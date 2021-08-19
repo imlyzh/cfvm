@@ -1,0 +1,15 @@
+[package]
+name = "cfir"
+version = "0.1.0"
+authors = ["Lyzh <enterindex@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "libcfir"
+path = "src/lib.rs"
+
+[dependencies]
+sexpr_ir = "^0.5.0"
+sexpr_process = "^0.1.1"

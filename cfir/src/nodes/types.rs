@@ -1,13 +1,13 @@
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Type {
     Void,
     FirstClassType(FirstClassType),
     FunctionType(FunctionType),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum FirstClassType {
     OpaqueType,
     SimpleType(SimpleType),
@@ -15,7 +15,7 @@ pub enum FirstClassType {
     Struct(RecordType),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum SimpleType {
     Int(IntType),
     Float(FloatType),
@@ -23,19 +23,19 @@ pub enum SimpleType {
     Vector(Box<SimpleType>, usize), // non include vector
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct RecordType {
     pub not_aligned: bool,
     pub record: Vec<(Option<String>, Type)>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct FunctionType {
     pub return_type: Box<Type>,
     pub params: Vec<(Option<String>, Type)>,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 #[repr(u8)]
 pub enum IntType {
     I1 = 0,
@@ -46,7 +46,7 @@ pub enum IntType {
     I128 = 5,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 #[repr(u8)]
 pub enum FloatType {
     F8 = 0,

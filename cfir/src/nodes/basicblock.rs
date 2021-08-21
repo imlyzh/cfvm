@@ -1,17 +1,11 @@
-use std::sync::Arc;
 
-use sexpr_ir::gast::Handle;
-use super::instruction::*;
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct BlockMetadata {
-    pub label: Handle<String>,
-    pub prev_block: Arc<BasicBlockDef>,
-}
+use super::{MutHandle, handles::LabelSymbol, instruction::*};
 
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct BasicBlockDef {
-    pub metadata: Option<BlockMetadata>,
-    pub instructions: Vec<Arc<Instruction>>,
+    pub label: Option<LabelSymbol>,
+    pub prev_block: MutHandle<Vec<MutHandle<BasicBlockDef>>>,
+    pub instructions: MutHandle<Vec<MutHandle<Instruction>>>,
+    pub terminator: MutHandle<Option<Terminator>>,
 }

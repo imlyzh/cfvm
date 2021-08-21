@@ -1,4 +1,7 @@
 
+pub trait GetType {
+    fn get_type(&self) -> Type;
+}
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Type {

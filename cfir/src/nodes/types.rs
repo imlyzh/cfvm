@@ -1,3 +1,5 @@
+use super::handles::LocalSymbol;
+
 
 pub trait GetType {
     fn get_type(&self) -> Type;
@@ -14,7 +16,7 @@ pub enum Type {
 pub enum FirstClassType {
     OpaqueType,
     SimpleType(SimpleType),
-    Array(Box<Type>, usize),
+    Array(ArrayType),
     Struct(RecordType),
 }
 
@@ -22,9 +24,18 @@ pub enum FirstClassType {
 pub enum SimpleType {
     Int(IntType),
     Float(FloatType),
-    Pointer(Box<Type>),
-    Vector(Box<SimpleType>, usize), // non include vector
+    Pointer(PointerType),
+    Vector(VectorType), // non include vector
 }
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct PointerType(pub Box<Type>);
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct VectorType(pub Box<SimpleType>, pub usize);
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct ArrayType(pub Box<Type>, pub usize);
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct RecordType {
@@ -35,7 +46,7 @@ pub struct RecordType {
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct FunctionType {
     pub return_type: Box<Type>,
-    pub params: Vec<(Option<String>, Type)>,
+    pub params: Vec<(Option<LocalSymbol>, Type)>,
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
@@ -80,8 +91,8 @@ impl GetSize for FirstClassType {
         match self {
             FirstClassType::OpaqueType => None,
             FirstClassType::SimpleType(t) => t.get_size(platform_size),
-            FirstClassType::Array(t, s) => t.get_size(platform_size).map(|x|x*s),
-            FirstClassType::Struct(r) => r.get_size(platform_size),
+            FirstClassType::Array(t) => t.get_size(platform_size),
+            FirstClassType::Struct(t) => t.get_size(platform_size),
         }
     }
 }
@@ -92,8 +103,22 @@ impl GetSize for SimpleType {
             SimpleType::Int(t) => t.get_size(platform_size),
             SimpleType::Float(t) => t.get_size(platform_size),
             SimpleType::Pointer(_) => Some(platform_size as usize),
-            SimpleType::Vector(t, s) => t.get_size(platform_size).map(|x|x*s),
+            SimpleType::Vector(t) => t.get_size(platform_size),
         }
+    }
+}
+
+impl GetSize for VectorType {
+    fn get_size(&self, platform_size: u8) -> Option<usize> {
+        let VectorType(t, s) = self;
+        t.get_size(platform_size).map(|x|x*s)
+    }
+}
+
+impl GetSize for ArrayType {
+    fn get_size(&self, platform_size: u8) -> Option<usize> {
+        let ArrayType(t, s) = self;
+        t.get_size(platform_size).map(|x|x*s)
     }
 }
 

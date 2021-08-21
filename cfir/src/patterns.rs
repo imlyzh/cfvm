@@ -21,7 +21,7 @@ impl_pattern!(PUBLIC_FUNCTION_DEF, "('pub-function name ret-type param-type line
 
 impl_pattern!(LABEL_DEF, "('label label-name)");
 
-impl_pattern!(PARAMS_TYPE, "(param_pair ...)");
+impl_pattern!(PARAMS_TYPE, "(param-pair ...)");
 impl_pattern!(PARAM_PAIR_TYPE, "(type name ...)");
 
 impl_pattern!(FUNCTION_TYPE, "('fun ret params)");

@@ -37,7 +37,7 @@ impl GetType for FunctionDecl {
     fn get_type(&self) -> Type {
         let func_type = Type::FunctionType(self.header.clone());
         // let r = func_type;
-        let r = Type::FirstClassType(FirstClassType::SimpleType(SimpleType::Pointer(Box::new(func_type))));
+        let r = Type::FirstClassType(FirstClassType::SimpleType(SimpleType::Pointer(PointerType(Box::new(func_type)))));
         r
     }
 }
@@ -57,7 +57,7 @@ impl GetType for FunctionDef {
     fn get_type(&self) -> Type {
         let func_type = Type::FunctionType(self.header.clone());
         // let r = func_type;
-        let r = Type::FirstClassType(FirstClassType::SimpleType(SimpleType::Pointer(Box::new(func_type))));
+        let r = Type::FirstClassType(FirstClassType::SimpleType(SimpleType::Pointer(PointerType(Box::new(func_type)))));
         r
     }
 }

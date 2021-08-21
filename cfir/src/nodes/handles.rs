@@ -7,16 +7,16 @@ use super::{FunctionDecl, FunctionDef, basicblock::BasicBlockDef, instruction::I
 
 
 #[derive(Debug, Hash, Clone, Eq, PartialEq)]
-pub struct LocalSymbol(Handle<String>);
+pub struct LocalSymbol(pub Handle<String>);
 
 #[derive(Debug, Hash, Clone, Eq, PartialEq)]
-pub struct GlobalSymbol(Handle<String>);
+pub struct GlobalSymbol(pub Handle<String>);
 
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub struct LabelSymbol(Handle<String>);
+pub struct LabelSymbol(pub Handle<String>);
 
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub struct TypeSymbol(Handle<String>);
+pub struct TypeSymbol(pub Handle<String>);
 
 
 

@@ -113,7 +113,7 @@ pub enum Instruction {
 pub enum Terminator {
     Ret(Option<ValueHandle>),
     Branch(BranchOp, ValueHandle, LabelHandle, LabelHandle),
-    Cond(Vec<(ValueHandle, LabelHandle)>),
+    Conds(Vec<(ValueHandle, LabelHandle)>),
     Switch(ValueHandle, Arc<(u64, LabelHandle)>),
     Unrechable,
 }

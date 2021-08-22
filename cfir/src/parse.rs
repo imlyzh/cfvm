@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::sync::Arc;
 
 use sexpr_ir::gast::GAst;
 use sexpr_process::capture::{Capture, Catch};
@@ -19,22 +20,8 @@ impl FromGast for Module {
 
     fn from_gast(ast: &GAst) -> Result<Self::Target, ()> {
         todo!()
-    }
-}
 
-fn is_void(ast: &GAst) -> Option<()> {
-    if ast.get_const()?.get_sym()?.0.as_str() == "void" {
-        Some(())
-    } else {
-        None
-    }
-}
-
-fn is_opaque(ast: &GAst) -> Option<()> {
-    if ast.get_const()?.get_sym()?.0.as_str() == "opaque" {
-        Some(())
-    } else {
-        None
+        
     }
 }
 
@@ -70,7 +57,96 @@ impl FromGast for SimpleType {
     type Target = Self;
 
     fn from_gast(ast: &GAst) -> Result<Self::Target, ()> {
-        todo!()
+        if let Ok(x) = IntType::from_gast(ast) {
+            return Ok(SimpleType::Int(x));
+        } else if let Ok(x) = FloatType::from_gast(ast) {
+            return Ok(SimpleType::Float(x));
+        } else if let Ok(x) = PointerType::from_gast(ast) {
+            return Ok(SimpleType::Pointer(x));
+        } else {
+            VectorType::from_gast(ast).map(SimpleType::Vector)
+        }
+    }
+}
+
+impl FromGast for IntType {
+    type Target = Self;
+
+    fn from_gast(ast: &GAst) -> Result<Self::Target, ()> {
+        let s = symbol_from_gast(ast)?;
+        let r = if s.as_str() == "i1" {
+            IntType::I1
+        } else if s.as_str() == "i8" {
+            IntType::I8
+        } else if s.as_str() == "i16" {
+            IntType::I16
+        } else if s.as_str() == "i32" {
+            IntType::I32
+        } else if s.as_str() == "i64" {
+            IntType::I64
+        } else if s.as_str() == "i128" {
+            IntType::I128
+        } else {
+            return Err(());
+        };
+        Ok(r)
+    }
+}
+
+impl FromGast for FloatType {
+    type Target = Self;
+
+    fn from_gast(ast: &GAst) -> Result<Self::Target, ()> {
+        let s = symbol_from_gast(ast)?;
+        let r = if s.as_str() == "f8" {
+            FloatType::F8
+        } else if s.as_str() == "f16" {
+            FloatType::F16
+        } else if s.as_str() == "f32" {
+            FloatType::F32
+        } else if s.as_str() == "f64" {
+            FloatType::F64
+        } else if s.as_str() == "f128" {
+            FloatType::F128
+        } else if s.as_str() == "ppcf128" {
+            FloatType::PpcF128
+        } else {
+            return Err(());
+        };
+        Ok(r)
+    }
+}
+
+impl FromGast for PointerType {
+    type Target = Self;
+
+    fn from_gast(ast: &GAst) -> Result<Self::Target, ()> {
+        let r = POINTER_TYPE
+            .catch(ast)
+            .map_err(|_| ())?;
+        let (_, r) = r.first().unwrap();
+        let r = r.get_one().unwrap();
+        let r = Type::from_gast(r)?;
+        Ok(PointerType(Box::new(r)))
+    }
+}
+
+impl FromGast for VectorType {
+    type Target = Self;
+
+    fn from_gast(ast: &GAst) -> Result<Self::Target, ()> {
+        let r = VECTOR_TYPE
+            .catch(ast)
+            .map_err(|_| ())?;
+        let r: HashMap<&str, &Capture> = r
+            .iter()
+            .map(|(s, c)| ((s.0).as_str(), c))
+            .collect();
+        let type_ = r.get("type").unwrap().get_one().unwrap();
+        let type_ = SimpleType::from_gast(type_)?;
+        let number = r.get("number").unwrap().get_one().unwrap();
+        let number = uint_from_gast(number)?;
+        Ok(VectorType(Box::new(type_), number))
     }
 }
 
@@ -78,7 +154,39 @@ impl FromGast for ArrayType {
     type Target = Self;
 
     fn from_gast(ast: &GAst) -> Result<Self::Target, ()> {
-        todo!()
+        let r = ARRAY_TYPE
+            .catch(ast)
+            .map_err(|_| ())?;
+        let r: HashMap<&str, &Capture> = r
+            .iter()
+            .map(|(s, c)| ((s.0).as_str(), c))
+            .collect();
+        let type_ = r.get("type").unwrap().get_one().unwrap();
+        let type_ = Type::from_gast(type_)?;
+        let number = r.get("number").unwrap().get_one().unwrap();
+        let number = uint_from_gast(number)?;
+        Ok(ArrayType(Box::new(type_), number))
+    }
+}
+
+fn record_line_from_gast(ast: &GAst) -> Result<(Option<Arc<String>>, Type), ()> {
+    let r = RECORD_LINE
+        .catch(ast)
+        .map_err(|_| ())?;
+    let r: HashMap<&str, &Capture> = r
+        .iter()
+        .map(|(s, c)| ((s.0).as_str(), c))
+        .collect();
+    let type_ = r.get("type").unwrap().get_one().unwrap();
+    let type_ = Type::from_gast(type_)?;
+    let name = r.get("name").unwrap().get_many().unwrap();
+    if name.len() > 1 {
+        Err(())
+    } else if name.len() == 1 {
+        let name = symbol_from_gast(name.first().unwrap())?;
+        Ok((Some(name), type_))
+    } else {
+        Ok((None, type_))
     }
 }
 
@@ -86,7 +194,19 @@ impl FromGast for RecordType {
     type Target = Self;
 
     fn from_gast(ast: &GAst) -> Result<Self::Target, ()> {
-        todo!()
+        let not_aligned: bool;
+        let r = if let Ok(r) = RECORD_TYPE.catch(ast) {
+            not_aligned = true;
+            r
+        } else {
+            let r = ALIGNED_RECORD_TYPE.catch(ast).map_err(|_| ())?;
+            not_aligned = false;
+            r
+        };
+        let r = &r.first().unwrap().1;
+        let record: Result<Vec<_>, ()> = r.get_many().unwrap().into_iter().map(record_line_from_gast).collect();
+        let record = record?;
+        Ok(RecordType { not_aligned, record })
     }
 }
 
@@ -140,13 +260,27 @@ impl FromGast for FunctionType {
     }
 }
 
+fn is_void(ast: &GAst) -> Option<()> {
+    if ast.get_const()?.get_sym()?.0.as_str() == "void" {
+        Some(())
+    } else {
+        None
+    }
+}
+
+fn is_opaque(ast: &GAst) -> Option<()> {
+    if ast.get_const()?.get_sym()?.0.as_str() == "opaque" {
+        Some(())
+    } else {
+        None
+    }
+}
 
 impl FromGast for LocalSymbol {
     type Target = Self;
 
     fn from_gast(ast: &GAst) -> Result<Self::Target, ()> {
-        let name = ast.get_const().ok_or(())?.get_sym().ok_or(())?;
-        let name = name.0.clone();
+        let name = symbol_from_gast(ast)?;
         if name.chars().next().unwrap() != '%' {
             return Err(());
         }
@@ -158,8 +292,7 @@ impl FromGast for GlobalSymbol {
     type Target = Self;
 
     fn from_gast(ast: &GAst) -> Result<Self::Target, ()> {
-        let name = ast.get_const().ok_or(())?.get_sym().ok_or(())?;
-        let name = name.0.clone();
+        let name = symbol_from_gast(ast)?;
         if name.chars().next().unwrap() != '@' {
             return Err(());
         }
@@ -171,11 +304,31 @@ impl FromGast for LabelSymbol {
     type Target = Self;
 
     fn from_gast(ast: &GAst) -> Result<Self::Target, ()> {
-        let name = ast.get_const().ok_or(())?.get_sym().ok_or(())?;
-        let name = name.0.clone();
+        let name = symbol_from_gast(ast)?;
         if name.chars().next().unwrap() != ':' {
             return Err(());
         }
         Ok(LabelSymbol(name))
     }
+}
+
+fn symbol_from_gast(ast: &GAst) -> Result<Arc<String>, ()> {
+    let name = ast.get_const().ok_or(())?.get_sym().ok_or(())?;
+    Ok(name.0.clone())
+}
+
+fn uint_from_gast(ast: &GAst) -> Result<u64, ()> {
+    ast.get_const().ok_or(())?.get_uint().ok_or(())
+}
+
+fn int_from_gast(ast: &GAst) -> Result<i64, ()> {
+    ast.get_const().ok_or(())?.get_int().ok_or(())
+}
+
+fn float_from_gast(ast: &GAst) -> Result<f64, ()> {
+    ast.get_const().ok_or(())?.get_float().ok_or(())
+}
+
+fn bool_from_gast(ast: &GAst) -> Result<bool, ()> {
+    ast.get_const().ok_or(())?.get_bool().ok_or(())
 }

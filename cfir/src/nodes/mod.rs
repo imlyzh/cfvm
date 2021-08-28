@@ -9,7 +9,7 @@ use sexpr_ir::gast::Handle;
 use basicblock::*;
 use types::*;
 
-use self::handles::{DefineSymbol, GlobalSymbol, GlobalValue, LabelSymbol, TypeDef};
+use self::handles::{DefineSymbol, GlobalValue, LabelSymbol, TypeDef, VariableDef};
 
 
 pub type MutHandle<T> = Arc<RwLock<T>>;
@@ -20,6 +20,7 @@ pub struct Module {
     pub name: Option<Handle<String>>,
     pub type_defs: HashMap<Handle<String>, TypeDef>,
     pub constant_defs: HashMap<Handle<String>, GlobalValue>,
+    pub variable_defs: HashMap<Handle<String>, VariableDef>,
     pub functions: HashMap<Handle<String>, FunctionDef>,
     pub public_functions: HashMap<Handle<String>, FunctionDef>,
     pub function_decls: HashMap<Handle<String>, FunctionDecl>,

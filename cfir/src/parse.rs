@@ -23,6 +23,7 @@ impl FromGast for Module {
         let mut name: Option<Handle<String>> = None;
         let mut type_defs: HashMap<Handle<String>, TypeDef> = HashMap::new();
         let mut constant_defs: HashMap<Handle<String>, GlobalValue> = HashMap::new();
+        let mut variable_defs: HashMap<Handle<String>, VariableDef> = HashMap::new();
         let mut functions: HashMap<Handle<String>, FunctionDef> = HashMap::new();
         let mut public_functions: HashMap<Handle<String>, FunctionDef> = HashMap::new();
         let mut function_decls: HashMap<Handle<String>, FunctionDecl> = HashMap::new();
@@ -57,8 +58,11 @@ impl FromGast for Module {
                 ModuleItem::TypeDefs(x) => {
                     type_defs.insert(x.name.0.clone(), x);
                 },
-                ModuleItem::ConstantDefs(name, value) => {
-                    constant_defs.insert(name.0, value);
+                ModuleItem::ConstantDefs(ConstantDefs(name, value)) => {
+                    constant_defs.insert(name.0.clone(), value);
+                },
+                ModuleItem::VariableDefs(VariableDefs(name, type_, value)) => {
+                    variable_defs.insert(name.0.clone(), VariableDef(type_, value));
                 },
             }
         }
@@ -66,6 +70,7 @@ impl FromGast for Module {
             name,
             type_defs,
             constant_defs,
+            variable_defs,
             functions,
             public_functions,
             function_decls,
@@ -73,20 +78,51 @@ impl FromGast for Module {
     }
 }
 
+// #[derive(Debug, Clone)]
+pub struct ConstantDefs(pub DefineSymbol, pub GlobalValue);
+
+// #[derive(Debug, Clone)]
+pub struct VariableDefs(pub DefineSymbol, pub Type, pub Option<GlobalValue>);
+
 enum ModuleItem {
     TypeDefs(TypeDef),
-    ConstantDefs(DefineSymbol, GlobalValue),
+    ConstantDefs(ConstantDefs),
+    VariableDefs(VariableDefs),
     Functions(FunctionDef),
     PublicFunctions(FunctionDef),
     FunctionDecls(FunctionDecl),
 }
 
 fn module_item_from_gast(ast: &GAst) -> Result<ModuleItem, ()> {
-    
-    if let Ok(r) = TypeDef::from_gast(ast) {
+    if let Ok(r) = FunctionDecl::from_gast(ast) {
+        Ok(ModuleItem::FunctionDecls(r))
+    } else if let Ok(r) = TypeDef::from_gast(ast) {
         Ok(ModuleItem::TypeDefs(r))
     } else {
         Err(())
+    }
+}
+
+impl FromGast for FunctionDecl {
+    type Target = Self;
+
+    fn from_gast(ast: &GAst) -> Result<Self::Target, ()> {
+        let r = FUNCTION_DECL.catch(ast).map_err(|_| ())?;
+        let r: HashMap<&str, &Capture> = r
+            .iter()
+            .map(|(s, c)| ((s.0).as_str(), c))
+            .collect();
+        let name = r.get("name").unwrap().get_one().unwrap();
+        let ret_type = r.get("ret-type").unwrap().get_one().unwrap();
+        let param_type = r.get("param-type").unwrap().get_one().unwrap();
+        let name = DefineSymbol::from_gast(name)?;
+        let ret_type = Type::from_gast(ret_type)?;
+        let param_type = param_type_from_gast(param_type)?;
+        let header = FunctionType {
+            return_type: Box::new(ret_type),
+            params: param_type
+        };
+        Ok(FunctionDecl {name, header})
     }
 }
 

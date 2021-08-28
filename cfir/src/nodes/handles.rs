@@ -90,3 +90,6 @@ pub struct TypeDef {
 }
 
 pub type TypeHandle = SymbolHandle<TypeSymbol, Arc<Type>>;
+
+#[derive(Debug, Clone)]
+pub struct VariableDef(pub Type, pub Option<GlobalValue>);

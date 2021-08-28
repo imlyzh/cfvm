@@ -21,11 +21,11 @@ impl FromGast for Module {
 
     fn from_gast(ast: &GAst) -> Result<Self::Target, ()> {
         let mut name: Option<Handle<String>> = None;
-        let mut type_defs: HashMap<GlobalSymbol, TypeDef> = HashMap::new();
-        let mut constant_defs: HashMap<GlobalSymbol, GlobalValue> = HashMap::new();
-        let mut functions: HashMap<GlobalSymbol, FunctionDef> = HashMap::new();
-        let mut public_functions: HashMap<GlobalSymbol, FunctionDef> = HashMap::new();
-        let mut function_decls: HashMap<GlobalSymbol, FunctionDecl> = HashMap::new();
+        let mut type_defs: HashMap<Handle<String>, TypeDef> = HashMap::new();
+        let mut constant_defs: HashMap<Handle<String>, GlobalValue> = HashMap::new();
+        let mut functions: HashMap<Handle<String>, FunctionDef> = HashMap::new();
+        let mut public_functions: HashMap<Handle<String>, FunctionDef> = HashMap::new();
+        let mut function_decls: HashMap<Handle<String>, FunctionDecl> = HashMap::new();
         let defines = if let Ok(c) = NAMED_MODULE.catch(ast) {
             let c: HashMap<&str, &Capture> = c
             .iter()
@@ -43,7 +43,25 @@ impl FromGast for Module {
             .collect();
             c.get("defines").unwrap().get_many().unwrap().clone()
         };
-        todo!();
+        for define in defines {
+            match module_item_from_gast(&define)? {
+                ModuleItem::Functions(x) => {
+                    functions.insert(x.name.0.clone(), x);
+                },
+                ModuleItem::PublicFunctions(x) => {
+                    public_functions.insert(x.name.0.clone(), x);
+                },
+                ModuleItem::FunctionDecls(x) => {
+                    function_decls.insert(x.name.0.clone(), x);
+                },
+                ModuleItem::TypeDefs(x) => {
+                    type_defs.insert(x.name.0.clone(), x);
+                },
+                ModuleItem::ConstantDefs(name, value) => {
+                    constant_defs.insert(name.0, value);
+                },
+            }
+        }
         Ok(Module {
             name,
             type_defs,
@@ -52,6 +70,40 @@ impl FromGast for Module {
             public_functions,
             function_decls,
         })
+    }
+}
+
+enum ModuleItem {
+    TypeDefs(TypeDef),
+    ConstantDefs(DefineSymbol, GlobalValue),
+    Functions(FunctionDef),
+    PublicFunctions(FunctionDef),
+    FunctionDecls(FunctionDecl),
+}
+
+fn module_item_from_gast(ast: &GAst) -> Result<ModuleItem, ()> {
+    
+    if let Ok(r) = TypeDef::from_gast(ast) {
+        Ok(ModuleItem::TypeDefs(r))
+    } else {
+        Err(())
+    }
+}
+
+impl FromGast for TypeDef {
+    type Target = Self;
+
+    fn from_gast(ast: &GAst) -> Result<Self::Target, ()> {
+        let r = TYPE_DEF.catch(ast).map_err(|_| ())?;
+        let r: HashMap<&str, &Capture> = r
+            .iter()
+            .map(|(s, c)| ((s.0).as_str(), c))
+            .collect();
+        let name = r.get("name").unwrap().get_one().unwrap();
+        let type_ = r.get("type").unwrap().get_one().unwrap();
+        let name = DefineSymbol::from_gast(name)?;
+        let type_ = Type::from_gast(type_)?;
+        Ok(TypeDef { name, type_ })
     }
 }
 
@@ -342,6 +394,14 @@ impl FromGast for LabelSymbol {
             return Err(());
         }
         Ok(LabelSymbol(name))
+    }
+}
+
+impl FromGast for DefineSymbol {
+    type Target = Self;
+
+    fn from_gast(ast: &GAst) -> Result<Self::Target, ()> {
+        symbol_from_gast(ast).map(DefineSymbol)
     }
 }
 

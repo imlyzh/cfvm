@@ -5,6 +5,8 @@ use sexpr_ir::gast::Handle;
 use super::{FunctionDecl, FunctionDef, basicblock::BasicBlockDef, instruction::Instruction, types::{GetType, Type}};
 
 
+#[derive(Debug, Hash, Clone, Eq, PartialEq)]
+pub struct DefineSymbol(pub Handle<String>);
 
 #[derive(Debug, Hash, Clone, Eq, PartialEq)]
 pub struct LocalSymbol(pub Handle<String>);
@@ -12,10 +14,10 @@ pub struct LocalSymbol(pub Handle<String>);
 #[derive(Debug, Hash, Clone, Eq, PartialEq)]
 pub struct GlobalSymbol(pub Handle<String>);
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Hash, Clone, Eq, PartialEq)]
 pub struct LabelSymbol(pub Handle<String>);
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Hash, Clone, Eq, PartialEq)]
 pub struct TypeSymbol(pub Handle<String>);
 
 
@@ -83,7 +85,7 @@ pub type LabelHandle = SymbolHandle<LabelSymbol, Arc<BasicBlockDef>>;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct TypeDef {
-    pub name: Handle<String>,
+    pub name: DefineSymbol,
     pub type_: Type,
 }
 

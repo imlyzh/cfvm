@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use sexpr_ir::gast::GAst;
+use sexpr_ir::gast::Handle;
 use sexpr_process::capture::{Capture, Catch};
 
 use crate::nodes::*;
@@ -19,9 +20,38 @@ impl FromGast for Module {
     type Target = Self;
 
     fn from_gast(ast: &GAst) -> Result<Self::Target, ()> {
-        todo!()
-
-        
+        let mut name: Option<Handle<String>> = None;
+        let mut type_defs: HashMap<GlobalSymbol, TypeDef> = HashMap::new();
+        let mut constant_defs: HashMap<GlobalSymbol, GlobalValue> = HashMap::new();
+        let mut functions: HashMap<GlobalSymbol, FunctionDef> = HashMap::new();
+        let mut public_functions: HashMap<GlobalSymbol, FunctionDef> = HashMap::new();
+        let mut function_decls: HashMap<GlobalSymbol, FunctionDecl> = HashMap::new();
+        let defines = if let Ok(c) = NAMED_MODULE.catch(ast) {
+            let c: HashMap<&str, &Capture> = c
+            .iter()
+            .map(|(s, c)| ((s.0).as_str(), c))
+            .collect();
+            let n = c.get("name").unwrap().get_one().unwrap();
+            let n = symbol_from_gast(n)?;
+            name = Some(n);
+            c.get("defines").unwrap().get_many().unwrap().clone()
+        } else {
+            let c = MODULE.catch(ast).map_err(|_| ())?;
+            let c: HashMap<&str, &Capture> = c
+            .iter()
+            .map(|(s, c)| ((s.0).as_str(), c))
+            .collect();
+            c.get("defines").unwrap().get_many().unwrap().clone()
+        };
+        todo!();
+        Ok(Module {
+            name,
+            type_defs,
+            constant_defs,
+            functions,
+            public_functions,
+            function_decls,
+        })
     }
 }
 
@@ -35,10 +65,7 @@ impl FromGast for Type {
         if let Ok(t) = FirstClassType::from_gast(ast) {
             return Ok(Type::FirstClassType(t));
         }
-        if let Ok(t) = FunctionType::from_gast(ast) {
-            return Ok(Type::FunctionType(t));
-        }
-        Err(())
+        FunctionType::from_gast(ast).map(Type::FunctionType)
     }
 }
 
@@ -49,7 +76,13 @@ impl FromGast for FirstClassType {
         if is_opaque(ast).is_some() {
             return Ok(FirstClassType::OpaqueType);
         }
-        todo!()
+        if let Ok(r) = SimpleType::from_gast(ast) {
+            return Ok(FirstClassType::SimpleType(r));
+        }
+        if let Ok(r) = ArrayType::from_gast(ast) {
+            return Ok(FirstClassType::Array(r));
+        }
+        RecordType::from_gast(ast).map(FirstClassType::Record)
     }
 }
 

@@ -19,7 +19,7 @@ pub enum FirstClassType {
     OpaqueType,
     SimpleType(SimpleType),
     Array(ArrayType),
-    Struct(RecordType),
+    Record(RecordType),
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -94,7 +94,7 @@ impl GetSize for FirstClassType {
             FirstClassType::OpaqueType => None,
             FirstClassType::SimpleType(t) => t.get_size(platform_size),
             FirstClassType::Array(t) => t.get_size(platform_size),
-            FirstClassType::Struct(t) => t.get_size(platform_size),
+            FirstClassType::Record(t) => t.get_size(platform_size),
         }
     }
 }

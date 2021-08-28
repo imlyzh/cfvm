@@ -77,9 +77,9 @@ pub enum Operator {
     And(ValueHandle, ValueHandle),
     Or(ValueHandle, ValueHandle),
     Xor(ValueHandle, ValueHandle),
-    GetValue(ValueHandle, IndexList, ValueHandle),
+    GetValue(ValueHandle, IndexList),
+    GetItem(ValueHandle, ValueHandle),
     SetValue(ValueHandle, IndexList, ValueHandle),
-    GetItem(ValueHandle, ValueHandle, ValueHandle),
     SetItem(ValueHandle, ValueHandle, ValueHandle),
     Trunc(ValueHandle, IntType),
     ZExt(ValueHandle, IntType),
@@ -88,7 +88,7 @@ pub enum Operator {
     FExt(ValueHandle, FloatType),
     ICmp(ICmpOp, ValueHandle, ValueHandle),
     FCmp(FCmpOp, ValueHandle, ValueHandle),
-    PhiInst(Vec<(ValueHandle, LabelHandle)>),
+    Phi(Vec<(ValueHandle, LabelHandle)>),
     Call(ValueHandle, Vec<ValueHandle>),
 }
 

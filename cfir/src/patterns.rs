@@ -19,22 +19,6 @@ impl_pattern!(FUNCTION_DECL, "('function-decl name ret-type param-type)");
 impl_pattern!(FUNCTION_DEF, "('function name ret-type param-type lines ...)");
 impl_pattern!(PUBLIC_FUNCTION_DEF, "('pub-function name ret-type param-type lines ...)");
 
-impl_pattern!(LABEL_DEF, "('label label-name)");
-
-impl_pattern!(BIND_INST_DEF, "('let local-name inst)");
-
-impl_pattern!(INST, "(inst args ...)");
-
-
-
-impl_pattern!(RET, "('ret args ...)");
-impl_pattern!(BRANCH, "('branch op cond then else)");
-impl_pattern!(CONDS, "('cond pair)");
-impl_pattern!(SWITCH, "('switch num pair)");
-impl_pattern!(CALL, "('call name args ...)");
-impl_pattern!(UNRECHABLE, "('unrechable)");
-
-
 impl_pattern!(GLOBAL_CONST_DEF, "('const global-name expr)");
 impl_pattern!(PUBLIC_GLOBAL_CONST_DEF, "('pub-const global-name expr)");
 impl_pattern!(GLOBAL_VARIABLE_DEF, "('var global-name expr)");
@@ -55,3 +39,59 @@ impl_pattern!(RECORD_LINE, "(type name ...)");
 impl_pattern!(ARRAY_TYPE, "('array type number)");
 
 impl_pattern!(VECTOR_TYPE, "('vector simple-type number)");
+
+
+impl_pattern!(LABEL_DEF, "('label label-name)");
+
+// terminator
+
+impl_pattern!(RET, "('ret args ...)");
+impl_pattern!(BRANCH, "('branch op cond then else)");
+impl_pattern!(CONDS, "('cond pair)");
+impl_pattern!(SWITCH, "('switch num pair)");
+impl_pattern!(CALL, "('call name args ...)");
+impl_pattern!(UNRECHABLE, "('unrechable)");
+
+impl_pattern!(STORE_INST_DEF, "('store local-name name)");
+
+impl_pattern!(V_STORE_INST_DEF, "('volatile-store local-name name)");
+
+impl_pattern!(BIND_INST_DEF, "('let local-name inst)");
+
+// operator
+
+impl_pattern!(ALLOCA_INST, "('alloc type value)");
+impl_pattern!(GET_PTR_INST, "('get-ptr value)");
+impl_pattern!(LOAD_INST, "('load type value)");
+impl_pattern!(CAST_INST, "('cast type value)");
+impl_pattern!(ADD_INST, "('add value0 value1)");
+impl_pattern!(F_ADD_INST, "('fadd value0 value1)");
+impl_pattern!(SUB_INST, "('sub value0 value1)");
+impl_pattern!(F_SUB_INST, "('fsub value0 value1)");
+impl_pattern!(MUL_INST, "('mul value0 value1)");
+impl_pattern!(F_MUL_INST, "('fmul value0 value1)");
+impl_pattern!(U_DIV_INST, "('udiv value0 value1)");
+impl_pattern!(S_DIV_INST, "('sdiv value0 value1)");
+impl_pattern!(U_REM_INST, "('urem value0 value1)");
+impl_pattern!(S_REM_INST, "('srem value0 value1)");
+impl_pattern!(F_REM_INST, "('frem value0 value1)");
+impl_pattern!(SHL_INST, "('shl value0 value1)");
+impl_pattern!(L_SHR_INST, "('lshr value0 value1)");
+impl_pattern!(A_SHR_INST, "('ashr value0 value1)");
+impl_pattern!(AND_INST, "('and value0 value1)");
+impl_pattern!(OR_INST, "('or value0 value1)");
+impl_pattern!(XOR_INST, "('xor value0 value1)");
+impl_pattern!(GET_VALUE_INST, "('get-value value index-list)");
+impl_pattern!(GET_ITEM_INST, "('get-item value, index-value)");
+impl_pattern!(SET_VALUE_INST, "('set-value value index-list value1)");
+impl_pattern!(SET_ITEM_INST, "('set-item value index-value value1)");
+impl_pattern!(TRUNC_INST, "('trunc value int-type)");
+impl_pattern!(ZEXT_INST, "('zext value int-type)");
+impl_pattern!(SEXT_INST, "('sext value int-type)");
+impl_pattern!(FTRUNC_INST, "('ftrunc value float-type)");
+impl_pattern!(F_EXT_INST, "('fext value float-type)");
+impl_pattern!(I_CMP_INST, "('icmp icmp-op value0 value1)");
+impl_pattern!(F_CMP_INST, "('fcmp fcmp-op value0 value1)");
+impl_pattern!(PHI_INST, "('phi phi-pairs ...)");
+impl_pattern!(PHI_PAIR, "['value label]");
+impl_pattern!(CALL_INST, "('call fun-value values ...)");

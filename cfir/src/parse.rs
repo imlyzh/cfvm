@@ -449,6 +449,18 @@ impl FromGast for DefineSymbol {
     }
 }
 
+impl FromGast for Attris {
+    type Target = Self;
+
+    fn from_gast(ast: &GAst) -> Result<Self::Target, ()> {
+        let r = ATTRIS.catch(ast).map_err(|_| ())?;
+        let r = r.first().unwrap().1.get_many().unwrap();
+        let r: Result<Vec<_>, _> = r.iter().map(symbol_from_gast).collect();
+        let r = r?;
+        Ok(Attris(r))
+    }
+}
+
 fn symbol_from_gast(ast: &GAst) -> Result<Arc<String>, ()> {
     let name = ast.get_const().ok_or(())?.get_sym().ok_or(())?;
     Ok(name.0.clone())

@@ -98,3 +98,7 @@ pub struct ConstantDef(pub DefineSymbol, pub bool, pub GlobalValue);
 
 #[derive(Debug, Clone)]
 pub struct VariableDef(pub DefineSymbol, pub bool, pub Type, pub Option<GlobalValue>);
+
+
+#[derive(Debug, Clone)]
+pub struct Attris(pub Vec<Handle<String>>);

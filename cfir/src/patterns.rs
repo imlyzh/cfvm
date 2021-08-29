@@ -23,6 +23,10 @@ impl_pattern!(GLOBAL_VARIABLE_DEF, "('var attrs global-name expr ...)");
 
 impl_pattern!(TYPE_DEF, "('type attrs name type)");
 
+// attris
+
+impl_pattern!(ATTRIS, "(exprs ...)");
+
 // types
 
 impl_pattern!(POINTER_TYPE, "('ptr type)");

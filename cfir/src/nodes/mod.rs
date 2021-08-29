@@ -9,7 +9,7 @@ use sexpr_ir::gast::Handle;
 use basicblock::*;
 use types::*;
 
-use self::handles::{DefineSymbol, GlobalValue, LabelSymbol, TypeDef, VariableDef};
+use self::handles::{ConstantDef, DefineSymbol, LabelSymbol, TypeDef, VariableDef};
 
 
 pub type MutHandle<T> = Arc<RwLock<T>>;
@@ -19,16 +19,16 @@ pub type MutHandle<T> = Arc<RwLock<T>>;
 pub struct Module {
     pub name: Option<Handle<String>>,
     pub type_defs: HashMap<Handle<String>, TypeDef>,
-    pub constant_defs: HashMap<Handle<String>, GlobalValue>,
+    pub constant_defs: HashMap<Handle<String>, ConstantDef>,
     pub variable_defs: HashMap<Handle<String>, VariableDef>,
     pub functions: HashMap<Handle<String>, FunctionDef>,
-    pub public_functions: HashMap<Handle<String>, FunctionDef>,
     pub function_decls: HashMap<Handle<String>, FunctionDecl>,
 }
 
 
 #[derive(Debug, Clone)]
 pub struct FunctionDecl {
+    pub is_public: bool,
     pub name: DefineSymbol,
     pub header: FunctionType,
     // metadatas
@@ -47,6 +47,7 @@ impl GetType for FunctionDecl {
 #[derive(Debug, Clone)]
 pub struct FunctionDef {
     pub name: DefineSymbol,
+    pub is_public: bool,
     pub header: FunctionType,
     // metadatas
     pub blocks: Vec<MutHandle<BasicBlockDef>>,

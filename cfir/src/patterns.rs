@@ -15,16 +15,15 @@ macro_rules! impl_pattern {
 impl_pattern!(MODULE, "('unnamed-module defines ...)");
 impl_pattern!(NAMED_MODULE, "('module name defines ...)");
 
-impl_pattern!(FUNCTION_DECL, "('function-decl name ret-type param-type)");
-impl_pattern!(FUNCTION_DEF, "('function name ret-type param-type lines ...)");
-impl_pattern!(PUBLIC_FUNCTION_DEF, "('pub-function name ret-type param-type lines ...)");
+impl_pattern!(FUNCTION_DECL, "('function-decl attrs name ret-type param-type)");
+impl_pattern!(FUNCTION_DEF, "('function attrs name ret-type param-type lines ...)");
 
-impl_pattern!(GLOBAL_CONST_DEF, "('const global-name expr)");
-impl_pattern!(PUBLIC_GLOBAL_CONST_DEF, "('pub-const global-name expr)");
-impl_pattern!(GLOBAL_VARIABLE_DEF, "('var global-name expr)");
-impl_pattern!(PUBLIC_GLOBAL_VARIABLE_DEF, "('pub-var global-name expr)");
+impl_pattern!(GLOBAL_CONST_DEF, "('const attrs global-name expr)");
+impl_pattern!(GLOBAL_VARIABLE_DEF, "('var attrs global-name expr ...)");
 
-impl_pattern!(TYPE_DEF, "('type name type)");
+impl_pattern!(TYPE_DEF, "('type attrs name type)");
+
+// types
 
 impl_pattern!(POINTER_TYPE, "('ptr type)");
 
@@ -39,6 +38,8 @@ impl_pattern!(RECORD_LINE, "(type name ...)");
 impl_pattern!(ARRAY_TYPE, "('array type number)");
 
 impl_pattern!(VECTOR_TYPE, "('vector simple-type number)");
+
+//
 
 
 impl_pattern!(LABEL_DEF, "('label label-name)");
@@ -60,7 +61,7 @@ impl_pattern!(BIND_INST_DEF, "('let local-name inst)");
 
 // operator
 
-impl_pattern!(ALLOCA_INST, "('alloc type value)");
+impl_pattern!(ALLOCA_INST, "('alloc type)");
 impl_pattern!(GET_PTR_INST, "('get-ptr value)");
 impl_pattern!(LOAD_INST, "('load type value)");
 impl_pattern!(CAST_INST, "('cast type value)");

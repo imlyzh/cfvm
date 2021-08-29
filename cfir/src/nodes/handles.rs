@@ -85,11 +85,16 @@ pub type LabelHandle = SymbolHandle<LabelSymbol, Arc<BasicBlockDef>>;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct TypeDef {
+    pub is_public: bool,
     pub name: DefineSymbol,
     pub type_: Type,
 }
 
 pub type TypeHandle = SymbolHandle<TypeSymbol, Arc<Type>>;
 
+
 #[derive(Debug, Clone)]
-pub struct VariableDef(pub Type, pub Option<GlobalValue>);
+pub struct ConstantDef(pub DefineSymbol, pub bool, pub GlobalValue);
+
+#[derive(Debug, Clone)]
+pub struct VariableDef(pub DefineSymbol, pub bool, pub Type, pub Option<GlobalValue>);

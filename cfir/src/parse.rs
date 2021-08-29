@@ -22,10 +22,9 @@ impl FromGast for Module {
     fn from_gast(ast: &GAst) -> Result<Self::Target, ()> {
         let mut name: Option<Handle<String>> = None;
         let mut type_defs: HashMap<Handle<String>, TypeDef> = HashMap::new();
-        let mut constant_defs: HashMap<Handle<String>, GlobalValue> = HashMap::new();
+        let mut constant_defs: HashMap<Handle<String>, ConstantDef> = HashMap::new();
         let mut variable_defs: HashMap<Handle<String>, VariableDef> = HashMap::new();
         let mut functions: HashMap<Handle<String>, FunctionDef> = HashMap::new();
-        let mut public_functions: HashMap<Handle<String>, FunctionDef> = HashMap::new();
         let mut function_decls: HashMap<Handle<String>, FunctionDecl> = HashMap::new();
         let defines = if let Ok(c) = NAMED_MODULE.catch(ast) {
             let c: HashMap<&str, &Capture> = c
@@ -49,20 +48,17 @@ impl FromGast for Module {
                 ModuleItem::Functions(x) => {
                     functions.insert(x.name.0.clone(), x);
                 },
-                ModuleItem::PublicFunctions(x) => {
-                    public_functions.insert(x.name.0.clone(), x);
-                },
                 ModuleItem::FunctionDecls(x) => {
                     function_decls.insert(x.name.0.clone(), x);
                 },
                 ModuleItem::TypeDefs(x) => {
                     type_defs.insert(x.name.0.clone(), x);
                 },
-                ModuleItem::ConstantDefs(ConstantDefs(name, value)) => {
-                    constant_defs.insert(name.0.clone(), value);
+                ModuleItem::ConstantDef(value ) => {
+                    constant_defs.insert(value.0.0.clone(), value);
                 },
-                ModuleItem::VariableDefs(VariableDefs(name, type_, value)) => {
-                    variable_defs.insert(name.0.clone(), VariableDef(type_, value));
+                ModuleItem::VariableDef(value ) => {
+                    variable_defs.insert(value.0.0.clone(), value);
                 },
             }
         }
@@ -72,24 +68,16 @@ impl FromGast for Module {
             constant_defs,
             variable_defs,
             functions,
-            public_functions,
             function_decls,
         })
     }
 }
 
-// #[derive(Debug, Clone)]
-pub struct ConstantDefs(pub DefineSymbol, pub GlobalValue);
-
-// #[derive(Debug, Clone)]
-pub struct VariableDefs(pub DefineSymbol, pub Type, pub Option<GlobalValue>);
-
 enum ModuleItem {
     TypeDefs(TypeDef),
-    ConstantDefs(ConstantDefs),
-    VariableDefs(VariableDefs),
+    ConstantDef(ConstantDef),
+    VariableDef(VariableDef),
     Functions(FunctionDef),
-    PublicFunctions(FunctionDef),
     FunctionDecls(FunctionDecl),
 }
 
@@ -98,8 +86,28 @@ fn module_item_from_gast(ast: &GAst) -> Result<ModuleItem, ()> {
         Ok(ModuleItem::FunctionDecls(r))
     } else if let Ok(r) = TypeDef::from_gast(ast) {
         Ok(ModuleItem::TypeDefs(r))
+    } else if let Ok(r) = ConstantDef::from_gast(ast) {
+        Ok(ModuleItem::ConstantDef(r))
+    }else if let Ok(r) = VariableDef::from_gast(ast) {
+        Ok(ModuleItem::VariableDef(r))
     } else {
         Err(())
+    }
+}
+
+impl FromGast for ConstantDef {
+    type Target = Self;
+
+    fn from_gast(ast: &GAst) -> Result<Self::Target, ()> {
+        todo!()
+    }
+}
+
+impl FromGast for VariableDef {
+    type Target = Self;
+
+    fn from_gast(ast: &GAst) -> Result<Self::Target, ()> {
+        todo!()
     }
 }
 
@@ -122,7 +130,7 @@ impl FromGast for FunctionDecl {
             return_type: Box::new(ret_type),
             params: param_type
         };
-        Ok(FunctionDecl {name, header})
+        Ok(FunctionDecl {is_public: todo!(), name, header})
     }
 }
 
@@ -139,7 +147,7 @@ impl FromGast for TypeDef {
         let type_ = r.get("type").unwrap().get_one().unwrap();
         let name = DefineSymbol::from_gast(name)?;
         let type_ = Type::from_gast(type_)?;
-        Ok(TypeDef { name, type_ })
+        Ok(TypeDef { name, type_, is_public: todo!() })
     }
 }
 

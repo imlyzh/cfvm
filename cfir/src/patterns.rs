@@ -23,6 +23,16 @@ impl_pattern!(GLOBAL_VARIABLE_DEF, "('var attrs global-name type expr ...)");
 
 impl_pattern!(TYPE_DEF, "('type attrs name type)");
 
+// datas
+
+impl_pattern!(RECORD_DATA, "('record lines ...)");
+impl_pattern!(RECORD_DATA_LINE, "(name expr ...)");
+impl_pattern!(ARRAY_DATA, "('array exprs ...)");
+
+impl_pattern!(VECTOR_DATA, "('vector exprs ...)");
+
+impl_pattern!(BYTES_DATA, "('record lines ...)");
+
 // attris
 
 impl_pattern!(ATTRIS, "(exprs ...)");

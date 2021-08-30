@@ -19,7 +19,7 @@ impl_pattern!(FUNCTION_DECL, "('function-decl attrs name ret-type param-type)");
 impl_pattern!(FUNCTION_DEF, "('function attrs name ret-type param-type lines ...)");
 
 impl_pattern!(GLOBAL_CONST_DEF, "('const attrs global-name expr)");
-impl_pattern!(GLOBAL_VARIABLE_DEF, "('var attrs global-name expr ...)");
+impl_pattern!(GLOBAL_VARIABLE_DEF, "('var attrs global-name type expr ...)");
 
 impl_pattern!(TYPE_DEF, "('type attrs name type)");
 

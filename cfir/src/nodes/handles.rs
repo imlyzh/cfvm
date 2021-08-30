@@ -92,13 +92,32 @@ pub struct TypeDef {
 
 pub type TypeHandle = SymbolHandle<TypeSymbol, Arc<Type>>;
 
+// first item is is_public
 
 #[derive(Debug, Clone)]
-pub struct ConstantDef(pub DefineSymbol, pub bool, pub GlobalValue);
+pub struct ConstantDef(pub bool, pub DefineSymbol, pub Type, pub GlobalValue);
 
 #[derive(Debug, Clone)]
-pub struct VariableDef(pub DefineSymbol, pub bool, pub Type, pub Option<GlobalValue>);
+pub struct VariableDef(pub bool, pub DefineSymbol, pub Type, pub Option<GlobalValue>);
 
 
 #[derive(Debug, Clone)]
 pub struct Attris(pub Vec<Handle<String>>);
+
+impl Attris {
+    pub fn have_flag(&self, flag: &str) -> bool {
+        self.0.iter().any(|f| f.as_str() == flag)
+    }
+
+    pub fn have_flags(&self, flags: &[&str]) -> bool {
+        self.0.iter().any(|f| flags.contains(&f.as_str()))
+    }
+
+    pub fn have_and_only_have_flags(&self, flags: &[&str]) -> Option<Vec<bool>> {
+        if self.0.len() != flags.len() {
+            return None;
+        }
+        let r: Vec<bool> = flags.iter().map(|x| self.have_flag(x)).collect();
+        Some(r)
+    }
+}

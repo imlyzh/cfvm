@@ -55,10 +55,10 @@ impl FromGast for Module {
                     type_defs.insert(x.name.0.clone(), x);
                 },
                 ModuleItem::ConstantDef(value ) => {
-                    constant_defs.insert(value.0.0.clone(), value);
+                    constant_defs.insert(value.1.0.clone(), value);
                 },
                 ModuleItem::VariableDef(value ) => {
-                    variable_defs.insert(value.0.0.clone(), value);
+                    variable_defs.insert(value.1.0.clone(), value);
                 },
             }
         }
@@ -99,7 +99,26 @@ impl FromGast for ConstantDef {
     type Target = Self;
 
     fn from_gast(ast: &GAst) -> Result<Self::Target, ()> {
-        todo!()
+        let r = GLOBAL_CONST_DEF.catch(ast).map_err(|_| ())?;
+        let r: HashMap<&str, &Capture> = r
+            .iter()
+            .map(|(s, c)| ((s.0).as_str(), c))
+            .collect();
+        let attrs = r.get("attrs").unwrap().get_one().unwrap();
+        let attrs = Attris::from_gast(attrs)?;
+        let attrs = attrs.have_and_only_have_flags(&["public"]).ok_or(())?;
+        let is_public = matches!(&attrs[..], [true]);
+
+        let name = r.get("global-name").unwrap().get_one().unwrap();
+        let name = DefineSymbol::from_gast(name)?;
+
+        let type_ = r.get("type").unwrap().get_one().unwrap();
+        let type_ = Type::from_gast(type_)?;
+
+        let expr = r.get("expr").unwrap().get_one().unwrap();
+        // let expr = GlobalValue::from_gast(expr)?;
+
+        Ok(ConstantDef(is_public, name, type_, todo!()))
     }
 }
 
@@ -107,7 +126,26 @@ impl FromGast for VariableDef {
     type Target = Self;
 
     fn from_gast(ast: &GAst) -> Result<Self::Target, ()> {
-        todo!()
+        let r = GLOBAL_VARIABLE_DEF.catch(ast).map_err(|_| ())?;
+        let r: HashMap<&str, &Capture> = r
+            .iter()
+            .map(|(s, c)| ((s.0).as_str(), c))
+            .collect();
+        let attrs = r.get("attrs").unwrap().get_one().unwrap();
+        let attrs = Attris::from_gast(attrs)?;
+        let attrs = attrs.have_and_only_have_flags(&["public"]).ok_or(())?;
+        let is_public = matches!(&attrs[..], [true]);
+
+        let name = r.get("global-name").unwrap().get_one().unwrap();
+        let name = DefineSymbol::from_gast(name)?;
+
+        let type_ = r.get("type").unwrap().get_one().unwrap();
+        let type_ = Type::from_gast(type_)?;
+
+        let expr = r.get("expr").unwrap().get_many().unwrap();
+        // let expr = GlobalValue::from_gast(expr)?;
+
+        Ok(VariableDef(is_public, name, type_, todo!()))
     }
 }
 
@@ -120,17 +158,25 @@ impl FromGast for FunctionDecl {
             .iter()
             .map(|(s, c)| ((s.0).as_str(), c))
             .collect();
+        let attrs = r.get("attrs").unwrap().get_one().unwrap();
+        let attrs = Attris::from_gast(attrs)?;
+        let attrs = attrs.have_and_only_have_flags(&["public"]).ok_or(())?;
+        let is_public = matches!(&attrs[..], [true]);
+
         let name = r.get("name").unwrap().get_one().unwrap();
-        let ret_type = r.get("ret-type").unwrap().get_one().unwrap();
-        let param_type = r.get("param-type").unwrap().get_one().unwrap();
         let name = DefineSymbol::from_gast(name)?;
+
+        let ret_type = r.get("ret-type").unwrap().get_one().unwrap();
         let ret_type = Type::from_gast(ret_type)?;
+
+        let param_type = r.get("param-type").unwrap().get_one().unwrap();
         let param_type = param_type_from_gast(param_type)?;
+
         let header = FunctionType {
             return_type: Box::new(ret_type),
             params: param_type
         };
-        Ok(FunctionDecl {is_public: todo!(), name, header})
+        Ok(FunctionDecl {is_public, name, header})
     }
 }
 
@@ -143,11 +189,18 @@ impl FromGast for TypeDef {
             .iter()
             .map(|(s, c)| ((s.0).as_str(), c))
             .collect();
+        let attrs = r.get("attrs").unwrap().get_one().unwrap();
+        let attrs = Attris::from_gast(attrs)?;
+        let attrs = attrs.have_and_only_have_flags(&["public"]).ok_or(())?;
+        let is_public = matches!(&attrs[..], [true]);
+
         let name = r.get("name").unwrap().get_one().unwrap();
-        let type_ = r.get("type").unwrap().get_one().unwrap();
         let name = DefineSymbol::from_gast(name)?;
+
+        let type_ = r.get("type").unwrap().get_one().unwrap();
         let type_ = Type::from_gast(type_)?;
-        Ok(TypeDef { name, type_, is_public: todo!() })
+
+        Ok(TypeDef { is_public, name, type_ })
     }
 }
 

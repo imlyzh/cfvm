@@ -74,6 +74,61 @@ pub enum FloatType {
 }
 
 
+pub trait Unify {
+    type Target;
+    fn unify(&self, other: &Self) -> Option<Self::Target>;
+}
+
+impl Unify for Type {
+    type Target = Self;
+
+    fn unify(&self, other: &Self) -> Option<Self::Target> {
+        match (self, other) {
+            (Type::Void, _) => Some(Type::Void),
+            (t, Type::Void) => Some(t.clone()),
+            (Type::FirstClassType(t1), Type::FirstClassType(t2)) =>
+                t1.unify(t2).map(Type::FirstClassType),
+            (Type::FunctionType(t1), Type::FunctionType(t2)) =>
+                t1.unify(t2).map(Type::FunctionType),
+            _ => None,
+        }
+    }
+}
+
+impl Unify for FirstClassType {
+    type Target = Self;
+
+    fn unify(&self, other: &Self) -> Option<Self::Target> {
+        match (self, other) {
+            (FirstClassType::OpaqueType, _) => Some(FirstClassType::OpaqueType),
+            (t, FirstClassType::OpaqueType) => Some(t.clone()),
+            (FirstClassType::SimpleType(t1), FirstClassType::SimpleType(t2)) => todo!(),
+            (FirstClassType::Array(t1), FirstClassType::Array(t2)) => todo!(),
+            (FirstClassType::Record(t1), FirstClassType::Record(t2)) => todo!(),
+            _ => None,
+        }
+    }
+}
+
+impl Unify for FunctionType {
+    type Target = Self;
+
+    fn unify(&self, other: &Self) -> Option<Self::Target> {
+        let return_type = self.return_type.unify(&other.return_type)?;
+        let return_type = Box::new(return_type);
+        let params: Option<Vec<_>> = self.params
+            .iter()
+            .zip(other.params.iter())
+            .map(|((_, t1), (_, t2))| t1.unify(t2))
+            .collect();
+        let params = params?;
+        let params = params.into_iter().map(|t| (None, t)).collect();
+        let r = FunctionType { return_type, params };
+        Some(r)
+    }
+}
+
+
 pub trait GetSize {
     fn get_size(&self, platform_size: u8) -> Option<u64>;
 }

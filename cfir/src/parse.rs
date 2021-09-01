@@ -149,6 +149,14 @@ impl FromGast for VariableDef {
     }
 }
 
+impl FromGast for GlobalValue {
+    type Target = Self;
+
+    fn from_gast(ast: &GAst) -> Result<Self::Target, ()> {
+        todo!()
+    }
+}
+
 impl FromGast for FunctionDecl {
     type Target = Self;
 

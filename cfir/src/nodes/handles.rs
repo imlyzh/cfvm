@@ -40,8 +40,22 @@ pub type LocalHandle = SymbolHandle<LocalSymbol, Arc<Instruction>>;
 // global value
 
 #[derive(Debug, Clone)]
+pub struct RecordValue(pub Vec<(Option<Handle<String>>, ConstantValue)>);
+
+#[derive(Debug, Clone)]
+pub enum ConstantValue {
+    Int(Vec<u8>),
+    Float(Vec<u8>),
+    Bytes(Vec<u8>),
+    RawChars(Vec<u8>),
+    Chars(Vec<char>),
+    Array(Vec<ConstantValue>),
+    Record(RecordValue),
+}
+
+#[derive(Debug, Clone)]
 pub enum GlobalValue {
-    Constant(Type, Vec<u8>),
+    Constant(Type, ConstantValue),
     FunctionDef(Arc<FunctionDef>),
     FunctionDecl(Arc<FunctionDecl>),
 }

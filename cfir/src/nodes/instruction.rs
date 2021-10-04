@@ -54,9 +54,16 @@ pub enum Index {
 pub type IndexList = Vec<Index>;
 
 
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+pub enum AllocaType {
+    Register(usize),
+    Stack,
+    Heap,
+}
+
 #[derive(Debug, Clone)]
 pub enum Operator {
-    Alloca(Type, ValueHandle),
+    Alloca(Option<AllocaType>, Type, ValueHandle),
     GetPtr(ValueHandle),
     Load(Type, ValueHandle),
     Cast(Type, ValueHandle),

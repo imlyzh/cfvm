@@ -1,0 +1,219 @@
+
+
+module = { "mod" ~ symbol ~ ":" ~ module_body* ~ EOI }
+
+module_body =
+    { function
+    // function_decls
+    // | type_def
+    // | const_def
+    // | var_def
+    }
+
+function = {
+    is_public ~ "fn" ~ global_symbol ~
+    function_type ~ "{" ~ blocks ~ "}"
+}
+
+is_public = { "pub"? }
+
+// types
+
+function_type = {
+    params ~ "->" ~ _type
+}
+
+params = {
+    "(" ~ (params_pair ~ ("," ~ params_pair)*)? ~ ")"
+}
+
+params_pair = {
+    params_name ~ ":" ~ _type
+}
+
+params_name = @
+    { "_"
+    | local_symbol
+}
+
+_type =
+    { void
+    | first_class_type
+    | function_type
+    }
+
+void = @{ "void" }
+
+first_class_type =
+    { opaque_type
+    | simple_type
+    | array_type
+    | record_type
+}
+
+opaque_type = { "opaque" }
+
+simple_type =
+    { int_type
+    | float_type
+    | pointer_type
+    | vector_type
+    }
+
+int_type = @
+    { "i1"
+    | "i8"
+    | "i16"
+    | "i32"
+    | "i64"
+    | "i128"
+}
+
+float_type = @
+    { "f8"
+    | "f16"
+    | "f32"
+    | "f64"
+    | "f128"
+    | "ppc_f128"
+}
+
+pointer_type = {
+    "*" ~ _type
+}
+
+vector_type = {
+    "<" ~ simple_type ~ ";" ~ number ~ ">"
+}
+
+array_type = {
+    "[" ~ _type ~ ";" ~ number ~ "]"
+}
+
+record_type = {
+    is_not_aligned ~ "{" ~ (params_pair ~ ("," ~ params_pair)*)? ~ "}"
+}
+
+is_not_aligned = { "#"? }
+
+// types end
+
+blocks = {
+    basic_init_block ~ basic_block*
+}
+
+basic_init_block = {
+    inst* ~
+    terminator
+}
+
+basic_block = {
+    label_symbol ~ ":" ~
+    inst* ~
+    terminator
+}
+
+inst =
+    { store
+    | bind
+    | operator
+    }
+
+store = {
+    "store" ~ is_volatile ~ local_symbol ~ value
+}
+
+is_volatile = { "volatile"? }
+
+bind = {
+    local_symbol ~ is_atomic ~ is_mutable ~ operator
+}
+
+is_atomic = { "atomic"? }
+
+is_mutable = { "mut"? }
+
+operator = {
+    "todo"
+}
+
+terminator =
+    { ret
+    | branch
+    | conds
+    | switch
+    | unrechable
+    }
+
+ret = {
+    "ret" ~ value?
+}
+
+branch = {
+    "br" ~ value ~ "?" ~ label_symbol ~ "," ~ label_symbol
+}
+
+conds = {
+    "conds" ~ "[" ~ conds_pair ~ ("," ~ conds_pair)* ~ "]"
+}
+
+conds_pair = { value ~ ":" ~ label_symbol }
+
+switch = {
+    "switch" ~ value ~ "[" ~ switch_pair ~ ("," ~ switch_pair)* ~ "]"
+}
+
+switch_pair = { number ~ ":" ~ label_symbol }
+
+unrechable = { "unrechable" }
+
+value =
+    { local_symbol
+    | global_symbol
+    }
+
+local_symbol = ${ "$" ~ symbol }
+
+global_symbol = ${ "@" ~ symbol }
+
+label_symbol = ${ "%" ~ symbol }
+
+symbol = $
+    { _quoted_name
+    | _name
+    | _id
+}
+
+_quoted_name = @{ "\"" ~ (!"\"" ~ ANY)* ~ "\"" }
+
+_id = @{ ('0'..'9')+ }
+
+_name = $ { (ASCII_ALPHA_LOWER | UNDERLINE) ~ (ASCII_ALPHANUMERIC | UNDERLINE)* }
+
+UNDERLINE = _{ "_" }
+
+// number
+
+number = $
+    { number_hex
+    | number_oct
+    | number_bin
+    | number_dec
+    }
+
+number_dec = _ { ("+" | "-")? ~ ASCII_DIGIT+ }
+
+number_oct = _ { ("+" | "-")? ~ "0o" ~ ASCII_OCT_DIGIT+ }
+
+number_hex = _ { ("+" | "-")? ~ "0x" ~ ASCII_HEX_DIGIT+ }
+
+number_bin = _ { ("+" | "-")? ~ "0b" ~ ASCII_BIN_DIGIT+ }
+
+
+WHITESPACE = _ { " "
+               | "\t"
+               | WHITE_SPACE
+               | NEWLINE
+               }
+
+COMMENT = _ { "//" ~ (!NEWLINE ~ ANY)* ~ NEWLINE? }

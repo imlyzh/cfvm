@@ -153,6 +153,10 @@ impl FromGast for GlobalValue {
     type Target = Self;
 
     fn from_gast(ast: &GAst) -> Result<Self::Target, ()> {
+        match ast {
+            GAst::Const(x) => todo!(),
+            GAst::List(_) => todo!(),
+        }
         todo!()
     }
 }

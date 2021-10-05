@@ -2,14 +2,17 @@ use std::{collections::BTreeSet, sync::Arc};
 
 use sexpr_ir::gast::Handle;
 
-use super::{MutHandle, handles::{LabelHandle, LocalHandle, LocalSymbol, ValueHandle}, types::{FloatType, IntType, Type}};
+use super::{
+    handles::{LabelHandle, LocalHandle, LocalSymbol, ValueHandle},
+    types::{FloatType, IntType, Type},
+    MutHandle,
+};
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum BranchOp {
     IfNil,
     IfNonNil,
 }
-
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum ICmpOp {
@@ -52,7 +55,6 @@ pub enum Index {
 }
 
 pub type IndexList = Vec<Index>;
-
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum AllocaType {
@@ -109,7 +111,6 @@ pub struct BindMetadata {
     pub is_volatile: IsVolatile,
     pub is_mutable: Option<bool>,
 }
-
 
 #[derive(Debug, Clone)]
 pub enum Instruction {

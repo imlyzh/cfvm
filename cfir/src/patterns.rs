@@ -2,7 +2,6 @@ use lazy_static::*;
 use sexpr_ir::syntax::sexpr::one_unit_parse;
 use sexpr_process::pattern::ListPattern;
 
-
 macro_rules! impl_pattern {
     ($name:ident, $e:expr) => {
         lazy_static! {
@@ -15,11 +14,20 @@ macro_rules! impl_pattern {
 impl_pattern!(MODULE, "('unnamed-module defines ...)");
 impl_pattern!(NAMED_MODULE, "('module name defines ...)");
 
-impl_pattern!(FUNCTION_DECL, "('function-decl attrs name ret-type param-type)");
-impl_pattern!(FUNCTION_DEF, "('function attrs name ret-type param-type lines ...)");
+impl_pattern!(
+    FUNCTION_DECL,
+    "('function-decl attrs name ret-type param-type)"
+);
+impl_pattern!(
+    FUNCTION_DEF,
+    "('function attrs name ret-type param-type lines ...)"
+);
 
 impl_pattern!(GLOBAL_CONST_DEF, "('const attrs global-name expr)");
-impl_pattern!(GLOBAL_VARIABLE_DEF, "('var attrs global-name type expr ...)");
+impl_pattern!(
+    GLOBAL_VARIABLE_DEF,
+    "('var attrs global-name type expr ...)"
+);
 
 impl_pattern!(TYPE_DEF, "('type attrs name type)");
 
@@ -54,7 +62,6 @@ impl_pattern!(ARRAY_TYPE, "('array type number)");
 impl_pattern!(VECTOR_TYPE, "('vector simple-type number)");
 
 //
-
 
 impl_pattern!(LABEL_DEF, "('label label-name)");
 

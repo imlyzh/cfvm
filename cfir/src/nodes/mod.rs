@@ -1,20 +1,21 @@
-pub mod parser;
-pub mod types;
-pub mod instruction;
 pub mod basicblock;
 pub mod handles;
+pub mod instruction;
+pub mod parser;
+pub mod types;
 
-use std::{collections::HashMap, sync::{Arc, RwLock}};
+use std::{
+    collections::HashMap,
+    sync::{Arc, RwLock},
+};
 
-use sexpr_ir::gast::Handle;
 use basicblock::*;
+use sexpr_ir::gast::Handle;
 use types::*;
 
 use self::handles::{ConstantDef, DefineSymbol, LabelSymbol, TypeDef, VariableDef};
 
-
 pub type MutHandle<T> = Arc<RwLock<T>>;
-
 
 #[derive(Debug, Clone)]
 pub struct Module {
@@ -26,24 +27,22 @@ pub struct Module {
     pub function_decls: HashMap<Handle<String>, FunctionDecl>,
 }
 
-
 #[derive(Debug, Clone)]
 pub struct FunctionDecl {
-    pub is_public: bool,
     pub name: DefineSymbol,
     pub header: FunctionType,
-    // metadatas
 }
 
 impl GetType for FunctionDecl {
     fn get_type(&self) -> Type {
         let func_type = Type::FunctionType(self.header.clone());
         // let r = func_type;
-        let r = Type::FirstClassType(FirstClassType::SimpleType(SimpleType::Pointer(PointerType(Box::new(func_type)))));
+        let r = Type::FirstClassType(FirstClassType::SimpleType(SimpleType::Pointer(
+            PointerType(Box::new(func_type)),
+        )));
         r
     }
 }
-
 
 #[derive(Debug, Clone)]
 pub struct FunctionDef {
@@ -55,12 +54,13 @@ pub struct FunctionDef {
     pub block_map: HashMap<LabelSymbol, usize>,
 }
 
-
 impl GetType for FunctionDef {
     fn get_type(&self) -> Type {
         let func_type = Type::FunctionType(self.header.clone());
         // let r = func_type;
-        let r = Type::FirstClassType(FirstClassType::SimpleType(SimpleType::Pointer(PointerType(Box::new(func_type)))));
+        let r = Type::FirstClassType(FirstClassType::SimpleType(SimpleType::Pointer(
+            PointerType(Box::new(func_type)),
+        )));
         r
     }
 }

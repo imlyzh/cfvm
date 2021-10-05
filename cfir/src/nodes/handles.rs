@@ -1,9 +1,13 @@
-use std::{sync::{Arc, RwLock}};
+use std::sync::{Arc, RwLock};
 
 use sexpr_ir::gast::Handle;
 
-use super::{FunctionDecl, FunctionDef, basicblock::BasicBlockDef, instruction::Instruction, types::{GetType, Type}};
-
+use super::{
+    basicblock::BasicBlockDef,
+    instruction::Instruction,
+    types::{GetType, Type},
+    FunctionDecl, FunctionDef,
+};
 
 #[derive(Debug, Hash, Clone, Eq, PartialEq)]
 pub struct DefineSymbol(pub Handle<String>);
@@ -20,22 +24,18 @@ pub struct LabelSymbol(pub Handle<String>);
 #[derive(Debug, Hash, Clone, Eq, PartialEq)]
 pub struct TypeSymbol(pub Handle<String>);
 
-
-
 #[derive(Debug, Hash, Clone, Eq, PartialEq)]
 pub enum LazyLoadSymbol<T, R> {
     Symbol(T),
-    Reference(R)
+    Reference(R),
 }
 
 #[derive(Debug, Clone)]
 pub struct SymbolHandle<T, R>(pub Arc<RwLock<LazyLoadSymbol<T, R>>>);
 
-
 // local value
 
 pub type LocalHandle = SymbolHandle<LocalSymbol, Arc<Instruction>>;
-
 
 // global value
 
@@ -72,28 +72,25 @@ impl GetType for GlobalValue {
 
 pub type GlobalHandle = SymbolHandle<GlobalSymbol, GlobalValue>;
 
-
 // union value
 
 #[derive(Debug, Hash, Clone, Eq, PartialEq)]
 pub enum SymbolRef {
     Local(LocalSymbol),
-    Global(GlobalSymbol)
+    Global(GlobalSymbol),
 }
 
 #[derive(Debug, Clone)]
 pub enum ValueRef {
     Local(Arc<Instruction>),
-    Global(GlobalValue)
+    Global(GlobalValue),
 }
 
 pub type ValueHandle = SymbolHandle<SymbolRef, ValueRef>;
 
-
 // basic block symbols
 
 pub type LabelHandle = SymbolHandle<LabelSymbol, Arc<BasicBlockDef>>;
-
 
 // type
 
@@ -112,8 +109,12 @@ pub type TypeHandle = SymbolHandle<TypeSymbol, Arc<Type>>;
 pub struct ConstantDef(pub bool, pub DefineSymbol, pub Type, pub GlobalValue);
 
 #[derive(Debug, Clone)]
-pub struct VariableDef(pub bool, pub DefineSymbol, pub Type, pub Option<GlobalValue>);
-
+pub struct VariableDef(
+    pub bool,
+    pub DefineSymbol,
+    pub Type,
+    pub Option<GlobalValue>,
+);
 
 #[derive(Debug, Clone)]
 pub struct Attris(pub Vec<Handle<String>>);

@@ -2,7 +2,6 @@ use std::sync::Arc;
 
 use super::{handles::LocalSymbol, instruction::AllocaType};
 
-
 pub trait GetType {
     fn get_type(&self) -> Type;
 }
@@ -47,9 +46,8 @@ pub struct RecordType {
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct FunctionType {
-    pub return_type: Box<Type>,
-    pub params: Vec<(Option<LocalSymbol>,
-        Option<AllocaType>, Type)>,
+    pub return_type: (Option<AllocaType>, Box<Type>),
+    pub params: Vec<(Option<LocalSymbol>, Option<AllocaType>, Type)>,
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
@@ -74,7 +72,6 @@ pub enum FloatType {
     PpcF128 = 5,
 }
 
-
 pub trait Unify {
     type Target;
     fn unify(&self, other: &Self) -> Option<Self::Target>;
@@ -87,10 +84,12 @@ impl Unify for Type {
         match (self, other) {
             (Type::Void, _) => Some(Type::Void),
             (t, Type::Void) => Some(t.clone()),
-            (Type::FirstClassType(t1), Type::FirstClassType(t2)) =>
-                t1.unify(t2).map(Type::FirstClassType),
-            (Type::FunctionType(t1), Type::FunctionType(t2)) =>
-                t1.unify(t2).map(Type::FunctionType),
+            (Type::FirstClassType(t1), Type::FirstClassType(t2)) => {
+                t1.unify(t2).map(Type::FirstClassType)
+            }
+            (Type::FunctionType(t1), Type::FunctionType(t2)) => {
+                t1.unify(t2).map(Type::FunctionType)
+            }
             _ => None,
         }
     }
@@ -115,25 +114,35 @@ impl Unify for FunctionType {
     type Target = Self;
 
     fn unify(&self, other: &Self) -> Option<Self::Target> {
-        let return_type = self.return_type.unify(&other.return_type)?;
-        let return_type = Box::new(return_type);
-        let params: Option<Vec<(_, _)>> = self.params
+        let return_type = if self.return_type.0 == other.return_type.0 {
+            (
+                self.return_type.0.clone(),
+                Box::new(self.return_type.1.unify(&other.return_type.1)?),
+            )
+        } else {
+            return None;
+        };
+        let params: Option<Vec<(_, _)>> = self
+            .params
             .iter()
             .zip(other.params.iter())
-            .map(|((_, a1, t1), (_, a2, t2))|
+            .map(|((_, a1, t1), (_, a2, t2))| {
                 if a1 == a2 {
                     Some((a1.clone(), t1.unify(t2)?))
                 } else {
                     None
-                })
+                }
+            })
             .collect();
         let params = params?;
         let params = params.into_iter().map(|(a, t)| (None, a, t)).collect();
-        let r = FunctionType { return_type, params };
+        let r = FunctionType {
+            return_type,
+            params,
+        };
         Some(r)
     }
 }
-
 
 pub trait GetSize {
     fn get_size(&self, platform_size: u8) -> Option<u64>;
@@ -174,19 +183,19 @@ impl GetSize for SimpleType {
 impl GetSize for VectorType {
     fn get_size(&self, platform_size: u8) -> Option<u64> {
         let VectorType(t, s) = self;
-        t.get_size(platform_size).map(|x|x*s)
+        t.get_size(platform_size).map(|x| x * s)
     }
 }
 
 impl GetSize for ArrayType {
     fn get_size(&self, platform_size: u8) -> Option<u64> {
         let ArrayType(t, s) = self;
-        t.get_size(platform_size).map(|x|x*s)
+        t.get_size(platform_size).map(|x| x * s)
     }
 }
 
 fn size_align(i: u64, platform_size: u8) -> u64 {
-    let platform_size  = platform_size as u64;
+    let platform_size = platform_size as u64;
     let i_mod = i % platform_size;
     if i_mod == 0 {
         i
@@ -201,7 +210,7 @@ impl GetSize for RecordType {
         if self.not_aligned {
             r.sum()
         } else {
-            r.map(|x| x.map(|x| size_align(x,  platform_size))).sum()
+            r.map(|x| x.map(|x| size_align(x, platform_size))).sum()
         }
     }
 }

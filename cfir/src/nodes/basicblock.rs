@@ -1,6 +1,4 @@
-
-use super::{MutHandle, handles::LabelSymbol, instruction::*};
-
+use super::{handles::LabelSymbol, instruction::*, MutHandle};
 
 #[derive(Debug, Clone)]
 pub struct BasicBlockDef {

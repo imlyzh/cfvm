@@ -63,7 +63,7 @@ pub enum AllocaType {
 
 #[derive(Debug, Clone)]
 pub enum Operator {
-    Alloca(Option<AllocaType>, Type, ValueHandle),
+    Alloca(Option<AllocaType>, Type, Option<ValueHandle>),
     GetPtr(ValueHandle),
     Load(Type, ValueHandle),
     Cast(Type, ValueHandle),
@@ -104,7 +104,7 @@ type IsVolatile = bool;
 #[derive(Debug, Clone)]
 pub struct BindMetadata {
     pub is_atomic: bool,
-    // pub is_volatile: bool,
+    pub is_volatile: bool,
     pub is_mutable: bool,
 }
 

@@ -1,26 +1,51 @@
 
-
 module = { "mod" ~ symbol ~ ":" ~ module_body* ~ EOI }
 
 module_body =
     { function
-    // function_decls
-    // | type_def
-    // | const_def
-    // | var_def
+    | function_decl
+    | type_def
+    | const_def
+    | var_def
     }
 
+type_def = {
+    is_pub ~ type_define_symbol ~ "=" ~ _type
+}
+
+const_def = {
+    is_pub ~ "const" ~ global_define_symbol ~ ":" ~ _type ~ "=" ~ const_value
+}
+
+var_def = {
+    is_pub ~ "var" ~ global_define_symbol ~ ":" ~ _type ~ ("=" ~ const_value)?
+}
+
+const_value = ${
+    "const_value"
+}
+
+function_decl = {
+    "import" ~ "fn" ~ global_symbol ~ function_type ~ ";"
+}
+
 function = {
-    is_public ~ "fn" ~ global_symbol ~
+    function_attr ~ "fn" ~ global_symbol ~
     function_type ~ "{" ~ blocks ~ "}"
 }
 
-is_public = { "pub"? }
+function_attr = { is_extern ~ is_pub ~ is_inline }
+
+is_extern = { "extern"? }
+
+is_pub = { "pub"? }
+
+is_inline = { ("inline" | "const")? }
 
 // types
 
 function_type = {
-    params ~ "->" ~ _type
+    params ~ "->" ~ type_bind_metadata
 }
 
 params = {
@@ -28,8 +53,10 @@ params = {
 }
 
 params_pair = {
-    params_name ~ ":" ~ _type
+    params_name ~ ":" ~ type_bind_metadata
 }
+
+type_bind_metadata = { _type ~ ("," ~ alloca_type)? }
 
 params_name = @
     { "_"
@@ -40,6 +67,7 @@ _type =
     { void
     | first_class_type
     | function_type
+    | type_symbol
     }
 
 void = @{ "void" }
@@ -120,22 +148,180 @@ inst =
     }
 
 store = {
-    "store" ~ is_volatile ~ local_symbol ~ value
+    "store" ~ is_atomic ~ is_volatile ~ local_symbol ~ value
 }
 
 is_volatile = { "volatile"? }
 
 bind = {
-    local_symbol ~ is_atomic ~ is_mutable ~ operator
+    local_symbol ~ "=" ~ is_atomic ~ is_volatile ~ is_mutable ~ operator
 }
 
 is_atomic = { "atomic"? }
 
 is_mutable = { "mut"? }
 
-operator = {
-    "todo"
+operator =
+    { alloca
+    | get_ptr
+    | load
+    | cast
+    | add
+    | fadd
+    | sub
+    | fsub
+    | mul
+    | fmul
+    | udiv
+    | sdiv
+    | urem
+    | srem
+    | frem
+    | shl
+    | lshr
+    | ashr
+    | and
+    | or
+    | xor
+    | get_value
+    | get_item
+    | set_value
+    | set_item
+    | trunc
+    | zext
+    | sext
+    | ftrunc
+    | fext
+    | icmp
+    | fcmp
+    | phi
+    | call
 }
+
+alloca = {
+    "alloca" ~ alloca_type ~ _type ~ value?
+}
+
+alloca_type = {
+    ( alloca_type_reg
+    | alloca_type_stack)?
+}
+
+alloca_type_reg = {
+    is_extend ~ "reg" ~ (reg_range | reg_range | reg_number)
+}
+
+is_extend = { "extend"? }
+
+reg_enum = { "(" ~ reg_number ~ ("," ~ reg_number)* ~ ")" }
+
+reg_range = { reg_number ~ "-" ~ reg_number }
+
+reg_number = { number }
+
+alloca_type_stack = _{ "stack" }
+
+
+get_ptr = {
+    "get-ptr" ~ value
+}
+
+load = {
+    "load" ~ _type ~ value
+}
+
+cast = {
+    "cast" ~ _type ~ value
+}
+
+add = { "add" ~ value ~ "," ~ value }
+fadd = { "fadd" ~ value ~ "," ~ value }
+sub = { "sub" ~ value ~ "," ~ value }
+fsub = { "fsub" ~ value ~ "," ~ value }
+mul = { "mul" ~ value ~ "," ~ value }
+fmul = { "fmul" ~ value ~ "," ~ value }
+udiv = { "udiv" ~ value ~ "," ~ value }
+sdiv = { "sdiv" ~ value ~ "," ~ value }
+urem = { "urem" ~ value ~ "," ~ value }
+srem = { "srem" ~ value ~ "," ~ value }
+frem = { "frem" ~ value ~ "," ~ value }
+shl = { "shl" ~ value ~ "," ~ value }
+lshr = { "lshr" ~ value ~ "," ~ value }
+ashr = { "ashr" ~ value ~ "," ~ value }
+and = { "and" ~ value ~ "," ~ value }
+or = { "or" ~ value ~ "," ~ value }
+xor = { "xor" ~ value ~ "," ~ value }
+
+get_value = { "get-value" ~ value ~ index_list }
+
+get_item = { "get-item" ~ value ~ value }
+
+set_item = { "set-item" ~ value ~ index_list ~ value }
+
+set_value = { "set-item" ~ value ~ value ~ value }
+
+trunc = { "trunc" ~ int_type ~ value }
+zext = { "zext" ~ int_type ~ value }
+sext = { "sext" ~ int_type ~ value }
+
+ftrunc = { "ftrunc" ~ float_type ~ value }
+fext = { "fext" ~ float_type ~ value }
+
+icmp = { "icmp" ~ icmp_op ~ value ~ "," ~ value }
+fcmp = { "fcmp" ~ fcmp_op ~ value ~ "," ~ value }
+
+icmp_op =
+    { "eq"
+    | "ne"
+    | "sge"
+    | "sgt"
+    | "sle"
+    | "slt"
+    | "uge"
+    | "ugt"
+    | "ule"
+    | "ult"
+    }
+
+fcmp_op =
+    { "false"
+    | "oeq"
+    | "oge"
+    | "ogt"
+    | "ole"
+    | "olt"
+    | "one"
+    | "ord"
+    | "true"
+    | "ueq"
+    | "uge"
+    | "ugt"
+    | "ule"
+    | "ult"
+    | "une"
+    | "uno"
+    }
+
+phi = {
+    "phi" ~ "[" ~ phi_pair ~ ("," ~ phi_pair)* ~ "]"
+}
+
+phi_pair = {
+    label_symbol ~ ":" ~ value
+}
+
+call = {
+    "call" ~ value ~ "(" ~ value ~ ("," ~ value)* ~ ")"
+}
+
+index_list = {
+    index ~ ("." ~ index)*
+}
+
+index =
+    { symbol
+    | number
+    }
 
 terminator =
     { ret
@@ -150,8 +336,13 @@ ret = {
 }
 
 branch = {
-    "br" ~ value ~ "?" ~ label_symbol ~ "," ~ label_symbol
+    "br" ~ branch_op ~ value ~ "?" ~ label_symbol ~ "," ~ label_symbol
 }
+
+branch_op = {
+    ( "if-nil"
+    | "if-non-nil")?
+    }
 
 conds = {
     "conds" ~ "[" ~ conds_pair ~ ("," ~ conds_pair)* ~ "]"
@@ -170,11 +361,14 @@ unrechable = { "unrechable" }
 value =
     { local_symbol
     | global_symbol
+    | const_value
     }
 
-local_symbol = ${ "$" ~ symbol }
+global_symbol = ${ (symbol ~ ".")? ~ global_define_symbol }
 
-global_symbol = ${ "@" ~ symbol }
+global_define_symbol = ${ "@" ~ symbol }
+
+local_symbol = ${ "$" ~ symbol }
 
 label_symbol = ${ "%" ~ symbol }
 
@@ -182,6 +376,20 @@ symbol = $
     { _quoted_name
     | _name
     | _id
+}
+
+type_symbol = ${
+    (symbol ~ ".")? ~ type_define_symbol
+}
+
+type_define_symbol = $
+    { _quoted_name
+    | _name
+    | type_id
+    }
+
+type_id = _{
+    "t" ~ _id
 }
 
 _quoted_name = @{ "\"" ~ (!"\"" ~ ANY)* ~ "\"" }

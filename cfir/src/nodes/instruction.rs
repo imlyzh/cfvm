@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{collections::BTreeSet, sync::Arc};
 
 use sexpr_ir::gast::Handle;
 
@@ -54,11 +54,12 @@ pub enum Index {
 pub type IndexList = Vec<Index>;
 
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum AllocaType {
     Register(usize),
+    RegisterRange(usize, usize),
+    Registers(BTreeSet<usize>),
     Stack,
-    Heap,
 }
 
 #[derive(Debug, Clone)]
@@ -99,13 +100,14 @@ pub enum Operator {
     Call(ValueHandle, Vec<ValueHandle>),
 }
 
+type IsAtomic = bool;
 type IsVolatile = bool;
 
 #[derive(Debug, Clone)]
 pub struct BindMetadata {
-    pub is_atomic: bool,
-    pub is_volatile: bool,
-    pub is_mutable: bool,
+    pub is_atomic: IsAtomic,
+    pub is_volatile: IsVolatile,
+    pub is_mutable: Option<bool>,
 }
 
 

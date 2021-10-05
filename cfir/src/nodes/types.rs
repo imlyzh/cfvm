@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use super::handles::LocalSymbol;
+use super::{handles::LocalSymbol, instruction::AllocaType};
 
 
 pub trait GetType {
@@ -48,7 +48,8 @@ pub struct RecordType {
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct FunctionType {
     pub return_type: Box<Type>,
-    pub params: Vec<(Option<LocalSymbol>, Type)>,
+    pub params: Vec<(Option<LocalSymbol>,
+        Option<AllocaType>, Type)>,
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
@@ -116,13 +117,18 @@ impl Unify for FunctionType {
     fn unify(&self, other: &Self) -> Option<Self::Target> {
         let return_type = self.return_type.unify(&other.return_type)?;
         let return_type = Box::new(return_type);
-        let params: Option<Vec<_>> = self.params
+        let params: Option<Vec<(_, _)>> = self.params
             .iter()
             .zip(other.params.iter())
-            .map(|((_, t1), (_, t2))| t1.unify(t2))
+            .map(|((_, a1, t1), (_, a2, t2))|
+                if a1 == a2 {
+                    Some((a1.clone(), t1.unify(t2)?))
+                } else {
+                    None
+                })
             .collect();
         let params = params?;
-        let params = params.into_iter().map(|t| (None, t)).collect();
+        let params = params.into_iter().map(|(a, t)| (None, a, t)).collect();
         let r = FunctionType { return_type, params };
         Some(r)
     }

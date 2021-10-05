@@ -44,12 +44,24 @@ impl GetType for FunctionDecl {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum InlineType {
+    Inline,
+    Const,
+}
+
+#[derive(Debug, Clone)]
+pub struct FunctionAttr {
+    pub is_extern: bool,
+    pub is_public: bool,
+    pub is_inline: Option<InlineType>,
+}
+
 #[derive(Debug, Clone)]
 pub struct FunctionDef {
     pub name: DefineSymbol,
-    pub is_public: bool,
     pub header: FunctionType,
-    // metadatas
+    pub function_attr: FunctionAttr,
     pub blocks: Vec<MutHandle<BasicBlockDef>>,
     pub block_map: HashMap<LabelSymbol, usize>,
 }

@@ -127,8 +127,18 @@ impl ParseFrom<Rule> for TypeSymbol {
 
 impl ParseFrom<Rule> for Symbol {
     fn parse_from(pair: Pair<Rule>) -> Self {
-        debug_assert_eq!(pair.as_rule(), Rule::type_symbol);
+        debug_assert_eq!(pair.as_rule(), Rule::symbol);
         Symbol(Handle::new(pair.as_str().to_string())) // fixme: register in global intern string pool
+    }
+}
+
+fn optional_symbol_parse_from(pair: Pair<Rule>) -> Option<Symbol> {
+    debug_assert_eq!(pair.as_rule(), Rule::params_name);
+    let pair = pair.into_inner().next().unwrap();
+    match pair.as_rule() {
+        Rule::symbol => Some(Symbol::parse_from(pair)), // fixme: register in global internstring pool
+        Rule::UNDERLINE => None,
+        _ => unreachable!(),
     }
 }
 
@@ -151,13 +161,21 @@ impl ParseFrom<Rule> for ArrayType {
     }
 }
 
+fn record_kv_pair(pair: Pair<Rule>) -> (Option<Symbol>, Type) {
+    debug_assert_eq!(pair.as_rule(), Rule::record_kv_pair);
+    let mut pairs = pair.into_inner();
+    let key = optional_symbol_parse_from(pairs.next().unwrap());
+    let value = Type::parse_from(pairs.next().unwrap());
+    (key, value)
+}
+
 impl ParseFrom<Rule> for RecordType {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::record_type);
         let mut pairs = pair.into_inner();
         let is_not_aligned = IsNotAligned::parse_from(pairs.next().unwrap());
-        // pairs.map(f)
-        todo!()
+        let kvs = pairs.map(record_kv_pair).collect();
+        RecordType (is_not_aligned, kvs)
     }
 }
 

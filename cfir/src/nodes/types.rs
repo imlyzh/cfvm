@@ -40,15 +40,19 @@ pub struct ArrayType(pub Box<Type>, pub u64);
 pub struct IsNotAligned(pub bool);
 
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub struct RecordType {
-    pub not_aligned: IsNotAligned,
-    pub record: Vec<(Option<Symbol>, Type)>,
-}
+pub struct RecordType (pub IsNotAligned, pub Vec<(Option<Symbol>, Type)>);
+
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct TypeBindAttr(pub Box<Type>, pub Option<AllocaType>);
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct ParamsType(pub Vec<(Option<LocalSymbol>, TypeBindAttr)>);
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct FunctionType {
-    pub return_type: (Option<AllocaType>, Box<Type>),
-    pub params: Vec<(Option<LocalSymbol>, Option<AllocaType>, Type)>,
+    pub return_type: TypeBindAttr,
+    pub params: ParamsType,
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
@@ -116,18 +120,19 @@ impl Unify for FunctionType {
 
     fn unify(&self, other: &Self) -> Option<Self::Target> {
         let return_type = if self.return_type.0 == other.return_type.0 {
-            (
-                self.return_type.0.clone(),
-                Box::new(self.return_type.1.unify(&other.return_type.1)?),
+            TypeBindAttr(
+                Box::new(self.return_type.0.unify(&other.return_type.0)?),
+                self.return_type.1.clone(),
             )
         } else {
             return None;
         };
         let params: Option<Vec<(_, _)>> = self
             .params
+            .0
             .iter()
-            .zip(other.params.iter())
-            .map(|((_, a1, t1), (_, a2, t2))| {
+            .zip(other.params.0.iter())
+            .map(|((_, TypeBindAttr(t1, a1)), (_, TypeBindAttr(t2, a2)))| {
                 if a1 == a2 {
                     Some((a1.clone(), t1.unify(t2)?))
                 } else {
@@ -136,7 +141,11 @@ impl Unify for FunctionType {
             })
             .collect();
         let params = params?;
-        let params = params.into_iter().map(|(a, t)| (None, a, t)).collect();
+        let params = params
+            .into_iter()
+            .map(|(a, t)| (None, TypeBindAttr(Box::new(t), a)))
+            .collect();
+        let params = ParamsType(params);
         let r = FunctionType {
             return_type,
             params,
@@ -207,8 +216,8 @@ fn size_align(i: u64, platform_size: u8) -> u64 {
 
 impl GetSize for RecordType {
     fn get_size(&self, platform_size: u8) -> Option<u64> {
-        let r = self.record.iter().map(|(_, t)| t.get_size(platform_size));
-        if self.not_aligned.0 {
+        let r = self.1.iter().map(|(_, t)| t.get_size(platform_size));
+        if self.0.0 {
             r.sum()
         } else {
             r.map(|x| x.map(|x| size_align(x, platform_size))).sum()

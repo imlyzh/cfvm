@@ -6,6 +6,7 @@ use pest_derive::*;
 use crate::nodes::*;
 use crate::nodes::handles::*;
 use crate::nodes::instruction::*;
+use crate::nodes::instruction::Store;
 
 
 #[derive(Parser)]
@@ -151,15 +152,29 @@ impl ParseFrom<Rule> for IsNotAligned {
     }
 }
 
-/// symbols ////////////////////////////////////////////////////////////////////////////////////
-
-impl ParseFrom<Rule> for LabelSymbol {
+impl ParseFrom<Rule> for IsAtomic {
     fn parse_from(pair: Pair<Rule>) -> Self {
-        debug_assert_eq!(pair.as_rule(), Rule::label_symbol);
-        let pair = pair.into_inner().next().unwrap();
-        LabelSymbol(Handle::new(pair.as_str().to_string())) // fixme: register in global intern string pool
+        debug_assert_eq!(pair.as_rule(), Rule::is_atomic);
+        if pair.as_str() == "atomic" {
+            IsAtomic(true)
+        } else {
+            IsAtomic(false)
+        }
     }
 }
+
+impl ParseFrom<Rule> for IsVolatile {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::is_volatile);
+        if pair.as_str() == "volatile" {
+            IsVolatile(true)
+        } else {
+            IsVolatile(false)
+        }
+    }
+}
+
+/// symbols ////////////////////////////////////////////////////////////////////////////////////
 
 impl ParseFrom<Rule> for DefineSymbol {
     fn parse_from(pair: Pair<Rule>) -> Self {
@@ -191,6 +206,20 @@ impl ParseFrom<Rule> for TypeDefineSymbol {
     }
 }
 
+impl ParseFrom<Rule> for LabelSymbol {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::label_symbol);
+        let pair = pair.into_inner().next().unwrap();
+        LabelSymbol(Handle::new(pair.as_str().to_string())) // fixme: register in global intern string pool
+    }
+}
+
+impl ParseFrom<Rule> for LabelHandle {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        LabelHandle::from(LabelSymbol::parse_from(pair))
+    }
+}
+
 impl ParseFrom<Rule> for LocalSymbol {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::local_symbol);
@@ -206,6 +235,12 @@ impl ParseFrom<Rule> for LocalSymbol {
     }
 }
 
+impl ParseFrom<Rule> for LocalHandle {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        LocalHandle::from(LocalSymbol::parse_from(pair))
+    }
+}
+
 impl ParseFrom<Rule> for GlobalSymbol {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::global_symbol);
@@ -218,6 +253,12 @@ impl ParseFrom<Rule> for GlobalSymbol {
             GlobalSymbol(None, Handle::new(sym))
         }
         // fixme: register in global intern string pool
+    }
+}
+
+impl ParseFrom<Rule> for GlobalHandle {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        GlobalHandle::from(GlobalSymbol::parse_from(pair))
     }
 }
 
@@ -653,10 +694,46 @@ impl ParseFrom<Rule> for FunctionDef {
 
 /// insts //////////////////////////////////////////////////////////////////////////////////////
 
+impl ParseFrom<Rule> for Store {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::store);
+        let mut pairs = pair.into_inner();
+        let is_atomic = IsAtomic::parse_from(pairs.next().unwrap());
+        let is_volatile = IsVolatile::parse_from(pairs.next().unwrap());
+        let dst = LocalHandle::parse_from(pairs.next().unwrap());
+        let src = ValueHandle::parse_from(pairs.next().unwrap());
+        Store(dst, src, is_atomic, is_volatile)
+    }
+}
+
+impl ParseFrom<Rule> for BindOperator {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::bind);
+        let mut pairs = pair.into_inner();
+        let symbol = LocalSymbol::parse_from(pairs.next().unwrap());
+        let is_atomic = IsAtomic::parse_from(pairs.next().unwrap());
+        let is_volatile = IsVolatile::parse_from(pairs.next().unwrap());
+        let operator = Operator::parse_from(pairs.next().unwrap());
+        BindOperator(symbol, Handle::new(RwLock::new(operator)), is_atomic, is_volatile)
+    }
+}
+
+impl ParseFrom<Rule> for Operator {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        todo!()
+    }
+}
+
 impl ParseFrom<Rule> for Instruction {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::inst);
-        todo!()
+        let pair = pair.into_inner().next().unwrap();
+        match pair.as_rule() {
+            Rule::store => Instruction::Store(Store::parse_from(pair)),
+            Rule::bind => Instruction::BindOperator(BindOperator::parse_from(pair)),
+            Rule::operator => Instruction::Operator(Handle::new(RwLock::new(Operator::parse_from(pair)))),
+            _ => unreachable!(),
+        }
     }
 }
 
@@ -691,7 +768,6 @@ fn conds_pair_parse_from(pair: Pair<Rule>) -> {
 impl ParseFrom<Rule> for Conds {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::conds);
-        todo!()
     }
 }
 */
@@ -701,8 +777,7 @@ fn switch_pair_parse_from(pair: Pair<Rule>) -> (SimpleValue, LabelHandle) {
     debug_assert_eq!(pair.as_rule(), Rule::switch_pair);
     let mut pairs = pair.into_inner();
     let value = SimpleValue::parse_from(pairs.next().unwrap());
-    let label = LabelSymbol::parse_from(pairs.next().unwrap());
-    let label = LabelHandle::from(label);
+    let label = LabelHandle::parse_from(pairs.next().unwrap());
     (value, label)
 }
 

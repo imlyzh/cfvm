@@ -1,4 +1,4 @@
-use std::{collections::BTreeSet, sync::Arc};
+use std::collections::BTreeSet;
 
 use sexpr_ir::gast::Handle;
 
@@ -106,20 +106,31 @@ pub enum Operator {
     Call(ValueHandle, Vec<ValueHandle>),
 }
 
-type IsAtomic = bool;
-type IsVolatile = bool;
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct IsAtomic (pub bool);
 
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct IsVolatile (pub bool);
+
+/*
 #[derive(Debug, Clone)]
 pub struct BindMetadata {
     pub is_atomic: IsAtomic,
     pub is_volatile: IsVolatile,
     pub is_mutable: Option<bool>,
 }
+*/
+
+#[derive(Debug, Clone)]
+pub struct Store(pub LocalHandle, pub ValueHandle, pub IsAtomic, pub IsVolatile);
+
+#[derive(Debug, Clone)]
+pub struct BindOperator(pub LocalSymbol, pub MutHandle<Operator>, pub IsAtomic, pub IsVolatile);
 
 #[derive(Debug, Clone)]
 pub enum Instruction {
-    Store(LocalHandle, ValueHandle, IsVolatile),
-    BindOperator(LocalSymbol, MutHandle<BindMetadata>, MutHandle<Operator>),
+    Store(Store),
+    BindOperator(BindOperator),
     Operator(MutHandle<Operator>),
 }
 

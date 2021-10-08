@@ -195,7 +195,7 @@ store = {
 is_volatile = { "volatile"? }
 
 bind = {
-    local_symbol ~ "=" ~ is_atomic ~ is_volatile ~ is_mutable ~ operator
+    local_symbol ~ "=" ~ is_atomic ~ is_volatile ~ operator
 }
 
 is_atomic = { "atomic"? }

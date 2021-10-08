@@ -5,7 +5,7 @@ use pest_derive::*;
 
 use crate::nodes::*;
 use crate::nodes::handles::*;
-use crate::nodes::instruction::{AllocaType, IsExtend, RegisterType};
+use crate::nodes::instruction::{AllocaType, Instruction, IsExtend, RegisterType, Terminator};
 
 
 #[derive(Parser)]
@@ -141,9 +141,18 @@ impl ParseFrom<Rule> for IsNotAligned {
 
 /// symbols ////////////////////////////////////////////////////////////////////////////////////
 
+impl ParseFrom<Rule> for LabelSymbol {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::label_symbol);
+        let pair = pair.into_inner().next().unwrap();
+        LabelSymbol(Handle::new(pair.as_str().to_string())) // fixme: register in global intern string pool
+    }
+}
+
 impl ParseFrom<Rule> for DefineSymbol {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::global_define_symbol);
+        let pair = pair.into_inner().next().unwrap();
         DefineSymbol(Handle::new(pair.as_str().to_string())) // fixme: register in global intern string pool
     }
 }
@@ -514,7 +523,6 @@ impl ParseFrom<Rule> for FunctionDecl {
 
 /// function def
 
-
 impl ParseFrom<Rule> for FunctionAttr {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::function_attr);
@@ -526,6 +534,38 @@ impl ParseFrom<Rule> for FunctionAttr {
     }
 }
 
+#[inline]
+fn insts_parse_from(pair: Pair<Rule>) -> Vec<MutHandle<Instruction>> {
+    debug_assert_eq!(pair.as_rule(), Rule::insts);
+    pair.into_inner().map(|x| Handle::new(RwLock::new(Instruction::parse_from(x)))).collect()
+}
+
+impl ParseFrom<Rule> for BasicBlockDef {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        let t = pair.as_rule();
+        debug_assert!(t == Rule::basic_block || t == Rule::basic_init_block);
+        let mut pairs = pair.into_inner();
+        let label = if let Rule::basic_block = t {
+            Some(LabelSymbol::parse_from(pairs.next().unwrap()))
+        } else {
+            None
+        };
+        let insts = insts_parse_from(pairs.next().unwrap());
+        let terminator = Terminator::parse_from(pairs.next().unwrap());
+        BasicBlockDef {
+            label,
+            instructions: Handle::new(RwLock::new(insts)),
+            terminator: Handle::new(RwLock::new(terminator)),
+        }
+    }
+}
+
+#[inline]
+fn blocks_parse_from(pair: Pair<Rule>) -> Vec<MutHandle<BasicBlockDef>> {
+    debug_assert_eq!(pair.as_rule(), Rule::blocks);
+    pair.into_inner().map(|x| Handle::new(RwLock::new(BasicBlockDef::parse_from(x)))).collect()
+}
+
 impl ParseFrom<Rule> for FunctionDef {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::function_def);
@@ -533,8 +573,35 @@ impl ParseFrom<Rule> for FunctionDef {
         let attr = FunctionAttr::parse_from(pairs.next().unwrap());
         let name = DefineSymbol::parse_from(pairs.next().unwrap());
         let header = FunctionType::parse_from(pairs.next().unwrap());
-        // todo: bodys
+        let blocks = blocks_parse_from(pairs.next().unwrap());
+        let block_map = blocks
+            .iter()
+            .enumerate()
+            .map(|(usize, x)| (x.read().unwrap().label.clone().unwrap(), usize))
+            .collect();
+        let block_map = Handle::new(RwLock::new(block_map));
+        FunctionDef {
+            name,
+            header,
+            function_attr: attr,
+            blocks: Handle::new(RwLock::new(blocks)),
+            block_map,
+        }
+    }
+}
+
+// insts ////////////////////////////////////////////////////////////////////////////////////
+
+impl ParseFrom<Rule> for Instruction {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::inst);
         todo!()
     }
 }
 
+impl ParseFrom<Rule> for Terminator {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::terminator);
+        todo!()
+    }
+}

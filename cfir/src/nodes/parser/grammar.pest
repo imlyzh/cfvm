@@ -170,15 +170,17 @@ blocks = {
 }
 
 basic_init_block = {
-    inst* ~
+    insts ~
     terminator
 }
 
 basic_block = {
     label_symbol ~ ":" ~
-    inst* ~
+    insts ~
     terminator
 }
+
+insts = { inst* }
 
 inst =
     { store

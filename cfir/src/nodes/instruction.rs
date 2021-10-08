@@ -2,11 +2,7 @@ use std::{collections::BTreeSet, sync::Arc};
 
 use sexpr_ir::gast::Handle;
 
-use super::{
-    handles::{LabelHandle, LocalHandle, LocalSymbol, ValueHandle},
-    types::{FloatType, IntType, Type},
-    MutHandle,
-};
+use super::{MutHandle, handles::{LabelHandle, LocalHandle, LocalSymbol, SimpleValue, ValueHandle}, types::{FloatType, IntType, Type}};
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum BranchOp {
@@ -128,10 +124,22 @@ pub enum Instruction {
 }
 
 #[derive(Debug, Clone)]
+pub struct Ret(pub Option<ValueHandle>);
+
+#[derive(Debug, Clone)]
+pub struct Branch(pub BranchOp, pub ValueHandle, pub LabelHandle, pub LabelHandle);
+
+#[derive(Debug, Clone)]
+pub struct Conds(pub Vec<(ValueHandle, LabelHandle)>, pub Option<LabelHandle>);
+
+#[derive(Debug, Clone)]
+pub struct Switch(pub ValueHandle, pub Vec<(SimpleValue, LabelHandle)>);
+
+#[derive(Debug, Clone)]
 pub enum Terminator {
-    Ret(Option<ValueHandle>),
-    Branch(BranchOp, ValueHandle, LabelHandle, LabelHandle),
-    Conds(Vec<(ValueHandle, LabelHandle)>),
-    Switch(ValueHandle, Arc<(u64, LabelHandle)>),
+    Ret(Ret),
+    Branch(Branch),
+    Conds(Conds),
+    Switch(Switch),
     Unrechable,
 }

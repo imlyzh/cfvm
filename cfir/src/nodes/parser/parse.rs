@@ -5,7 +5,7 @@ use pest_derive::*;
 
 use crate::nodes::*;
 use crate::nodes::handles::*;
-use crate::nodes::instruction::{AllocaType, Instruction, IsExtend, RegisterType, Terminator};
+use crate::nodes::instruction::*;
 
 
 #[derive(Parser)]
@@ -82,7 +82,6 @@ impl ParseFrom<Rule> for Module {
 
 /// attr tags /////////////////////////////////////////////////////////////////////////////////
 
-
 impl ParseFrom<Rule> for IsExtern {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::is_extern);
@@ -101,6 +100,19 @@ impl ParseFrom<Rule> for IsPublic {
             IsPublic(true)
         } else {
             IsPublic(false)
+        }
+    }
+}
+
+impl ParseFrom<Rule> for BranchOp {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::branch_op);
+        if pair.as_str() == "if-nil" {
+            BranchOp::IfNil
+        } else if pair.as_str() == "if-non-nil" {
+            BranchOp::IfNonNil
+        } else {
+            BranchOp::IfNil
         }
     }
 }
@@ -157,6 +169,21 @@ impl ParseFrom<Rule> for DefineSymbol {
     }
 }
 
+impl ParseFrom<Rule> for TypeSymbol {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::type_symbol);
+        let mut pairs = pair.into_inner();
+        let sym = pairs.next().unwrap().as_str().to_string();
+        if let Some(x) = pairs.next() {
+            let namespace = x.as_str().to_string();
+            TypeSymbol(Some(Handle::new(namespace)), Handle::new(sym))
+        } else {
+            TypeSymbol(None, Handle::new(sym))
+        }
+        // fixme: register in global intern string pool
+    }
+}
+
 impl ParseFrom<Rule> for TypeDefineSymbol {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::type_define_symbol);
@@ -164,11 +191,45 @@ impl ParseFrom<Rule> for TypeDefineSymbol {
     }
 }
 
-impl ParseFrom<Rule> for TypeSymbol {
+impl ParseFrom<Rule> for LocalSymbol {
     fn parse_from(pair: Pair<Rule>) -> Self {
-        debug_assert_eq!(pair.as_rule(), Rule::type_symbol);
-        TypeSymbol(Handle::new(pair.as_str().to_string())) // fixme: register in global intern string pool
-        // todo: pair namespace and name
+        debug_assert_eq!(pair.as_rule(), Rule::local_symbol);
+        let mut pairs = pair.into_inner();
+        let sym = pairs.next().unwrap().as_str().to_string();
+        if let Some(x) = pairs.next() {
+            let namespace = x.as_str().to_string();
+            LocalSymbol(Some(Handle::new(namespace)), Handle::new(sym))
+        } else {
+            LocalSymbol(None, Handle::new(sym))
+        }
+        // fixme: register in global intern string pool
+    }
+}
+
+impl ParseFrom<Rule> for GlobalSymbol {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::global_symbol);
+        let mut pairs = pair.into_inner();
+        let sym = pairs.next().unwrap().as_str().to_string();
+        if let Some(x) = pairs.next() {
+            let namespace = x.as_str().to_string();
+            GlobalSymbol(Some(Handle::new(namespace)), Handle::new(sym))
+        } else {
+            GlobalSymbol(None, Handle::new(sym))
+        }
+        // fixme: register in global intern string pool
+    }
+}
+
+impl ParseFrom<Rule> for ValueHandle {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::ret);
+        let pair = pair.into_inner().next().unwrap();
+        match pair.as_rule() {
+            Rule::local_symbol => SymbolHandle::from(SymbolRef::Local(LocalSymbol::parse_from(pair))),
+            Rule::global_symbol => SymbolHandle::from(SymbolRef::Global(GlobalSymbol::parse_from(pair))),
+            _ => unreachable!(),
+        }
     }
 }
 
@@ -590,7 +651,7 @@ impl ParseFrom<Rule> for FunctionDef {
     }
 }
 
-// insts ////////////////////////////////////////////////////////////////////////////////////
+/// insts //////////////////////////////////////////////////////////////////////////////////////
 
 impl ParseFrom<Rule> for Instruction {
     fn parse_from(pair: Pair<Rule>) -> Self {
@@ -599,9 +660,75 @@ impl ParseFrom<Rule> for Instruction {
     }
 }
 
+// terminators /////////////////////////////////////////////////////////////////////////////////
+
+impl ParseFrom<Rule> for Ret {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::ret);
+        let pair = pair.into_inner().next().unwrap();
+        let value = pair.into_inner().next().map(|x| ValueHandle::parse_from(x));
+        Ret(value)
+    }
+}
+
+impl ParseFrom<Rule> for Branch {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::branch);
+        let mut pairs = pair.into_inner();
+        let branch_op = BranchOp::parse_from(pairs.next().unwrap());
+        let cond = ValueHandle::parse_from(pairs.next().unwrap());
+        let true_block = LabelSymbol::parse_from(pairs.next().unwrap());
+        let false_block = LabelSymbol::parse_from(pairs.next().unwrap());
+        Branch(branch_op, cond, LabelHandle::from(true_block), LabelHandle::from(false_block))
+    }
+}
+
+/*
+fn conds_pair_parse_from(pair: Pair<Rule>) -> {
+
+}
+
+impl ParseFrom<Rule> for Conds {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::conds);
+        todo!()
+    }
+}
+*/
+
+#[inline]
+fn switch_pair_parse_from(pair: Pair<Rule>) -> (SimpleValue, LabelHandle) {
+    debug_assert_eq!(pair.as_rule(), Rule::switch_pair);
+    let mut pairs = pair.into_inner();
+    let value = SimpleValue::parse_from(pairs.next().unwrap());
+    let label = LabelSymbol::parse_from(pairs.next().unwrap());
+    let label = LabelHandle::from(label);
+    (value, label)
+}
+
+impl ParseFrom<Rule> for Switch {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::switch);
+        let mut pairs = pair.into_inner();
+        let cond = ValueHandle::parse_from(pairs.next().unwrap());
+        let map = pairs
+            .map(switch_pair_parse_from)
+            .collect();
+        Switch(cond, map)
+    }
+}
+
 impl ParseFrom<Rule> for Terminator {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::terminator);
-        todo!()
+        let pair = pair.into_inner().next().unwrap();
+        match pair.as_rule() {
+            Rule::ret => Terminator::Ret(Ret::parse_from(pair)),
+            Rule::branch => Terminator::Branch(Branch::parse_from(pair)),
+            // Rule::conds => Terminator::Conds(Conds::parse_from(pair)),
+            Rule::switch => Terminator::Switch(Switch::parse_from(pair)),
+            Rule::unrechable => Terminator::Unrechable,
+            _ => unreachable!(),
+        }
     }
 }

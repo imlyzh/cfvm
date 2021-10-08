@@ -11,20 +11,19 @@ use super::{
 
 
 #[derive(Debug, Hash, Clone, Eq, PartialEq)]
-pub struct GlobalSymbol(pub Handle<String>);
+pub struct GlobalSymbol(pub Option<Handle<String>>, pub Handle<String>);
 
 #[derive(Debug, Hash, Clone, Eq, PartialEq)]
-pub struct TypeSymbol(pub Handle<String>);
+pub struct LocalSymbol(pub Option<Handle<String>>, pub Handle<String>);
 
+#[derive(Debug, Hash, Clone, Eq, PartialEq)]
+pub struct TypeSymbol(pub Option<Handle<String>>, pub Handle<String>);
 
 #[derive(Debug, Hash, Clone, Eq, PartialEq)]
 pub struct Symbol(pub Arc<String>); // record line key, params name, etc.
 
 #[derive(Debug, Hash, Clone, Eq, PartialEq)]
 pub struct DefineSymbol(pub Handle<String>);
-
-#[derive(Debug, Hash, Clone, Eq, PartialEq)]
-pub struct LocalSymbol(pub Handle<String>);
 
 #[derive(Debug, Hash, Clone, Eq, PartialEq)]
 pub struct LabelSymbol(pub Handle<String>);

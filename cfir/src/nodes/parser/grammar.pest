@@ -367,7 +367,7 @@ index =
 terminator =
     { ret
     | branch
-    | conds
+    // | conds
     | switch
     | unrechable
     }
@@ -385,24 +385,30 @@ branch_op = {
     | "if-non-nil")?
     }
 
+/*
 conds = {
-    "conds" ~ "[" ~ conds_pair ~ ("," ~ conds_pair)* ~ "]"
+    "conds" ~ "[" ~ conds_pairs ~ conds_else_pair? ~ "]"
 }
 
+conds_pairs = { conds_pair ~ ("," ~ conds_pair)* }
+
 conds_pair = { value ~ ":" ~ label_symbol }
+
+conds_else_pair = { UNDERLINE ~ ":" ~ label_symbol }
+*/
 
 switch = {
     "switch" ~ value ~ "[" ~ switch_pair ~ ("," ~ switch_pair)* ~ "]"
 }
 
-switch_pair = { number ~ ":" ~ label_symbol }
+switch_pair = { simple_value ~ ":" ~ label_symbol }
 
 unrechable = { "unrechable" }
 
 value =
     { local_symbol
     | global_symbol
-    | constant_value
+    // | constant_value
     }
 
 global_symbol = ${ (symbol ~ ".")? ~ global_define_symbol }

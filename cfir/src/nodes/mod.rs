@@ -13,7 +13,7 @@ use basicblock::*;
 use sexpr_ir::gast::Handle;
 use types::*;
 
-use self::handles::{ConstantDef, DefineSymbol, LabelSymbol, TypeDef, TypeDefineSymbol, VariableDef};
+use self::handles::{ConstantDef, DefineSymbol, IsExtern, IsPublic, LabelSymbol, TypeDef, TypeDefineSymbol, VariableDef};
 
 pub type MutHandle<T> = Arc<RwLock<T>>;
 
@@ -52,8 +52,8 @@ pub enum InlineType {
 
 #[derive(Debug, Clone)]
 pub struct FunctionAttr {
-    pub is_extern: bool,
-    pub is_public: bool,
+    pub is_extern: IsExtern,
+    pub is_public: IsPublic,
     pub is_inline: Option<InlineType>,
 }
 

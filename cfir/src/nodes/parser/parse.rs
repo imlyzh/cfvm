@@ -80,16 +80,40 @@ impl ParseFrom<Rule> for Module {
     }
 }
 
-/// attr tags ////////////////////////////////////////////////////////////////////////////////////
+/// attr tags /////////////////////////////////////////////////////////////////////////////////
 
-impl ParseFrom<Rule> for IsPub {
+
+impl ParseFrom<Rule> for IsExtern {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::is_extern);
+        if pair.as_str() == "extern" {
+            IsExtern(true)
+        } else {
+            IsExtern(false)
+        }
+    }
+}
+
+impl ParseFrom<Rule> for IsPublic {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::is_pub);
         if pair.as_str() == "pub" {
-            IsPub(true)
+            IsPublic(true)
         } else {
-            IsPub(false)
+            IsPublic(false)
         }
+    }
+}
+
+#[inline]
+fn option_inline_type_parse_from(pair: Pair<Rule>) -> Option<InlineType> {
+    debug_assert_eq!(pair.as_rule(), Rule::is_inline);
+    if pair.as_str() == "inline" {
+        Some(InlineType::Inline)
+    } else if pair.as_str() == "const" {
+        Some(InlineType::Const)
+    } else {
+        None
     }
 }
 
@@ -447,7 +471,7 @@ impl ParseFrom<Rule> for TypeDef {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::type_def);
         let mut pairs = pair.into_inner();
-        let is_pub = IsPub::parse_from(pairs.next().unwrap());
+        let is_pub = IsPublic::parse_from(pairs.next().unwrap());
         let name = TypeDefineSymbol::parse_from(pairs.next().unwrap());
         let type_ = TypeHandle::parse_from(pairs.next().unwrap());
         TypeDef(is_pub, name, type_)
@@ -458,7 +482,7 @@ impl ParseFrom<Rule> for ConstantDef {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::constant_def);
         let mut pairs = pair.into_inner();
-        let is_pub = IsPub::parse_from(pairs.next().unwrap());
+        let is_pub = IsPublic::parse_from(pairs.next().unwrap());
         let name = DefineSymbol::parse_from(pairs.next().unwrap());
         let ty = Type::parse_from(pairs.next().unwrap());
         let const_value = ConstantValue::parse_from(pairs.next().unwrap());
@@ -470,7 +494,7 @@ impl ParseFrom<Rule> for VariableDef {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::variable_def);
         let mut pairs = pair.into_inner();
-        let is_pub = IsPub::parse_from(pairs.next().unwrap());
+        let is_pub = IsPublic::parse_from(pairs.next().unwrap());
         let name = DefineSymbol::parse_from(pairs.next().unwrap());
         let ty = Type::parse_from(pairs.next().unwrap());
         let const_value = pairs.next().map(ConstantValue::parse_from);
@@ -488,11 +512,25 @@ impl ParseFrom<Rule> for FunctionDecl {
     }
 }
 
+/// function def
+
+
+impl ParseFrom<Rule> for FunctionAttr {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::function_attr);
+        let mut pairs = pair.into_inner();
+        let is_extern = IsExtern::parse_from(pairs.next().unwrap());
+        let is_public = IsPublic::parse_from(pairs.next().unwrap());
+        let is_inline = option_inline_type_parse_from(pairs.next().unwrap());
+        FunctionAttr { is_extern, is_public, is_inline }
+    }
+}
+
 impl ParseFrom<Rule> for FunctionDef {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::function_def);
         let mut pairs = pair.into_inner();
-        // todo: function attrs
+        let attr = FunctionAttr::parse_from(pairs.next().unwrap());
         let name = DefineSymbol::parse_from(pairs.next().unwrap());
         let header = FunctionType::parse_from(pairs.next().unwrap());
         // todo: bodys

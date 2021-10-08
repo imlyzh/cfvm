@@ -128,19 +128,22 @@ pub type LabelHandle = SymbolHandle<LabelSymbol, Arc<BasicBlockDef>>;
 // type
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct IsPub(pub bool);
+pub struct IsExtern(pub bool);
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct IsPublic(pub bool);
 
 pub type TypeHandle = SymbolHandle<TypeSymbol, Arc<Type>>;
 
 #[derive(Debug, Clone)]
-pub struct TypeDef (pub IsPub, pub TypeDefineSymbol, pub TypeHandle);
+pub struct TypeDef (pub IsPublic, pub TypeDefineSymbol, pub TypeHandle);
 
 
 #[derive(Debug, Clone)]
-pub struct ConstantDef(pub IsPub, pub DefineSymbol, pub Type, pub ConstantValue);
+pub struct ConstantDef(pub IsPublic, pub DefineSymbol, pub Type, pub ConstantValue);
 
 #[derive(Debug, Clone)]
-pub struct VariableDef(pub IsPub, pub DefineSymbol, pub Type, pub Option<ConstantValue>);
+pub struct VariableDef(pub IsPublic, pub DefineSymbol, pub Type, pub Option<ConstantValue>);
 
 #[derive(Debug, Clone)]
 pub struct Attris(pub Vec<Handle<String>>);

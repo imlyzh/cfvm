@@ -12,24 +12,53 @@ module_body =
     }
 
 type_def = {
-    is_pub ~ type_define_symbol ~ "=" ~ type_value
+    is_pub ~ type_define_symbol ~ "=" ~ type_value ~ ";"
 }
 
 constant_def = {
-    is_pub ~ "const" ~ global_define_symbol ~ ":" ~ type_value ~ "=" ~ const_value
+    is_pub ~ "const" ~ global_define_symbol ~ ":" ~ type_value ~ "=" ~ constant_value ~ ";"
 }
 
 variable_def = {
-    is_pub ~ "var" ~ global_define_symbol ~ ":" ~ type_value ~ ("=" ~ const_value)?
+    is_pub ~ "var" ~ global_define_symbol ~ ":" ~ type_value ~ ("=" ~ constant_value)? ~ ";"
 }
 
-const_value = ${
-    "const_value"
+
+constant_value =
+    { simple_value
+    | array_value
+    | record_value
+    | string_lit
 }
+
+simple_value =
+    { float_number
+    | number
+    | char
+    | vector_value
+}
+
+vector_value = {
+    "<" ~ simple_value ~ ("," ~ simple_value)* ~ ">"
+}
+
+array_value = {
+    "[" ~ constant_value ~ ("," ~ constant_value)* ~ "]"
+}
+
+record_value = {
+    "{" ~ params_name ~ ("," ~ params_name)* ~ "}"
+}
+
+record_value_kv_pair = {
+    params_name ~ ":" ~ constant_value
+}
+
 
 function_decl = {
     "import" ~ "fn" ~ global_define_symbol ~ function_type ~ ";"
 }
+
 
 function_def = {
     function_attr ~ "fn" ~ global_define_symbol ~
@@ -371,7 +400,7 @@ unrechable = { "unrechable" }
 value =
     { local_symbol
     | global_symbol
-    | const_value
+    | constant_value
     }
 
 global_symbol = ${ (symbol ~ ".")? ~ global_define_symbol }
@@ -410,7 +439,31 @@ _name = $ { (ASCII_ALPHA_LOWER | UNDERLINE) ~ (ASCII_ALPHANUMERIC | UNDERLINE)* 
 
 UNDERLINE = _{ "_" }
 
+// string
+
+string_lit = $ { "\"" ~ (escape | (!("\\" | "\"") ~ ANY)+)* ~ "\""}
+
+
+char = {
+    "'" ~ (escape | (!("\\" | "\"") ~ ANY)) ~ "'"
+}
+
+escape = _{ "\\\\"
+          | "\\\""
+          | "\\'"
+          | "\\n"
+          | "\\r"
+          | "\\t"
+          }
+
 // number
+
+float_number = $
+    { (number_hex ~ "." ~ ASCII_HEX_DIGIT+)
+    | (number_oct ~ "." ~ ASCII_OCT_DIGIT+)
+    | (number_bin ~ "." ~ ASCII_BIN_DIGIT+)
+    | (number_dec ~ "." ~ ASCII_DIGIT+)
+}
 
 number = $
     { number_hex

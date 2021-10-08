@@ -55,20 +55,35 @@ impl<T, R> SymbolHandle<T, R> {
 
 pub type LocalHandle = SymbolHandle<LocalSymbol, Arc<Instruction>>;
 
+
 // global value
 
 #[derive(Debug, Clone)]
-pub struct RecordValue(pub Vec<(Option<Handle<String>>, ConstantValue)>);
+pub struct RecordValue(pub Vec<(Option<Symbol>, ConstantValue)>);
+
+#[derive(Debug, Clone)]
+pub struct VectorValue(pub Vec<SimpleValue>);
+
+#[derive(Debug, Clone)]
+pub enum SimpleValue {
+    FloatNumber(String),
+    Number(String),
+    Char(char),
+    Vector(VectorValue)
+}
+
+#[derive(Debug, Clone)]
+pub struct ArrayValue(pub Vec<ConstantValue>);
+
+#[derive(Debug, Clone)]
+pub struct StringLit (pub Handle<String>);
 
 #[derive(Debug, Clone)]
 pub enum ConstantValue {
-    Int(Vec<u8>),
-    Float(Vec<u8>),
-    Bytes(Vec<u8>),
-    RawChars(Vec<u8>),
-    Chars(Vec<char>),
-    Array(Vec<ConstantValue>),
-    Record(RecordValue),
+    SimpleValue(SimpleValue),
+    ArrayValue(ArrayValue),
+    RecordValue(RecordValue),
+    StringLit(StringLit),
 }
 
 #[derive(Debug, Clone)]
@@ -122,10 +137,10 @@ pub struct TypeDef (pub IsPub, pub TypeDefineSymbol, pub TypeHandle);
 
 
 #[derive(Debug, Clone)]
-pub struct ConstantDef(pub IsPub, pub DefineSymbol, pub Type, pub GlobalValue);
+pub struct ConstantDef(pub IsPub, pub DefineSymbol, pub Type, pub ConstantValue);
 
 #[derive(Debug, Clone)]
-pub struct VariableDef(pub IsPub, pub DefineSymbol, pub Type, pub Option<GlobalValue>);
+pub struct VariableDef(pub IsPub, pub DefineSymbol, pub Type, pub Option<ConstantValue>);
 
 #[derive(Debug, Clone)]
 pub struct Attris(pub Vec<Handle<String>>);

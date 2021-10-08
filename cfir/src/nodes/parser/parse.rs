@@ -374,6 +374,73 @@ impl ParseFrom<Rule> for TypeHandle {
     }
 }
 
+/// global values ///////////////////////////////////////////////////////////////////////////
+
+impl ParseFrom<Rule> for VectorValue {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::vector_value);
+        VectorValue(pair.into_inner().map(SimpleValue::parse_from).collect())
+    }
+}
+
+impl ParseFrom<Rule> for ArrayValue {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::array_value);
+        ArrayValue(pair.into_inner().map(ConstantValue::parse_from).collect())
+    }
+}
+
+impl ParseFrom<Rule> for SimpleValue {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::simple_value);
+        let pair = pair.into_inner().next().unwrap();
+        match pair.as_rule() {
+            Rule::number => SimpleValue::Number(pair.as_str().to_string()),
+            Rule::float_number => SimpleValue::FloatNumber(pair.as_str().to_string()),
+            Rule::char => SimpleValue::Char('\0'), // todo: escape char
+            Rule::vector_value => SimpleValue::Vector(VectorValue::parse_from(pair)),
+            _ => unreachable!(),
+        }
+    }
+}
+
+#[inline]
+fn record_value_kv_pair_parse_from(pair: Pair<Rule>) -> (Option<Symbol>, ConstantValue) {
+    debug_assert_eq!(pair.as_rule(), Rule::record_value_kv_pair);
+    let mut pairs = pair.into_inner();
+    let name = optional_symbol_parse_from(pairs.next().unwrap());
+    let value = ConstantValue::parse_from(pairs.next().unwrap());
+    (name, value)
+}
+
+impl ParseFrom<Rule> for RecordValue {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::record_value);
+        RecordValue(pair.into_inner().map(record_value_kv_pair_parse_from).collect())
+    }
+}
+
+impl ParseFrom<Rule> for StringLit {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        StringLit(Handle::new(pair.as_str().to_string()))
+        // todo string cast
+    }
+}
+
+impl ParseFrom<Rule> for ConstantValue {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::constant_value);
+        let pair = pair.into_inner().next().unwrap();
+        match pair.as_rule() {
+            Rule::simple_value => ConstantValue::SimpleValue(SimpleValue::parse_from(pair)),
+            Rule::array_value => ConstantValue::ArrayValue(ArrayValue::parse_from(pair)),
+            Rule::record_value => ConstantValue::RecordValue(RecordValue::parse_from(pair)),
+            Rule::string_lit => ConstantValue::StringLit(StringLit::parse_from(pair)),
+            _ => unreachable!(),
+        }
+    }
+}
+
 /// defs ////////////////////////////////////////////////////////////////////////////////////
 
 impl ParseFrom<Rule> for TypeDef {
@@ -394,10 +461,10 @@ impl ParseFrom<Rule> for ConstantDef {
         let is_pub = IsPub::parse_from(pairs.next().unwrap());
         let name = DefineSymbol::parse_from(pairs.next().unwrap());
         let ty = Type::parse_from(pairs.next().unwrap());
-        todo!()
+        let const_value = ConstantValue::parse_from(pairs.next().unwrap());
+        ConstantDef(is_pub, name, ty, const_value)
     }
 }
-
 
 impl ParseFrom<Rule> for VariableDef {
     fn parse_from(pair: Pair<Rule>) -> Self {
@@ -406,7 +473,8 @@ impl ParseFrom<Rule> for VariableDef {
         let is_pub = IsPub::parse_from(pairs.next().unwrap());
         let name = DefineSymbol::parse_from(pairs.next().unwrap());
         let ty = Type::parse_from(pairs.next().unwrap());
-        todo!()
+        let const_value = pairs.next().map(ConstantValue::parse_from);
+        VariableDef(is_pub, name, ty, const_value)
     }
 }
 
@@ -426,7 +494,7 @@ impl ParseFrom<Rule> for FunctionDef {
         let mut pairs = pair.into_inner();
         // todo: function attrs
         let name = DefineSymbol::parse_from(pairs.next().unwrap());
-        let ty = FunctionType::parse_from(pairs.next().unwrap());
+        let header = FunctionType::parse_from(pairs.next().unwrap());
         // todo: bodys
         todo!()
     }

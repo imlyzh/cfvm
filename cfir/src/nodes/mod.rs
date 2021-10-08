@@ -62,8 +62,8 @@ pub struct FunctionDef {
     pub name: DefineSymbol,
     pub header: FunctionType,
     pub function_attr: FunctionAttr,
-    pub blocks: Vec<MutHandle<BasicBlockDef>>,
-    pub block_map: HashMap<LabelSymbol, usize>,
+    pub blocks: MutHandle<Vec<MutHandle<BasicBlockDef>>>,
+    pub block_map: MutHandle<HashMap<LabelSymbol, usize>>,
 }
 
 impl GetType for FunctionDef {

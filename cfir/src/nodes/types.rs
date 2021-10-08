@@ -47,7 +47,7 @@ pub struct RecordType (pub IsNotAligned, pub Vec<(Option<Symbol>, Type)>);
 pub struct TypeBindAttr(pub Box<Type>, pub Option<AllocaType>);
 
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub struct ParamsType(pub Vec<(Option<LocalSymbol>, TypeBindAttr)>);
+pub struct ParamsType(pub Vec<(Option<Symbol>, TypeBindAttr)>);
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct FunctionType {

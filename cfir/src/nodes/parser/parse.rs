@@ -1,8 +1,11 @@
+use std::collections::BTreeSet;
+
 use pest::iterators::Pair;
 use pest_derive::*;
 
 use crate::nodes::*;
 use crate::nodes::handles::*;
+use crate::nodes::instruction::{AllocaType, IsExtend, RegisterType};
 
 
 #[derive(Parser)]
@@ -90,6 +93,17 @@ impl ParseFrom<Rule> for IsPub {
     }
 }
 
+impl ParseFrom<Rule> for IsExtend {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::is_extend);
+        if pair.as_str() == "extend" {
+            IsExtend(true)
+        } else {
+            IsExtend(false)
+        }
+    }
+}
+
 impl ParseFrom<Rule> for IsNotAligned {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::is_not_aligned);
@@ -132,6 +146,7 @@ impl ParseFrom<Rule> for Symbol {
     }
 }
 
+#[inline]
 fn optional_symbol_parse_from(pair: Pair<Rule>) -> Option<Symbol> {
     debug_assert_eq!(pair.as_rule(), Rule::params_name);
     let pair = pair.into_inner().next().unwrap();
@@ -144,10 +159,66 @@ fn optional_symbol_parse_from(pair: Pair<Rule>) -> Option<Symbol> {
 
 /// types ////////////////////////////////////////////////////////////////////////////////////
 
+impl ParseFrom<Rule> for IntType {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::int_type);
+        match pair.as_str() {
+            "i1" => IntType::I1,
+            "i8" => IntType::I8,
+            "i16" => IntType::I16,
+            "i32" => IntType::I32,
+            "i64" => IntType::I64,
+            "i128" => IntType::I128,
+            _ => unreachable!(),
+        }
+    }
+}
+
+impl ParseFrom<Rule> for FloatType {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::float_type);
+        match pair.as_str() {
+            "f8" => FloatType::F8,
+            "f16" => FloatType::F16,
+            "f32" => FloatType::F32,
+            "f64" => FloatType::F64,
+            "f128" => FloatType::F128,
+            "ppc_f128" => FloatType::PpcF128,
+            _ => unreachable!(),
+        }
+    }
+}
+
+impl ParseFrom<Rule> for PointerType {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::pointer_type);
+        let pair = pair.into_inner().next().unwrap();
+        let type_ = Type::parse_from(pair);
+        PointerType(Box::new(type_))
+    }
+}
+
+impl ParseFrom<Rule> for VectorType {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::vector_type);
+        let mut pairs = pair.into_inner();
+        let type_ = SimpleType::parse_from(pairs.next().unwrap());
+        let len = pairs.next().unwrap().as_str().parse::<u64>().unwrap();
+        VectorType(Box::new(type_), len)
+    }
+}
+
 impl ParseFrom<Rule> for SimpleType {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::simple_type);
-        todo!()
+        let pair = pair.into_inner().next().unwrap();
+        match pair.as_rule() {
+            Rule::int_type => SimpleType::Int(IntType::parse_from(pair)),
+            Rule::float_type => SimpleType::Float(FloatType::parse_from(pair)),
+            Rule::pointer_type => SimpleType::Pointer(PointerType::parse_from(pair)),
+            Rule::vector_type => SimpleType::Vector(VectorType::parse_from(pair)),
+            _ => unreachable!(),
+        }
     }
 }
 
@@ -161,6 +232,7 @@ impl ParseFrom<Rule> for ArrayType {
     }
 }
 
+#[inline]
 fn record_kv_pair(pair: Pair<Rule>) -> (Option<Symbol>, Type) {
     debug_assert_eq!(pair.as_rule(), Rule::record_kv_pair);
     let mut pairs = pair.into_inner();
@@ -193,10 +265,87 @@ impl ParseFrom<Rule> for FirstClassType {
     }
 }
 
+#[inline]
+fn register_set_parse_from(pair: Pair<Rule>) -> BTreeSet<usize> {
+    debug_assert_eq!(pair.as_rule(), Rule::reg_enum);
+    pair.into_inner().map(|p| p.as_str().parse::<usize>().unwrap()).collect()
+}
+
+#[inline]
+fn register_range_parse_from(pair: Pair<Rule>) -> (usize, usize) {
+    debug_assert_eq!(pair.as_rule(), Rule::reg_enum);
+    let mut pairs = pair.into_inner();
+    let left = pairs.next().unwrap().as_str().parse::<usize>().unwrap();
+    let right = pairs.next().unwrap().as_str().parse::<usize>().unwrap();
+    (left, right)
+}
+
+#[inline]
+fn register_parse_from(pair: Pair<Rule>) -> usize {
+    debug_assert_eq!(pair.as_rule(), Rule::reg_enum);
+    pair.as_str().parse::<usize>().unwrap()
+}
+
+impl ParseFrom<Rule> for RegisterType {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::alloca_type_reg);
+        let mut pairs = pair.into_inner();
+        let is_extend = IsExtend::parse_from(pairs.next().unwrap());
+        let pair = pairs.next().unwrap();
+        match pair.as_rule() {
+            Rule::reg_enum => RegisterType::Registers(is_extend, register_set_parse_from(pair)),
+            Rule::reg_range => RegisterType::RegisterRange(is_extend, register_range_parse_from(pair)),
+            Rule::reg_number => RegisterType::Register(is_extend, register_parse_from(pair)),
+            _ => unreachable!(),
+        }
+    }
+}
+
+impl ParseFrom<Rule> for AllocaType {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::alloca_type);
+        let pair = pair.into_inner().next().unwrap();
+        match pair.as_rule() {
+            Rule::alloca_type_stack => AllocaType::Stack,
+            Rule::alloca_type_reg => todo!(),
+            _ => unreachable!(),
+        }
+    }
+}
+
+impl ParseFrom<Rule> for TypeBindAttr {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::type_bind_metadata);
+        let mut pairs = pair.into_inner();
+        let ty = Type::parse_from(pairs.next().unwrap());
+        let alloc_type = pairs.next().map(AllocaType::parse_from);
+        TypeBindAttr(Box::new(ty), alloc_type)
+    }
+}
+
+#[inline]
+fn params_pair_parse_from(pair: Pair<Rule>) -> (Option<Symbol>, TypeBindAttr) {
+    debug_assert_eq!(pair.as_rule(), Rule::params_pair);
+    let mut pairs = pair.into_inner();
+    let name = optional_symbol_parse_from(pairs.next().unwrap());
+    let ty = TypeBindAttr::parse_from(pairs.next().unwrap());
+    (name, ty)
+}
+
+impl ParseFrom<Rule> for ParamsType {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::params);
+        ParamsType(pair.into_inner().map(params_pair_parse_from).collect())
+    }
+}
+
 impl ParseFrom<Rule> for FunctionType {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::function_type);
-        todo!()
+        let mut pairs = pair.into_inner();
+        let params = ParamsType::parse_from(pairs.next().unwrap());
+        let return_type = TypeBindAttr::parse_from(pairs.next().unwrap());
+        FunctionType { return_type, params }
     }
 }
 
@@ -244,6 +393,7 @@ impl ParseFrom<Rule> for ConstantDef {
         let mut pairs = pair.into_inner();
         let is_pub = IsPub::parse_from(pairs.next().unwrap());
         let name = DefineSymbol::parse_from(pairs.next().unwrap());
+        let ty = Type::parse_from(pairs.next().unwrap());
         todo!()
     }
 }
@@ -255,6 +405,7 @@ impl ParseFrom<Rule> for VariableDef {
         let mut pairs = pair.into_inner();
         let is_pub = IsPub::parse_from(pairs.next().unwrap());
         let name = DefineSymbol::parse_from(pairs.next().unwrap());
+        let ty = Type::parse_from(pairs.next().unwrap());
         todo!()
     }
 }
@@ -264,7 +415,8 @@ impl ParseFrom<Rule> for FunctionDecl {
         debug_assert_eq!(pair.as_rule(), Rule::function_decl);
         let mut pairs = pair.into_inner();
         let name = DefineSymbol::parse_from(pairs.next().unwrap());
-        todo!()
+        let header = FunctionType::parse_from(pairs.next().unwrap());
+        FunctionDecl { name, header }
     }
 }
 
@@ -272,6 +424,10 @@ impl ParseFrom<Rule> for FunctionDef {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::function_def);
         let mut pairs = pair.into_inner();
+        // todo: function attrs
+        let name = DefineSymbol::parse_from(pairs.next().unwrap());
+        let ty = FunctionType::parse_from(pairs.next().unwrap());
+        // todo: bodys
         todo!()
     }
 }

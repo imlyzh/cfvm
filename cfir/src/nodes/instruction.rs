@@ -57,10 +57,18 @@ pub enum Index {
 pub type IndexList = Vec<Index>;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
+pub struct IsExtend(pub bool);
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub enum RegisterType {
+    Register(IsExtend, usize),
+    RegisterRange(IsExtend, (usize, usize)),
+    Registers(IsExtend, BTreeSet<usize>),
+}
+
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum AllocaType {
-    Register(usize),
-    RegisterRange(usize, usize),
-    Registers(BTreeSet<usize>),
+    RegisterType(RegisterType),
     Stack,
 }
 

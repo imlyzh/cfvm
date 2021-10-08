@@ -1,6 +1,4 @@
-use std::sync::Arc;
-
-use super::{handles::LocalSymbol, instruction::AllocaType};
+use super::{handles::{LocalSymbol, Symbol}, instruction::AllocaType};
 
 pub trait GetType {
     fn get_type(&self) -> Type;
@@ -39,9 +37,12 @@ pub struct VectorType(pub Box<SimpleType>, pub u64);
 pub struct ArrayType(pub Box<Type>, pub u64);
 
 #[derive(Debug, Clone, Eq, PartialEq)]
+pub struct IsNotAligned(pub bool);
+
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct RecordType {
-    pub not_aligned: bool,
-    pub record: Vec<(Option<Arc<String>>, Type)>,
+    pub not_aligned: IsNotAligned,
+    pub record: Vec<(Option<Symbol>, Type)>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -207,7 +208,7 @@ fn size_align(i: u64, platform_size: u8) -> u64 {
 impl GetSize for RecordType {
     fn get_size(&self, platform_size: u8) -> Option<u64> {
         let r = self.record.iter().map(|(_, t)| t.get_size(platform_size));
-        if self.not_aligned {
+        if self.not_aligned.0 {
             r.sum()
         } else {
             r.map(|x| x.map(|x| size_align(x, platform_size))).sum()

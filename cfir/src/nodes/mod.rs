@@ -13,18 +13,18 @@ use basicblock::*;
 use sexpr_ir::gast::Handle;
 use types::*;
 
-use self::handles::{ConstantDef, DefineSymbol, LabelSymbol, TypeDef, VariableDef};
+use self::handles::{ConstantDef, DefineSymbol, LabelSymbol, TypeDef, TypeDefineSymbol, VariableDef};
 
 pub type MutHandle<T> = Arc<RwLock<T>>;
 
 #[derive(Debug, Clone)]
 pub struct Module {
-    pub name: Option<Handle<String>>,
-    pub type_defs: HashMap<Handle<String>, TypeDef>,
-    pub constant_defs: HashMap<Handle<String>, ConstantDef>,
-    pub variable_defs: HashMap<Handle<String>, VariableDef>,
-    pub functions: HashMap<Handle<String>, FunctionDef>,
-    pub function_decls: HashMap<Handle<String>, FunctionDecl>,
+    pub name: Handle<String>,
+    pub type_defs: HashMap<TypeDefineSymbol, TypeDef>,
+    pub constant_defs: HashMap<DefineSymbol, ConstantDef>,
+    pub variable_defs: HashMap<DefineSymbol, VariableDef>,
+    pub functions: HashMap<DefineSymbol, FunctionDef>,
+    pub function_decls: HashMap<DefineSymbol, FunctionDecl>,
 }
 
 #[derive(Debug, Clone)]

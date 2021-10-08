@@ -9,6 +9,17 @@ use super::{
     FunctionDecl, FunctionDef,
 };
 
+
+#[derive(Debug, Hash, Clone, Eq, PartialEq)]
+pub struct GlobalSymbol(pub Handle<String>);
+
+#[derive(Debug, Hash, Clone, Eq, PartialEq)]
+pub struct TypeSymbol(pub Handle<String>);
+
+
+#[derive(Debug, Hash, Clone, Eq, PartialEq)]
+pub struct Symbol(pub Arc<String>); // record line key, params name, etc.
+
 #[derive(Debug, Hash, Clone, Eq, PartialEq)]
 pub struct DefineSymbol(pub Handle<String>);
 
@@ -16,13 +27,11 @@ pub struct DefineSymbol(pub Handle<String>);
 pub struct LocalSymbol(pub Handle<String>);
 
 #[derive(Debug, Hash, Clone, Eq, PartialEq)]
-pub struct GlobalSymbol(pub Handle<String>);
-
-#[derive(Debug, Hash, Clone, Eq, PartialEq)]
 pub struct LabelSymbol(pub Handle<String>);
 
 #[derive(Debug, Hash, Clone, Eq, PartialEq)]
-pub struct TypeSymbol(pub Handle<String>);
+pub struct TypeDefineSymbol(pub Handle<String>);
+
 
 #[derive(Debug, Hash, Clone, Eq, PartialEq)]
 pub enum LazyLoadSymbol<T, R> {
@@ -32,6 +41,15 @@ pub enum LazyLoadSymbol<T, R> {
 
 #[derive(Debug, Clone)]
 pub struct SymbolHandle<T, R>(pub Arc<RwLock<LazyLoadSymbol<T, R>>>);
+
+impl<T, R> SymbolHandle<T, R> {
+    pub fn from(symbol: T) -> Self {
+        SymbolHandle(Arc::new(RwLock::new(LazyLoadSymbol::Symbol(symbol))))
+    }
+    pub fn new(reference: R) -> Self {
+        SymbolHandle(Arc::new(RwLock::new(LazyLoadSymbol::Reference(reference))))
+    }
+}
 
 // local value
 
@@ -94,27 +112,20 @@ pub type LabelHandle = SymbolHandle<LabelSymbol, Arc<BasicBlockDef>>;
 
 // type
 
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub struct TypeDef {
-    pub is_public: bool,
-    pub name: DefineSymbol,
-    pub type_: Type,
-}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct IsPub(pub bool);
 
 pub type TypeHandle = SymbolHandle<TypeSymbol, Arc<Type>>;
 
-// first item is is_public
+#[derive(Debug, Clone)]
+pub struct TypeDef (pub IsPub, pub TypeDefineSymbol, pub TypeHandle);
+
 
 #[derive(Debug, Clone)]
-pub struct ConstantDef(pub bool, pub DefineSymbol, pub Type, pub GlobalValue);
+pub struct ConstantDef(pub IsPub, pub DefineSymbol, pub Type, pub GlobalValue);
 
 #[derive(Debug, Clone)]
-pub struct VariableDef(
-    pub bool,
-    pub DefineSymbol,
-    pub Type,
-    pub Option<GlobalValue>,
-);
+pub struct VariableDef(pub IsPub, pub DefineSymbol, pub Type, pub Option<GlobalValue>);
 
 #[derive(Debug, Clone)]
 pub struct Attris(pub Vec<Handle<String>>);

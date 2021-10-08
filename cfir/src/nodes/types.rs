@@ -1,4 +1,7 @@
-use super::{handles::{LocalSymbol, Symbol}, instruction::AllocaType};
+use super::{
+    handles::{LocalSymbol, Symbol},
+    instruction::AllocaType,
+};
 
 pub trait GetType {
     fn get_type(&self) -> Type;
@@ -40,8 +43,7 @@ pub struct ArrayType(pub Box<Type>, pub u64);
 pub struct IsNotAligned(pub bool);
 
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub struct RecordType (pub IsNotAligned, pub Vec<(Option<Symbol>, Type)>);
-
+pub struct RecordType(pub IsNotAligned, pub Vec<(Option<Symbol>, Type)>);
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct TypeBindAttr(pub Box<Type>, pub Option<AllocaType>);
@@ -217,7 +219,7 @@ fn size_align(i: u64, platform_size: u8) -> u64 {
 impl GetSize for RecordType {
     fn get_size(&self, platform_size: u8) -> Option<u64> {
         let r = self.1.iter().map(|(_, t)| t.get_size(platform_size));
-        if self.0.0 {
+        if self.0 .0 {
             r.sum()
         } else {
             r.map(|x| x.map(|x| size_align(x, platform_size))).sum()

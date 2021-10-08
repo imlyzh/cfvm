@@ -3,16 +3,14 @@ use std::collections::BTreeSet;
 use pest::iterators::Pair;
 use pest_derive::*;
 
-use crate::nodes::*;
 use crate::nodes::handles::*;
-use crate::nodes::instruction::*;
 use crate::nodes::instruction::Store;
-
+use crate::nodes::instruction::*;
+use crate::nodes::*;
 
 #[derive(Parser)]
 #[grammar = "./nodes/parser/grammar.pest"]
 pub enum CFIR {}
-
 
 pub trait ParseFrom<T>
 where
@@ -20,7 +18,6 @@ where
 {
     fn parse_from(pair: Pair<T>) -> Self;
 }
-
 
 impl ParseFrom<Rule> for Module {
     fn parse_from(pair: Pair<Rule>) -> Self {
@@ -267,8 +264,12 @@ impl ParseFrom<Rule> for ValueHandle {
         debug_assert_eq!(pair.as_rule(), Rule::ret);
         let pair = pair.into_inner().next().unwrap();
         match pair.as_rule() {
-            Rule::local_symbol => SymbolHandle::from(SymbolRef::Local(LocalSymbol::parse_from(pair))),
-            Rule::global_symbol => SymbolHandle::from(SymbolRef::Global(GlobalSymbol::parse_from(pair))),
+            Rule::local_symbol => {
+                SymbolHandle::from(SymbolRef::Local(LocalSymbol::parse_from(pair)))
+            }
+            Rule::global_symbol => {
+                SymbolHandle::from(SymbolRef::Global(GlobalSymbol::parse_from(pair)))
+            }
             _ => unreachable!(),
         }
     }
@@ -382,7 +383,7 @@ impl ParseFrom<Rule> for RecordType {
         let mut pairs = pair.into_inner();
         let is_not_aligned = IsNotAligned::parse_from(pairs.next().unwrap());
         let kvs = pairs.map(record_kv_pair).collect();
-        RecordType (is_not_aligned, kvs)
+        RecordType(is_not_aligned, kvs)
     }
 }
 
@@ -403,7 +404,9 @@ impl ParseFrom<Rule> for FirstClassType {
 #[inline]
 fn register_set_parse_from(pair: Pair<Rule>) -> BTreeSet<usize> {
     debug_assert_eq!(pair.as_rule(), Rule::reg_enum);
-    pair.into_inner().map(|p| p.as_str().parse::<usize>().unwrap()).collect()
+    pair.into_inner()
+        .map(|p| p.as_str().parse::<usize>().unwrap())
+        .collect()
 }
 
 #[inline]
@@ -429,7 +432,9 @@ impl ParseFrom<Rule> for RegisterType {
         let pair = pairs.next().unwrap();
         match pair.as_rule() {
             Rule::reg_enum => RegisterType::Registers(is_extend, register_set_parse_from(pair)),
-            Rule::reg_range => RegisterType::RegisterRange(is_extend, register_range_parse_from(pair)),
+            Rule::reg_range => {
+                RegisterType::RegisterRange(is_extend, register_range_parse_from(pair))
+            }
             Rule::reg_number => RegisterType::Register(is_extend, register_parse_from(pair)),
             _ => unreachable!(),
         }
@@ -490,7 +495,10 @@ impl ParseFrom<Rule> for FunctionType {
         let mut pairs = pair.into_inner();
         let params = ParamsType::parse_from(pairs.next().unwrap());
         let return_type = TypeBindAttr::parse_from(pairs.next().unwrap());
-        FunctionType { return_type, params }
+        FunctionType {
+            return_type,
+            params,
+        }
     }
 }
 
@@ -561,7 +569,11 @@ fn record_value_kv_pair_parse_from(pair: Pair<Rule>) -> (Option<Symbol>, Constan
 impl ParseFrom<Rule> for RecordValue {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::record_value);
-        RecordValue(pair.into_inner().map(record_value_kv_pair_parse_from).collect())
+        RecordValue(
+            pair.into_inner()
+                .map(record_value_kv_pair_parse_from)
+                .collect(),
+        )
     }
 }
 
@@ -642,14 +654,20 @@ impl ParseFrom<Rule> for FunctionAttr {
         let is_extern = IsExtern::parse_from(pairs.next().unwrap());
         let is_public = IsPublic::parse_from(pairs.next().unwrap());
         let is_inline = option_inline_type_parse_from(pairs.next().unwrap());
-        FunctionAttr { is_extern, is_public, is_inline }
+        FunctionAttr {
+            is_extern,
+            is_public,
+            is_inline,
+        }
     }
 }
 
 #[inline]
 fn insts_parse_from(pair: Pair<Rule>) -> Vec<MutHandle<Instruction>> {
     debug_assert_eq!(pair.as_rule(), Rule::insts);
-    pair.into_inner().map(|x| Handle::new(RwLock::new(Instruction::parse_from(x)))).collect()
+    pair.into_inner()
+        .map(|x| Handle::new(RwLock::new(Instruction::parse_from(x))))
+        .collect()
 }
 
 impl ParseFrom<Rule> for BasicBlockDef {
@@ -675,7 +693,9 @@ impl ParseFrom<Rule> for BasicBlockDef {
 #[inline]
 fn blocks_parse_from(pair: Pair<Rule>) -> Vec<MutHandle<BasicBlockDef>> {
     debug_assert_eq!(pair.as_rule(), Rule::blocks);
-    pair.into_inner().map(|x| Handle::new(RwLock::new(BasicBlockDef::parse_from(x)))).collect()
+    pair.into_inner()
+        .map(|x| Handle::new(RwLock::new(BasicBlockDef::parse_from(x))))
+        .collect()
 }
 
 impl ParseFrom<Rule> for FunctionDef {
@@ -721,7 +741,12 @@ impl ParseFrom<Rule> for Branch {
         let cond = ValueHandle::parse_from(pairs.next().unwrap());
         let true_block = LabelSymbol::parse_from(pairs.next().unwrap());
         let false_block = LabelSymbol::parse_from(pairs.next().unwrap());
-        Branch(branch_op, cond, LabelHandle::from(true_block), LabelHandle::from(false_block))
+        Branch(
+            branch_op,
+            cond,
+            LabelHandle::from(true_block),
+            LabelHandle::from(false_block),
+        )
     }
 }
 
@@ -751,9 +776,7 @@ impl ParseFrom<Rule> for Switch {
         debug_assert_eq!(pair.as_rule(), Rule::switch);
         let mut pairs = pair.into_inner();
         let cond = ValueHandle::parse_from(pairs.next().unwrap());
-        let map = pairs
-            .map(switch_pair_parse_from)
-            .collect();
+        let map = pairs.map(switch_pair_parse_from).collect();
         Switch(cond, map)
     }
 }
@@ -787,6 +810,25 @@ impl ParseFrom<Rule> for Store {
     }
 }
 
+impl ParseFrom<Rule> for Index {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::index);
+        let pair = pair.into_inner().next().unwrap();
+        match pair.as_rule() {
+            Rule::symbol => Index::Symbol(Symbol::parse_from(pair)),
+            Rule::number => Index::Index(pair.as_str().parse().unwrap()),
+            _ => unreachable!(),
+        }
+    }
+}
+
+impl ParseFrom<Rule> for IndexList {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::index_list);
+        IndexList(pair.into_inner().map(Index::parse_from).collect())
+    }
+}
+
 impl ParseFrom<Rule> for BindOperator {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::bind);
@@ -795,7 +837,12 @@ impl ParseFrom<Rule> for BindOperator {
         let is_atomic = IsAtomic::parse_from(pairs.next().unwrap());
         let is_volatile = IsVolatile::parse_from(pairs.next().unwrap());
         let operator = Operator::parse_from(pairs.next().unwrap());
-        BindOperator(symbol, Handle::new(RwLock::new(operator)), is_atomic, is_volatile)
+        BindOperator(
+            symbol,
+            Handle::new(RwLock::new(operator)),
+            is_atomic,
+            is_volatile,
+        )
     }
 }
 
@@ -806,10 +853,65 @@ impl ParseFrom<Rule> for Instruction {
         match pair.as_rule() {
             Rule::store => Instruction::Store(Store::parse_from(pair)),
             Rule::bind => Instruction::BindOperator(BindOperator::parse_from(pair)),
-            Rule::operator => Instruction::Operator(Handle::new(RwLock::new(Operator::parse_from(pair)))),
+            Rule::operator => {
+                Instruction::Operator(Handle::new(RwLock::new(Operator::parse_from(pair))))
+            }
             _ => unreachable!(),
         }
     }
+}
+
+impl ParseFrom<Rule> for ICmpOp {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::icmp_op);
+        match pair.as_str() {
+            "eq" => ICmpOp::Eq,
+            "ne" => ICmpOp::Ne,
+            "sge" => ICmpOp::Sge,
+            "sgt" => ICmpOp::Sgt,
+            "sle" => ICmpOp::Sle,
+            "slt" => ICmpOp::Slt,
+            "uge" => ICmpOp::Uge,
+            "ugt" => ICmpOp::Ugt,
+            "ule" => ICmpOp::Ule,
+            "ult" => ICmpOp::Ult,
+            _ => unreachable!(),
+        }
+    }
+}
+
+impl ParseFrom<Rule> for FCmpOp {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::icmp_op);
+        match pair.as_str() {
+            "false" => FCmpOp::False,
+            "oeq" => FCmpOp::Oeq,
+            "oge" => FCmpOp::Oge,
+            "ogt" => FCmpOp::Ogt,
+            "ole" => FCmpOp::Ole,
+            "olt" => FCmpOp::Olt,
+            "one" => FCmpOp::One,
+            "ord" => FCmpOp::Ord,
+            "true" => FCmpOp::True,
+            "ueq" => FCmpOp::Ueq,
+            "uge" => FCmpOp::Uge,
+            "ugt" => FCmpOp::Ugt,
+            "ule" => FCmpOp::Ule,
+            "ult" => FCmpOp::Ult,
+            "une" => FCmpOp::Une,
+            "uno" => FCmpOp::Uno,
+            _ => unreachable!(),
+        }
+    }
+}
+
+#[inline]
+fn phi_pair_parse_from(pair: Pair<Rule>) -> (LabelHandle, ValueHandle) {
+    debug_assert_eq!(pair.as_rule(), Rule::phi_pair);
+    let mut pairs = pair.into_inner();
+    let label = LabelHandle::parse_from(pairs.next().unwrap());
+    let value = ValueHandle::parse_from(pairs.next().unwrap());
+    (label, value)
 }
 
 impl ParseFrom<Rule> for Operator {
@@ -824,149 +926,180 @@ impl ParseFrom<Rule> for Operator {
                 let ty = Type::parse_from(pairs.next().unwrap());
                 let value = pairs.next().map(ValueHandle::parse_from);
                 Operator::Alloca(alloca_type, ty, value)
-            },
-            Rule::get_ptr => todo!(),
+            }
+            Rule::get_ptr => {
+                let value = ValueHandle::parse_from(pairs.next().unwrap());
+                let index = pairs.next().map(IndexList::parse_from);
+                Operator::GetPtr(value, index)
+            }
             Rule::load => {
                 let ty = Type::parse_from(pairs.next().unwrap());
                 let value = ValueHandle::parse_from(pairs.next().unwrap());
                 Operator::Load(ty, value)
-            },
+            }
             Rule::cast => {
                 let ty = Type::parse_from(pairs.next().unwrap());
                 let value = ValueHandle::parse_from(pairs.next().unwrap());
                 Operator::Cast(ty, value)
-            },
+            }
             Rule::add => {
                 let value1 = ValueHandle::parse_from(pairs.next().unwrap());
                 let value2 = ValueHandle::parse_from(pairs.next().unwrap());
                 Operator::Add(value1, value2)
-            },
+            }
             Rule::fadd => {
                 let value1 = ValueHandle::parse_from(pairs.next().unwrap());
                 let value2 = ValueHandle::parse_from(pairs.next().unwrap());
                 Operator::FAdd(value1, value2)
-            },
+            }
             Rule::sub => {
                 let value1 = ValueHandle::parse_from(pairs.next().unwrap());
                 let value2 = ValueHandle::parse_from(pairs.next().unwrap());
                 Operator::Sub(value1, value2)
-            },
+            }
             Rule::fsub => {
                 let value1 = ValueHandle::parse_from(pairs.next().unwrap());
                 let value2 = ValueHandle::parse_from(pairs.next().unwrap());
                 Operator::FSub(value1, value2)
-            },
+            }
             Rule::mul => {
                 let value1 = ValueHandle::parse_from(pairs.next().unwrap());
                 let value2 = ValueHandle::parse_from(pairs.next().unwrap());
                 Operator::Mul(value1, value2)
-            },
+            }
             Rule::fmul => {
                 let value1 = ValueHandle::parse_from(pairs.next().unwrap());
                 let value2 = ValueHandle::parse_from(pairs.next().unwrap());
                 Operator::FMul(value1, value2)
-            },
+            }
             Rule::udiv => {
                 let value1 = ValueHandle::parse_from(pairs.next().unwrap());
                 let value2 = ValueHandle::parse_from(pairs.next().unwrap());
                 Operator::UDiv(value1, value2)
-            },
+            }
             Rule::sdiv => {
                 let value1 = ValueHandle::parse_from(pairs.next().unwrap());
                 let value2 = ValueHandle::parse_from(pairs.next().unwrap());
                 Operator::SDiv(value1, value2)
-            },
+            }
             Rule::urem => {
                 let value1 = ValueHandle::parse_from(pairs.next().unwrap());
                 let value2 = ValueHandle::parse_from(pairs.next().unwrap());
                 Operator::URem(value1, value2)
-            },
+            }
             Rule::srem => {
                 let value1 = ValueHandle::parse_from(pairs.next().unwrap());
                 let value2 = ValueHandle::parse_from(pairs.next().unwrap());
                 Operator::SRem(value1, value2)
-            },
+            }
             Rule::frem => {
                 let value1 = ValueHandle::parse_from(pairs.next().unwrap());
                 let value2 = ValueHandle::parse_from(pairs.next().unwrap());
                 Operator::FRem(value1, value2)
-            },
+            }
             Rule::shl => {
                 let value1 = ValueHandle::parse_from(pairs.next().unwrap());
                 let value2 = ValueHandle::parse_from(pairs.next().unwrap());
                 Operator::Shl(value1, value2)
-            },
+            }
             Rule::lshr => {
                 let value1 = ValueHandle::parse_from(pairs.next().unwrap());
                 let value2 = ValueHandle::parse_from(pairs.next().unwrap());
                 Operator::LShr(value1, value2)
-            },
+            }
             Rule::ashr => {
                 let value1 = ValueHandle::parse_from(pairs.next().unwrap());
                 let value2 = ValueHandle::parse_from(pairs.next().unwrap());
                 Operator::AShr(value1, value2)
-            },
+            }
             Rule::and => {
                 let value1 = ValueHandle::parse_from(pairs.next().unwrap());
                 let value2 = ValueHandle::parse_from(pairs.next().unwrap());
                 Operator::And(value1, value2)
-            },
+            }
             Rule::or => {
                 let value1 = ValueHandle::parse_from(pairs.next().unwrap());
                 let value2 = ValueHandle::parse_from(pairs.next().unwrap());
                 Operator::Or(value1, value2)
-            },
+            }
             Rule::xor => {
                 let value1 = ValueHandle::parse_from(pairs.next().unwrap());
                 let value2 = ValueHandle::parse_from(pairs.next().unwrap());
                 Operator::Xor(value1, value2)
-            },
-            Rule::get_value => todo!(),
+            }
+            Rule::get_value => {
+                let value = ValueHandle::parse_from(pairs.next().unwrap());
+                let index = IndexList::parse_from(pairs.next().unwrap());
+                Operator::GetValue(value, index)
+            }
             Rule::get_item => {
                 let value1 = ValueHandle::parse_from(pairs.next().unwrap());
                 let index = ValueHandle::parse_from(pairs.next().unwrap());
                 Operator::GetItem(value1, index)
-            },
-            Rule::set_value => todo!(),
+            }
+            Rule::set_value => {
+                let value1 = ValueHandle::parse_from(pairs.next().unwrap());
+                let index = IndexList::parse_from(pairs.next().unwrap());
+                let value2 = ValueHandle::parse_from(pairs.next().unwrap());
+                Operator::SetValue(value1, index, value2)
+            }
             Rule::set_item => {
                 let value1 = ValueHandle::parse_from(pairs.next().unwrap());
                 let index = ValueHandle::parse_from(pairs.next().unwrap());
                 let value2 = ValueHandle::parse_from(pairs.next().unwrap());
                 Operator::SetItem(value1, index, value2)
-            },
+            }
             Rule::trunc => {
                 let ty = IntType::parse_from(pairs.next().unwrap());
                 let value1 = ValueHandle::parse_from(pairs.next().unwrap());
                 Operator::Trunc(value1, ty)
-            },
+            }
             Rule::zext => {
                 let ty = IntType::parse_from(pairs.next().unwrap());
                 let value1 = ValueHandle::parse_from(pairs.next().unwrap());
                 Operator::ZExt(value1, ty)
-            },
+            }
             Rule::sext => {
                 let ty = IntType::parse_from(pairs.next().unwrap());
                 let value1 = ValueHandle::parse_from(pairs.next().unwrap());
                 Operator::SExt(value1, ty)
-            },
+            }
             Rule::ftrunc => {
                 let ty = FloatType::parse_from(pairs.next().unwrap());
                 let value1 = ValueHandle::parse_from(pairs.next().unwrap());
                 Operator::FTrunc(value1, ty)
-            },
+            }
             Rule::fext => {
                 let ty = FloatType::parse_from(pairs.next().unwrap());
                 let value1 = ValueHandle::parse_from(pairs.next().unwrap());
                 Operator::FExt(value1, ty)
-            },
-            Rule::icmp => todo!(),
-            Rule::fcmp => todo!(),
-            Rule::phi => todo!(),
+            }
+            Rule::icmp => {
+                let op = ICmpOp::parse_from(pairs.next().unwrap());
+                let value1 = ValueHandle::parse_from(pairs.next().unwrap());
+                let value2 = ValueHandle::parse_from(pairs.next().unwrap());
+                Operator::ICmp(op, value1, value2)
+            }
+            Rule::fcmp => {
+                let op = FCmpOp::parse_from(pairs.next().unwrap());
+                let value1 = ValueHandle::parse_from(pairs.next().unwrap());
+                let value2 = ValueHandle::parse_from(pairs.next().unwrap());
+                Operator::FCmp(op, value1, value2)
+            }
+            Rule::phi => {
+                let pairs = pairs.next().unwrap().into_inner();
+                Operator::Phi(pairs.map(phi_pair_parse_from).collect())
+            }
             Rule::call => {
                 let callee = ValueHandle::parse_from(pairs.next().unwrap());
-                let args = pairs.next().unwrap().into_inner().map(ValueHandle::parse_from).collect();
+                let args = pairs
+                    .next()
+                    .unwrap()
+                    .into_inner()
+                    .map(ValueHandle::parse_from)
+                    .collect();
                 Operator::Call(callee, args)
-            },
+            }
             _ => unreachable!(),
         }
     }

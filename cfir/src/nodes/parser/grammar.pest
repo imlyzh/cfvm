@@ -264,7 +264,7 @@ alloca_type_stack = _{ "stack" }
 
 
 get_ptr = {
-    "get-ptr" ~ value ~ "," ~ index_list
+    "get-ptr" ~ value ~ ("," ~ index_list)?
 }
 
 load = {

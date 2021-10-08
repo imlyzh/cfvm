@@ -13,7 +13,10 @@ use basicblock::*;
 use sexpr_ir::gast::Handle;
 use types::*;
 
-use self::handles::{ConstantDef, DefineSymbol, IsExtern, IsPublic, LabelSymbol, TypeDef, TypeDefineSymbol, VariableDef};
+use self::handles::{
+    ConstantDef, DefineSymbol, IsExtern, IsPublic, LabelSymbol, TypeDef, TypeDefineSymbol,
+    VariableDef,
+};
 
 pub type MutHandle<T> = Arc<RwLock<T>>;
 

@@ -9,7 +9,6 @@ use super::{
     FunctionDecl, FunctionDef,
 };
 
-
 #[derive(Debug, Hash, Clone, Eq, PartialEq)]
 pub struct GlobalSymbol(pub Option<Handle<String>>, pub Handle<String>);
 
@@ -30,7 +29,6 @@ pub struct LabelSymbol(pub Handle<String>);
 
 #[derive(Debug, Hash, Clone, Eq, PartialEq)]
 pub struct TypeDefineSymbol(pub Handle<String>);
-
 
 #[derive(Debug, Hash, Clone, Eq, PartialEq)]
 pub enum LazyLoadSymbol<T, R> {
@@ -54,7 +52,6 @@ impl<T, R> SymbolHandle<T, R> {
 
 pub type LocalHandle = SymbolHandle<LocalSymbol, Arc<Instruction>>;
 
-
 // global value
 
 #[derive(Debug, Clone)]
@@ -68,14 +65,14 @@ pub enum SimpleValue {
     FloatNumber(String),
     Number(String),
     Char(char),
-    Vector(VectorValue)
+    Vector(VectorValue),
 }
 
 #[derive(Debug, Clone)]
 pub struct ArrayValue(pub Vec<ConstantValue>);
 
 #[derive(Debug, Clone)]
-pub struct StringLit (pub Handle<String>);
+pub struct StringLit(pub Handle<String>);
 
 #[derive(Debug, Clone)]
 pub enum ConstantValue {
@@ -135,14 +132,18 @@ pub struct IsPublic(pub bool);
 pub type TypeHandle = SymbolHandle<TypeSymbol, Arc<Type>>;
 
 #[derive(Debug, Clone)]
-pub struct TypeDef (pub IsPublic, pub TypeDefineSymbol, pub TypeHandle);
-
+pub struct TypeDef(pub IsPublic, pub TypeDefineSymbol, pub TypeHandle);
 
 #[derive(Debug, Clone)]
 pub struct ConstantDef(pub IsPublic, pub DefineSymbol, pub Type, pub ConstantValue);
 
 #[derive(Debug, Clone)]
-pub struct VariableDef(pub IsPublic, pub DefineSymbol, pub Type, pub Option<ConstantValue>);
+pub struct VariableDef(
+    pub IsPublic,
+    pub DefineSymbol,
+    pub Type,
+    pub Option<ConstantValue>,
+);
 
 #[derive(Debug, Clone)]
 pub struct Attris(pub Vec<Handle<String>>);

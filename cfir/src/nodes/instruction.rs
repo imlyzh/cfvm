@@ -2,7 +2,11 @@ use std::collections::BTreeSet;
 
 use sexpr_ir::gast::Handle;
 
-use super::{MutHandle, handles::{LabelHandle, LocalHandle, LocalSymbol, SimpleValue, ValueHandle}, types::{FloatType, IntType, Type}};
+use super::{
+    handles::{LabelHandle, LocalHandle, LocalSymbol, SimpleValue, Symbol, ValueHandle},
+    types::{FloatType, IntType, Type},
+    MutHandle,
+};
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum BranchOp {
@@ -47,10 +51,11 @@ pub enum FCmpOp {
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Index {
     Index(u64),
-    Symbol(Handle<String>),
+    Symbol(Symbol),
 }
 
-pub type IndexList = Vec<Index>;
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct IndexList(pub Vec<Index>);
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct IsExtend(pub bool);
@@ -71,7 +76,7 @@ pub enum AllocaType {
 #[derive(Debug, Clone)]
 pub enum Operator {
     Alloca(Option<AllocaType>, Type, Option<ValueHandle>),
-    GetPtr(ValueHandle, IndexList),
+    GetPtr(ValueHandle, Option<IndexList>),
     Load(Type, ValueHandle),
     Cast(Type, ValueHandle),
     Add(ValueHandle, ValueHandle),
@@ -102,15 +107,15 @@ pub enum Operator {
     FExt(ValueHandle, FloatType),
     ICmp(ICmpOp, ValueHandle, ValueHandle),
     FCmp(FCmpOp, ValueHandle, ValueHandle),
-    Phi(Vec<(ValueHandle, LabelHandle)>),
+    Phi(Vec<(LabelHandle, ValueHandle)>),
     Call(ValueHandle, Vec<ValueHandle>),
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub struct IsAtomic (pub bool);
+pub struct IsAtomic(pub bool);
 
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub struct IsVolatile (pub bool);
+pub struct IsVolatile(pub bool);
 
 /*
 #[derive(Debug, Clone)]
@@ -122,10 +127,20 @@ pub struct BindMetadata {
 */
 
 #[derive(Debug, Clone)]
-pub struct Store(pub LocalHandle, pub ValueHandle, pub IsAtomic, pub IsVolatile);
+pub struct Store(
+    pub LocalHandle,
+    pub ValueHandle,
+    pub IsAtomic,
+    pub IsVolatile,
+);
 
 #[derive(Debug, Clone)]
-pub struct BindOperator(pub LocalSymbol, pub MutHandle<Operator>, pub IsAtomic, pub IsVolatile);
+pub struct BindOperator(
+    pub LocalSymbol,
+    pub MutHandle<Operator>,
+    pub IsAtomic,
+    pub IsVolatile,
+);
 
 #[derive(Debug, Clone)]
 pub enum Instruction {
@@ -138,7 +153,12 @@ pub enum Instruction {
 pub struct Ret(pub Option<ValueHandle>);
 
 #[derive(Debug, Clone)]
-pub struct Branch(pub BranchOp, pub ValueHandle, pub LabelHandle, pub LabelHandle);
+pub struct Branch(
+    pub BranchOp,
+    pub ValueHandle,
+    pub LabelHandle,
+    pub LabelHandle,
+);
 
 #[derive(Debug, Clone)]
 pub struct Conds(pub Vec<(ValueHandle, LabelHandle)>, pub Option<LabelHandle>);

@@ -185,12 +185,12 @@ impl ParseFrom<Rule> for TypeSymbol {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::type_symbol);
         let mut pairs = pair.into_inner();
-        let sym = pairs.next().unwrap().as_str().to_string();
+        let sym = TypeDefineSymbol::parse_from(pairs.next().unwrap());
         if let Some(x) = pairs.next() {
             let namespace = x.as_str().to_string();
-            TypeSymbol(Some(Handle::new(namespace)), Handle::new(sym))
+            TypeSymbol(Some(Handle::new(namespace)), sym)
         } else {
-            TypeSymbol(None, Handle::new(sym))
+            TypeSymbol(None, sym)
         }
         // fixme: register in global intern string pool
     }
@@ -682,8 +682,20 @@ impl ParseFrom<Rule> for BasicBlockDef {
         };
         let insts = insts_parse_from(pairs.next().unwrap());
         let terminator = Terminator::parse_from(pairs.next().unwrap());
+        let variable_defs = insts
+            .iter()
+            .filter(|x| if let Instruction::BindOperator(_) = x.read().unwrap().to_owned() {true} else {false})
+            .map(|x|
+                if let Instruction::BindOperator(b) = x.read().unwrap().to_owned() {
+                    (b.0.clone(), Handle::new(RwLock::new(b)))
+                } else {
+                    unreachable!()
+                })
+            .collect();
+        let variable_defs = Handle::new(RwLock::new(variable_defs));
         BasicBlockDef {
             label,
+            variable_defs,
             instructions: Handle::new(RwLock::new(insts)),
             terminator: Handle::new(RwLock::new(terminator)),
         }

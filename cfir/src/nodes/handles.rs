@@ -16,7 +16,7 @@ pub struct GlobalSymbol(pub Option<Handle<String>>, pub Handle<String>);
 pub struct LocalSymbol(pub Option<Handle<String>>, pub Handle<String>);
 
 #[derive(Debug, Hash, Clone, Eq, PartialEq)]
-pub struct TypeSymbol(pub Option<Handle<String>>, pub Handle<String>);
+pub struct TypeSymbol(pub Option<Handle<String>>, pub TypeDefineSymbol);
 
 #[derive(Debug, Hash, Clone, Eq, PartialEq)]
 pub struct Symbol(pub Arc<String>); // record line key, params name, etc.
@@ -145,23 +145,7 @@ pub struct VariableDef(
     pub Option<ConstantValue>,
 );
 
-#[derive(Debug, Clone)]
-pub struct Attris(pub Vec<Handle<String>>);
-
-impl Attris {
-    pub fn have_flag(&self, flag: &str) -> bool {
-        self.0.iter().any(|f| f.as_str() == flag)
-    }
-
-    pub fn have_flags(&self, flags: &[&str]) -> bool {
-        self.0.iter().any(|f| flags.contains(&f.as_str()))
-    }
-
-    pub fn have_and_only_have_flags(&self, flags: &[&str]) -> Option<Vec<bool>> {
-        if self.0.len() != flags.len() {
-            return None;
-        }
-        let r: Vec<bool> = flags.iter().map(|x| self.have_flag(x)).collect();
-        Some(r)
-    }
+pub trait GetValue<Env> {
+    type Target;
+    fn get_value(&self, env: &Env) -> Option<Self::Target>;
 }

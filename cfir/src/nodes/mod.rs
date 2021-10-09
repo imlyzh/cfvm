@@ -3,6 +3,7 @@ pub mod handles;
 pub mod instruction;
 pub mod parser;
 pub mod types;
+pub mod pass;
 
 use std::{
     collections::HashMap,
@@ -19,6 +20,9 @@ use self::handles::{
 };
 
 pub type MutHandle<T> = Arc<RwLock<T>>;
+
+#[derive(Debug, Clone)]
+pub struct GlobalEnv(pub HashMap<Handle<String>, MutHandle<Module>>);
 
 #[derive(Debug, Clone)]
 pub struct Module {

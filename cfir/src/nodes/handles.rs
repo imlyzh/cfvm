@@ -10,7 +10,7 @@ use super::{
 };
 
 #[derive(Debug, Hash, Clone, Eq, PartialEq)]
-pub struct GlobalSymbol(pub Option<Handle<String>>, pub Handle<String>);
+pub struct GlobalSymbol(pub Option<Handle<String>>, pub DefineSymbol);
 
 #[derive(Debug, Hash, Clone, Eq, PartialEq)]
 pub struct LocalSymbol(pub Option<Handle<String>>, pub Handle<String>);
@@ -84,15 +84,39 @@ pub enum ConstantValue {
 
 #[derive(Debug, Clone)]
 pub enum GlobalValue {
-    Constant(Type, ConstantValue),
-    FunctionDef(Arc<FunctionDef>),
-    FunctionDecl(Arc<FunctionDecl>),
+    Constant(Handle<ConstantDef>),
+    Variable(Handle<VariableDef>),
+    FunctionDef(Handle<FunctionDef>),
+    FunctionDecl(Handle<FunctionDecl>),
+}
+
+impl GetType for ConstantDef {
+    fn get_type(&self) -> Type {
+        let r = &self.2;
+        if let LazyLoadSymbol::Reference(r) = r.0.read().unwrap().to_owned() {
+            (*r).clone()
+        } else {
+            panic!("not a reference")
+        }
+    }
+}
+
+impl GetType for VariableDef {
+    fn get_type(&self) -> Type {
+        let r = &self.2;
+        if let LazyLoadSymbol::Reference(r) = r.0.read().unwrap().to_owned() {
+            (*r).clone()
+        } else {
+            panic!("not a reference")
+        }
+    }
 }
 
 impl GetType for GlobalValue {
     fn get_type(&self) -> Type {
         match self {
-            GlobalValue::Constant(t, _) => t.clone(),
+            GlobalValue::Constant(c) => c.get_type(),
+            GlobalValue::Variable(v) => v.get_type(),
             GlobalValue::FunctionDef(f) => f.get_type(),
             GlobalValue::FunctionDecl(f) => f.get_type(),
         }
@@ -135,17 +159,7 @@ pub type TypeHandle = SymbolHandle<TypeSymbol, Arc<Type>>;
 pub struct TypeDef(pub IsPublic, pub TypeDefineSymbol, pub TypeHandle);
 
 #[derive(Debug, Clone)]
-pub struct ConstantDef(pub IsPublic, pub DefineSymbol, pub Type, pub ConstantValue);
+pub struct ConstantDef(pub IsPublic, pub DefineSymbol, pub TypeHandle, pub ConstantValue);
 
 #[derive(Debug, Clone)]
-pub struct VariableDef(
-    pub IsPublic,
-    pub DefineSymbol,
-    pub Type,
-    pub Option<ConstantValue>,
-);
-
-pub trait GetValue<Env> {
-    type Target;
-    fn get_value(&self, env: &Env) -> Option<Self::Target>;
-}
+pub struct VariableDef(pub IsPublic, pub DefineSymbol, pub TypeHandle, pub Option<ConstantValue>);

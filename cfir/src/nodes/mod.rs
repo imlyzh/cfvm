@@ -27,11 +27,11 @@ pub struct GlobalEnv(pub HashMap<Handle<String>, MutHandle<Module>>);
 #[derive(Debug, Clone)]
 pub struct Module {
     pub name: Handle<String>,
-    pub type_defs: HashMap<TypeDefineSymbol, TypeDef>,
-    pub constant_defs: HashMap<DefineSymbol, ConstantDef>,
-    pub variable_defs: HashMap<DefineSymbol, VariableDef>,
-    pub functions: HashMap<DefineSymbol, FunctionDef>,
-    pub function_decls: HashMap<DefineSymbol, FunctionDecl>,
+    pub type_defs: HashMap<TypeDefineSymbol, Handle<TypeDef>>,
+    pub constant_defs: HashMap<DefineSymbol, Handle<ConstantDef>>,
+    pub variable_defs: HashMap<DefineSymbol, Handle<VariableDef>>,
+    pub functions: HashMap<DefineSymbol, Handle<FunctionDef>>,
+    pub function_decls: HashMap<DefineSymbol, Handle<FunctionDecl>>,
 }
 
 #[derive(Debug, Clone)]

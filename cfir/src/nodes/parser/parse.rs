@@ -26,41 +26,41 @@ impl ParseFrom<Rule> for Module {
         let name = Handle::new(pairs.next().unwrap().as_str().to_string());
         let bodys = pairs.next().unwrap().into_inner();
 
-        let mut type_defs: HashMap<TypeDefineSymbol, TypeDef> = Default::default();
-        let mut constant_defs: HashMap<DefineSymbol, ConstantDef> = Default::default();
-        let mut variable_defs: HashMap<DefineSymbol, VariableDef> = Default::default();
-        let mut functions: HashMap<DefineSymbol, FunctionDef> = Default::default();
-        let mut function_decls: HashMap<DefineSymbol, FunctionDecl> = Default::default();
+        let mut type_defs: HashMap<TypeDefineSymbol, Handle<TypeDef>> = Default::default();
+        let mut constant_defs: HashMap<DefineSymbol, Handle<ConstantDef>> = Default::default();
+        let mut variable_defs: HashMap<DefineSymbol, Handle<VariableDef>> = Default::default();
+        let mut functions: HashMap<DefineSymbol, Handle<FunctionDef>> = Default::default();
+        let mut function_decls: HashMap<DefineSymbol, Handle<FunctionDecl>> = Default::default();
 
         for pair in bodys {
             match pair.as_rule() {
                 Rule::type_def => {
                     let pair = pair.into_inner().next().unwrap();
-                    let type_def = TypeDef::parse_from(pair);
+                    let type_def = Handle::new(TypeDef::parse_from(pair));
                     let name = type_def.1.clone();
                     type_defs.insert(name, type_def);
                 }
                 Rule::constant_def => {
                     let pair = pair.into_inner().next().unwrap();
-                    let constant_def = ConstantDef::parse_from(pair);
+                    let constant_def = Handle::new(ConstantDef::parse_from(pair));
                     let name = constant_def.1.clone();
                     constant_defs.insert(name, constant_def);
                 }
                 Rule::variable_def => {
                     let pair = pair.into_inner().next().unwrap();
-                    let variable_def = VariableDef::parse_from(pair);
+                    let variable_def = Handle::new(VariableDef::parse_from(pair));
                     let name = variable_def.1.clone();
                     variable_defs.insert(name, variable_def);
                 }
                 Rule::function_def => {
                     let pair = pair.into_inner().next().unwrap();
-                    let function_def = FunctionDef::parse_from(pair);
+                    let function_def = Handle::new(FunctionDef::parse_from(pair));
                     let name = function_def.name.clone();
                     functions.insert(name, function_def);
                 }
                 Rule::function_decl => {
                     let pair = pair.into_inner().next().unwrap();
-                    let function_decl = FunctionDecl::parse_from(pair);
+                    let function_decl = Handle::new(FunctionDecl::parse_from(pair));
                     let name = function_decl.name.clone();
                     function_decls.insert(name, function_decl);
                 }
@@ -242,12 +242,12 @@ impl ParseFrom<Rule> for GlobalSymbol {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::global_symbol);
         let mut pairs = pair.into_inner();
-        let sym = pairs.next().unwrap().as_str().to_string();
+        let sym = DefineSymbol::parse_from(pairs.next().unwrap());
         if let Some(x) = pairs.next() {
             let namespace = x.as_str().to_string();
-            GlobalSymbol(Some(Handle::new(namespace)), Handle::new(sym))
+            GlobalSymbol(Some(Handle::new(namespace)), sym)
         } else {
-            GlobalSymbol(None, Handle::new(sym))
+            GlobalSymbol(None, sym)
         }
         // fixme: register in global intern string pool
     }
@@ -617,7 +617,7 @@ impl ParseFrom<Rule> for ConstantDef {
         let mut pairs = pair.into_inner();
         let is_pub = IsPublic::parse_from(pairs.next().unwrap());
         let name = DefineSymbol::parse_from(pairs.next().unwrap());
-        let ty = Type::parse_from(pairs.next().unwrap());
+        let ty = TypeHandle::parse_from(pairs.next().unwrap());
         let const_value = ConstantValue::parse_from(pairs.next().unwrap());
         ConstantDef(is_pub, name, ty, const_value)
     }
@@ -629,7 +629,7 @@ impl ParseFrom<Rule> for VariableDef {
         let mut pairs = pair.into_inner();
         let is_pub = IsPublic::parse_from(pairs.next().unwrap());
         let name = DefineSymbol::parse_from(pairs.next().unwrap());
-        let ty = Type::parse_from(pairs.next().unwrap());
+        let ty = TypeHandle::parse_from(pairs.next().unwrap());
         let const_value = pairs.next().map(ConstantValue::parse_from);
         VariableDef(is_pub, name, ty, const_value)
     }

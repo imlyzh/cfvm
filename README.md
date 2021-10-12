@@ -1,3 +1,3 @@
 # cfvm
 
-The  CloudFlow Virtual Machine.
+The 云流 (CloudFlow) Virtual Machine.

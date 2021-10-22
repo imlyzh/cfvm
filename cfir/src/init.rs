@@ -1,6 +1,6 @@
-use crate::nodes::*;
-use crate::nodes::handles::*;
-use crate::nodes::basicblock::*;
+use crate::graphir::*;
+use crate::graphir::handles::*;
+use crate::graphir::basicblock::*;
 
 
 

@@ -3,10 +3,10 @@ use std::collections::BTreeSet;
 use pest::iterators::Pair;
 use pest_derive::*;
 
-use crate::nodes::handles::*;
-use crate::nodes::instruction::Store;
-use crate::nodes::instruction::*;
-use crate::nodes::*;
+use crate::graphir::handles::*;
+use crate::graphir::instruction::Store;
+use crate::graphir::instruction::*;
+use crate::graphir::*;
 
 #[derive(Parser)]
 #[grammar = "./nodes/parser/grammar.pest"]

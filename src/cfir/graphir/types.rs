@@ -1,5 +1,5 @@
 use super::{
-    handles::{LocalSymbol, Symbol},
+    handles::{Symbol},
     instruction::AllocaType,
 };
 

@@ -47,6 +47,7 @@ impl<T, R> SymbolHandle<T, R> {
     pub fn new(reference: R) -> Self {
         SymbolHandle(Arc::new(RwLock::new(LazyLoadSymbol::Reference(reference))))
     }
+    
 }
 
 // local value

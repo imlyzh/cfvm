@@ -1,4 +1,4 @@
-use std::ops::Range;
+use std::{collections::{BinaryHeap, HashMap, HashSet}, ops::Range};
 
 use crate::{analysis::find_lifetime::FindVarLifetime, cfir::graphir::{FunctionDef, basicblock::BasicBlockDef, handles::{LazyLoadSymbol, LocalSymbol, SymbolHandle}, instruction::{BindOperator, Instruction, Store}}};
 
@@ -38,6 +38,26 @@ impl LinealScanAlloc for InstStream {
         for (inst_num, i) in insts.iter().enumerate() {
             i.find_var_lifetime(true, inst_num, &mut reg_lifetime, &mut var_lifetime);
         }
+        let reg_set: HashSet<usize> = reg_lifetime.iter().map(|(x, _)| x).cloned().collect();
+        let var_set: HashSet<LocalSymbol> = var_lifetime.iter().map(|(x, _)| x).cloned().collect();
+        let reg_map: HashMap<usize, BinaryHeap<usize>> = reg_set
+            .iter()
+            .map(|x| (x.clone(),
+                reg_lifetime
+                    .iter()
+                    .filter(|(y, _)| y == x)
+                    .map(|(_, z)| *z)
+                    .collect::<BinaryHeap<_>>()))
+            .collect();
+        let var_map: HashMap<LocalSymbol, BinaryHeap<usize>> = var_set
+            .iter()
+            .map(|x| (x.clone(),
+                var_lifetime
+                    .iter()
+                    .filter(|(y, _)| y == x)
+                    .map(|(_, z)| *z)
+                    .collect::<BinaryHeap<_>>()))
+            .collect();
         todo!()
     }
 }

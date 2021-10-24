@@ -3,13 +3,13 @@ use std::collections::BTreeSet;
 use pest::iterators::Pair;
 use pest_derive::*;
 
-use crate::graphir::handles::*;
-use crate::graphir::instruction::Store;
-use crate::graphir::instruction::*;
-use crate::graphir::*;
+use crate::cfir::graphir::handles::*;
+use crate::cfir::graphir::instruction::Store;
+use crate::cfir::graphir::instruction::*;
+use crate::cfir::graphir::*;
 
 #[derive(Parser)]
-#[grammar = "./nodes/parser/grammar.pest"]
+#[grammar = "./cfir/graphir/parser/grammar.pest"]
 pub enum CFIR {}
 
 pub trait ParseFrom<T>

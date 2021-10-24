@@ -1,6 +1,7 @@
 use std::sync::{Arc, RwLock};
 
-use sexpr_ir::gast::Handle;
+// use sexpr_ir::gast::Handle;
+pub type Handle<T> = Arc<T>;
 
 use super::{
     basicblock::BasicBlockDef,

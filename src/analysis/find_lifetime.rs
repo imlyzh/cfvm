@@ -1,4 +1,4 @@
-use crate::cfir::graphir::{handles::{LazyLoadSymbol, LocalSymbol, SymbolRef, ValueHandle}, instruction::{BindOperator, Instruction, Operator, Store}};
+use crate::cfir::graphir::{handles::{LazyLoadSymbol, LocalSymbol, SymbolHandle, SymbolRef, ValueHandle, ValueRef}, instruction::{BindOperator, Instruction, Operator, Store}};
 
 
 
@@ -20,8 +20,8 @@ impl FindVarLifetime for ValueHandle {
         reg_lifetime: &mut Vec<(usize, usize)>,
         var_lifetime: &mut Vec<(LocalSymbol, usize)>) {
         match self.0.read().unwrap().clone() {
-            LazyLoadSymbol::Symbol(SymbolRef::Local(s)) => todo!(),
-            LazyLoadSymbol::Reference(r) => todo!(),
+            LazyLoadSymbol::Symbol(SymbolRef::Local(s)) => var_lifetime.push((s, inst_num*2)),
+            LazyLoadSymbol::Reference(ValueRef::Local(r)) => r.find_var_lifetime(deep, inst_num, reg_lifetime, var_lifetime),
             _ => {}
         }
         todo!()
@@ -47,7 +47,7 @@ impl FindVarLifetime for Operator {
             Operator::SExt(a, _)        |
             Operator::FTrunc(a, _)      |
             Operator::FExt(a, _)        => {
-                todo!()
+                a.find_var_lifetime(deep, inst_num, reg_lifetime, var_lifetime)
             }
             // 2
             Operator::Add(a, b)         |
@@ -72,14 +72,22 @@ impl FindVarLifetime for Operator {
             Operator::SetItem(a, _, b)  |
             Operator::ICmp(_, a, b)     |
             Operator::FCmp(_, a, b)     => {
-                todo!()
+                a.find_var_lifetime(deep, inst_num, reg_lifetime, var_lifetime);
+                b.find_var_lifetime(deep, inst_num, reg_lifetime, var_lifetime)
             }
             // n
             Operator::Phi(nodes) => {
-                todo!()
+                nodes
+                    .iter()
+                    .for_each(|(_, x)|
+                        x.find_var_lifetime(deep, inst_num, reg_lifetime, var_lifetime));
             }
             Operator::Call(a, bs) => {
-                todo!()
+                a.find_var_lifetime(deep, inst_num, reg_lifetime, var_lifetime);
+                bs
+                    .iter()
+                    .for_each(|x|
+                        x.find_var_lifetime(deep, inst_num, reg_lifetime, var_lifetime));
             }
         }
         todo!()
@@ -101,20 +109,25 @@ impl FindVarLifetime for Instruction {
                             => var_lifetime.push((v, inst_num*2)),
                         LazyLoadSymbol::Reference(v) => {
                             v.find_var_lifetime(false, inst_num, reg_lifetime, var_lifetime);
-                            todo!()
                             },
                     }
                     if deep {
-                        todo!()
+                        e.find_var_lifetime(false, inst_num, reg_lifetime, var_lifetime);
                     }
                 }
             Instruction::BindOperator(BindOperator(v, e, _, _)) => {
-                    var_lifetime.push((v.clone(), inst_num+2));
-                    todo!()
+                if deep {
+                    var_lifetime.push((v.clone(), inst_num*2+1));
+                } else {
+                    var_lifetime.push((v.clone(), inst_num*2));
                 }
-            Instruction::Operator(e)=>{
-                todo!()
-            }
+                if deep {
+                    e.read().unwrap().find_var_lifetime(false, inst_num, reg_lifetime, var_lifetime);
+                }
+                }
+            Instruction::Operator(e)=> {
+                // e.read().unwrap().find_var_lifetime(false, inst_num, reg_lifetime, var_lifetime),
+                }
         }
     }
 }

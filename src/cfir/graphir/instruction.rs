@@ -73,7 +73,7 @@ pub enum AllocaType {
 
 #[derive(Debug, Clone)]
 pub enum Operator {
-    Alloca(Option<AllocaType>, Type, Option<ValueHandle>),
+    Alloca(Option<AllocaType>, Type),
     GetPtr(ValueHandle, Option<IndexList>),
     Load(Type, ValueHandle),
     Cast(Type, ValueHandle),

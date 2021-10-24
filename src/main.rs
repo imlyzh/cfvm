@@ -1,4 +1,5 @@
 mod cfir;
+mod analysis;
 mod codegen;
 
 fn main() {

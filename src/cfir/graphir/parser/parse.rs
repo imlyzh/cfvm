@@ -936,8 +936,10 @@ impl ParseFrom<Rule> for Operator {
             Rule::alloca => {
                 let alloca_type = option_alloca_type_parse_from(pairs.next().unwrap());
                 let ty = Type::parse_from(pairs.next().unwrap());
-                let value = pairs.next().map(ValueHandle::parse_from);
-                Operator::Alloca(alloca_type, ty, value)
+                // let value = pairs.next().map(ValueHandle::parse_from);
+                Operator::Alloca(alloca_type, ty,
+                    // value
+                )
             }
             Rule::get_ptr => {
                 let value = ValueHandle::parse_from(pairs.next().unwrap());

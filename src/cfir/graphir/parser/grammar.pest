@@ -240,7 +240,8 @@ operator =
 }
 
 alloca = {
-    "alloca" ~ alloca_type ~ type_ ~ value?
+    "alloca" ~ alloca_type ~ type_
+    // ~ value?
 }
 
 alloca_type = {

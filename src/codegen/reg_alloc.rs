@@ -40,7 +40,7 @@ impl LinealScanAlloc for InstStream {
         }
         let reg_set: HashSet<usize> = reg_lifetime.iter().map(|(x, _)| x).cloned().collect();
         let var_set: HashSet<LocalSymbol> = var_lifetime.iter().map(|(x, _)| x).cloned().collect();
-        let reg_map: HashMap<usize, BinaryHeap<usize>> = reg_set
+        let reg_map: Vec<(usize, BinaryHeap<usize>)> = reg_set
             .iter()
             .map(|x| (x.clone(),
                 reg_lifetime
@@ -49,7 +49,7 @@ impl LinealScanAlloc for InstStream {
                     .map(|(_, z)| *z)
                     .collect::<BinaryHeap<_>>()))
             .collect();
-        let var_map: HashMap<LocalSymbol, BinaryHeap<usize>> = var_set
+        let var_map: Vec<(LocalSymbol, BinaryHeap<usize>)> = var_set
             .iter()
             .map(|x| (x.clone(),
                 var_lifetime
@@ -58,6 +58,7 @@ impl LinealScanAlloc for InstStream {
                     .map(|(_, z)| *z)
                     .collect::<BinaryHeap<_>>()))
             .collect();
+        
         todo!()
     }
 }

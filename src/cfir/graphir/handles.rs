@@ -10,6 +10,7 @@ use super::{
     FunctionDecl, FunctionDef,
 };
 
+
 #[derive(Debug, Hash, Clone, Eq, PartialEq)]
 pub struct GlobalSymbol(pub Option<Handle<String>>, pub DefineSymbol);
 
@@ -47,7 +48,7 @@ impl<T, R> SymbolHandle<T, R> {
     pub fn new(reference: R) -> Self {
         SymbolHandle(Arc::new(RwLock::new(LazyLoadSymbol::Reference(reference))))
     }
-    
+
 }
 
 // local value

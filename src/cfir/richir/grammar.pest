@@ -1,0 +1,294 @@
+
+module = { "mod" ~ symbol ~ ":" ~ module_bodys ~ EOI }
+
+module_bodys = { module_body* }
+
+module_body =
+    { function_def
+    | function_decl
+    | type_def
+    | constant_def
+    | variable_def
+    }
+
+type_def = {
+    is_pub ~ type_define_symbol ~ "=" ~ type_value ~ ";"
+}
+
+constant_def = {
+    is_pub ~ "const" ~ global_define_symbol ~ ":" ~ type_value ~ "=" ~ constant_value ~ ";"
+}
+
+variable_def = {
+    is_pub ~ "var" ~ global_define_symbol ~ ":" ~ type_value ~ ("=" ~ constant_value)? ~ ";"
+}
+
+
+constant_value =
+    { simple_value
+    | array_value
+    | record_value
+    | string_lit
+}
+
+simple_value =
+    { float_number
+    | number
+    | char
+    | vector_value
+}
+
+vector_value = {
+    "<" ~ simple_value ~ ("," ~ simple_value)* ~ ">"
+}
+
+array_value = {
+    "[" ~ constant_value ~ ("," ~ constant_value)* ~ "]"
+}
+
+record_value = {
+    "{" ~ params_name ~ ("," ~ params_name)* ~ "}"
+}
+
+record_value_kv_pair = {
+    params_name ~ ":" ~ constant_value
+}
+
+
+function_decl = {
+    "import" ~ "fn" ~ global_define_symbol ~ function_type ~ ";"
+}
+
+
+function_def = {
+    function_attr ~ "fn" ~ global_define_symbol ~
+    function_type ~ "{" ~ blocks ~ "}"
+}
+
+function_attr = { is_extern ~ is_pub ~ is_inline }
+
+is_extern = { "extern"? }
+
+is_pub = { "pub"? }
+
+is_inline = { ("inline" | "const")? }
+
+// types
+
+function_type = {
+    params ~ "->" ~ type_bind_metadata
+}
+
+params = {
+    "(" ~ (params_pair ~ ("," ~ params_pair)*)? ~ ")"
+}
+
+params_pair = {
+    params_name ~ ":" ~ type_bind_metadata
+}
+
+type_bind_metadata = { type_value ~ ("," ~ alloca_type)? }
+
+params_name = @
+    { UNDERLINE
+    | local_symbol
+}
+
+type_value =
+    { type_
+    | type_symbol
+    }
+
+type_ =
+    { void_type
+    | first_class_type
+    | function_type
+    }
+
+void_type = @{ "void" }
+
+first_class_type =
+    { opaque_type
+    | simple_type
+    | array_type
+    | record_type
+}
+
+opaque_type = { "opaque" }
+
+simple_type =
+    { int_type
+    | float_type
+    | pointer_type
+    | vector_type
+    }
+
+int_type = @
+    { "i1"
+    | "i8"
+    | "i16"
+    | "i32"
+    | "i64"
+    | "i128"
+}
+
+float_type = @
+    { "f8"
+    | "f16"
+    | "f32"
+    | "f64"
+    | "f128"
+    | "ppc_f128"
+}
+
+pointer_type = {
+    "*" ~ type_
+}
+
+vector_type = {
+    "<" ~ simple_type ~ ";" ~ number ~ ">"
+}
+
+array_type = {
+    "[" ~ type_ ~ ";" ~ number ~ "]"
+}
+
+record_type = {
+    is_not_aligned ~ "{" ~ (record_kv_pair ~ ("," ~ record_kv_pair)*)? ~ "}"
+}
+
+is_not_aligned = { "#"? }
+
+record_kv_pair = {
+    params_name ~ ":" ~ type_
+}
+
+// types end
+
+
+
+call = {
+    value ~ "(" ~ value ~ ("," ~ value)* ~ ")"
+}
+
+index_list = {
+    index ~ ("." ~ index)*
+}
+
+index =
+    { symbol
+    | number
+    }
+
+
+/*
+conds = {
+    "conds" ~ "[" ~ conds_pairs ~ conds_else_pair? ~ "]"
+}
+
+conds_pairs = { conds_pair ~ ("," ~ conds_pair)* }
+
+conds_pair = { value ~ ":" ~ label_symbol }
+
+conds_else_pair = { UNDERLINE ~ ":" ~ label_symbol }
+*/
+
+switch = {
+    "switch" ~ value ~ "[" ~ switch_pair ~ ("," ~ switch_pair)* ~ "]"
+}
+
+switch_pair = { simple_value ~ ":" ~ label_symbol }
+
+unrechable = { "unrechable" }
+
+value =
+    { local_symbol
+    | global_symbol
+    // | constant_value
+    }
+
+global_symbol = ${ (symbol ~ ".")? ~ global_define_symbol }
+
+global_define_symbol = ${ "@" ~ symbol }
+
+local_symbol = ${ "$" ~ symbol }
+
+label_symbol = ${ "%" ~ symbol }
+
+symbol = $
+    { _quoted_name
+    | _name
+    | _id
+}
+
+type_symbol = ${
+    (symbol ~ ".")? ~ type_define_symbol
+}
+
+type_define_symbol = $
+    { _quoted_name
+    | _name
+    | type_id
+    }
+
+type_id = _{
+    "t" ~ _id
+}
+
+_quoted_name = @{ "\"" ~ (!"\"" ~ ANY)* ~ "\"" }
+
+_id = @{ ('0'..'9')+ }
+
+_name = $ { (ASCII_ALPHA_LOWER | UNDERLINE) ~ (ASCII_ALPHANUMERIC | UNDERLINE)* }
+
+UNDERLINE = _{ "_" }
+
+// string
+
+string_lit = $ { "\"" ~ (escape | (!("\\" | "\"") ~ ANY)+)* ~ "\""}
+
+
+char = {
+    "'" ~ (escape | (!("\\" | "\"") ~ ANY)) ~ "'"
+}
+
+escape = _{ "\\\\"
+          | "\\\""
+          | "\\'"
+          | "\\n"
+          | "\\r"
+          | "\\t"
+          }
+
+// number
+
+float_number = $
+    { (number_hex ~ "." ~ ASCII_HEX_DIGIT+)
+    | (number_oct ~ "." ~ ASCII_OCT_DIGIT+)
+    | (number_bin ~ "." ~ ASCII_BIN_DIGIT+)
+    | (number_dec ~ "." ~ ASCII_DIGIT+)
+}
+
+number = $
+    { number_hex
+    | number_oct
+    | number_bin
+    | number_dec
+    }
+
+number_dec = _ { ("+" | "-")? ~ ASCII_DIGIT+ }
+
+number_oct = _ { ("+" | "-")? ~ "0o" ~ ASCII_OCT_DIGIT+ }
+
+number_hex = _ { ("+" | "-")? ~ "0x" ~ ASCII_HEX_DIGIT+ }
+
+number_bin = _ { ("+" | "-")? ~ "0b" ~ ASCII_BIN_DIGIT+ }
+
+
+WHITESPACE = _ { " "
+               | "\t"
+               | WHITE_SPACE
+               | NEWLINE
+               }
+
+COMMENT = _ { "//" ~ (!NEWLINE ~ ANY)* ~ NEWLINE? }

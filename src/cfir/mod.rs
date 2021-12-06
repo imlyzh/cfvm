@@ -1,2 +1,2 @@
 pub mod graphir;
-// pub mod streamir;
+pub mod richir;

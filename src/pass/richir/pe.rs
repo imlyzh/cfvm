@@ -27,8 +27,8 @@ impl Pe for LetBinding {
         let ctx = ctx.new_level();
         let boxed_value = Arc::new(value);
         // fixme: if expr is a constant, we can evaluate the body immediately
-        if let Some(x) = boxed_value.get_literal() {
-            ctx.set_local(name, x);
+        if boxed_value.is_literal() {
+            ctx.set_local(name, boxed_value);
             let body = self.body.pe(ctx);
             body
         } else {
@@ -105,9 +105,38 @@ impl Pe for Value {
 impl Pe for Call {
     type Target = Value;
     fn pe(&self, ctx: Context) -> Self::Target {
-        let r = self.fun.pe(ctx.clone());
+        let fun = self.fun.pe(ctx.clone());
         let args = self.args.iter().map(|x| x.pe(ctx.clone()));
-        todo!()
+        if !fun.is_literal() {
+            return Value::Call(Arc::new(Call {
+                fun: Arc::new(fun),
+                args: args.collect(),
+            }));
+        }
+        let fun = fun.get_fun();
+        if let None = fun {
+            panic!("TypeError: `Call` fun need function value");
+        };
+        let fun = fun.unwrap();
+        if fun.args.len() != args.len() {
+            panic!("TypeError: `Call` args number mismatch");
+        }
+        let ctx = ctx.new_level();
+        for ((name, _typ), value) in fun.args.0.iter().zip(args.clone()) {
+            // todo: type check
+            if let Some(name) = name {
+                ctx.set_local(name, Arc::new(value))
+            }
+        }
+        let fun = fun.pe(ctx);
+        if !fun.body.is_literal() {
+            return Value::Call(Arc::new(Call {
+                fun: Arc::new(Value::Fun(Arc::new(fun))),
+                args: args.collect(),
+            }));
+        }
+        let result = fun.body.get_literal().unwrap();
+        result.into()
     }
 }
 
@@ -130,7 +159,7 @@ impl Pe for Fun {
     type Target = Fun;
     fn pe(&self, ctx: Context) -> Self::Target {
         Fun {
-            params: self.params.clone(),
+            args: self.args.clone(),
             body: Arc::new(self.body.pe(ctx)),
         }
     }

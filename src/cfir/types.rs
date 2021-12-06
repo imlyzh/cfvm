@@ -1,6 +1,6 @@
 use std::collections::BTreeSet;
 
-use super::handles::{Symbol};
+use super::handles::{Symbol, LocalSymbol};
 
 pub trait GetType {
     fn get_type(&self) -> Type;
@@ -71,7 +71,16 @@ pub enum AllocaType {
 
 
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub struct ParamsType(pub Vec<(Option<Symbol>, TypeBindAttr)>);
+pub struct ParamsType(pub Vec<(Option<LocalSymbol>, TypeBindAttr)>);
+
+impl ParamsType {
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+}
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct FunctionType {

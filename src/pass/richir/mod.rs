@@ -23,20 +23,28 @@ impl Context {
             global: self.global.clone(),
         }
     }
-    pub fn set_local(&self, name: &LocalSymbol, value: Literal) {
+    pub fn set_local(&self, name: &LocalSymbol, value: Arc<Value>) {
         let r = self.local.local_vars.clone();
         r.borrow_mut().deref_mut().insert(name.clone(), value);
     }
 
     pub fn get(&self, name: &SymbolRef) -> Option<Literal> {
         match name {
-            SymbolRef::Local(l) => todo!(),
-            SymbolRef::Global(g) => todo!(),
-            SymbolRef::Symbol(s) => todo!(),
+            SymbolRef::Local(name) => self.get_local(name),
+            SymbolRef::Global(name) => self.get_global(name),
+            SymbolRef::Symbol(_name) => todo!(),
         }
-        todo!()
     }
     pub fn get_local(&self, name: &LocalSymbol) -> Option<Literal> {
+        let v = self.get_local_value(name)?;
+        match &*v {
+            Value::Var(name) => self.get(&name),
+            Value::Lit(v) => Some(Literal::ConstVal(v.clone())),
+            Value::Fun(f) => Some(Literal::Fun(f.clone())),
+            Value::Call(_) => None,
+        }
+    }
+    pub fn get_local_value(&self, name: &LocalSymbol) -> Option<Arc<Value>> {
         self.local.local_vars.as_ref().borrow().get(name).map(|v| v.clone())
     }
     pub fn get_global(&self, name: &GlobalSymbol) -> Option<Literal> {
@@ -61,7 +69,7 @@ impl Context {
 
 #[derive(Debug, Clone, Default)]
 pub struct LocalContext {
-    pub local_vars: Rc<RefCell<HashMap<LocalSymbol, Literal>>>,
+    pub local_vars: Rc<RefCell<HashMap<LocalSymbol, Arc<Value>>>>,
     pub parent: Option<Rc<LocalContext>>,
 }
 

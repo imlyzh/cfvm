@@ -43,7 +43,7 @@ pub struct NamedFun {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Fun {
-    pub params: ParamsType,
+    pub args: ParamsType,
     pub body: Arc<Expr>,
 }
 
@@ -76,6 +76,36 @@ pub enum Value {
 pub enum Literal {
     ConstVal(Arc<ConstantValue>),
     Fun(Arc<Fun>)
+}
+
+impl Into<Value> for Literal {
+    fn into(self) -> Value {
+        match self {
+            Literal::ConstVal(c) => Value::Lit(c),
+            Literal::Fun(f) => Value::Fun(f),
+        }
+    }
+}
+
+impl Expr {
+    pub fn is_let(&self) -> bool {
+        match self {
+            Expr::Let(_) => true,
+            _ => false,
+        }
+    }
+    pub fn is_literal(&self) -> bool {
+        match self {
+            Expr::Val(v) => v.is_literal(),
+            _ => false,
+        }
+    }
+    pub fn get_literal(&self) -> Option<Literal> {
+        match self {
+            Expr::Val(lit) => lit.get_literal(),
+            _ => None,
+        }
+    }
 }
 
 impl Literal {
@@ -132,11 +162,18 @@ impl Value {
             None
         }
     }
+    pub fn get_fun(&self) -> Option<Arc<Fun>> {
+        if let Value::Fun(f) = self {
+            Some(f.clone())
+        } else {
+            None
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Call {
-    pub fun: SymbolRef,
+    pub fun: Arc<Value>,
     pub args: Vec<Value>,
 }
 

@@ -2,17 +2,42 @@ pub mod parser;
 
 use std::{sync::Arc, collections::HashMap};
 
+use super::handles::{ConstantValue, Symbol, LocalSymbol, SymbolRef};
+
 
 #[derive(Debug, Clone, PartialEq)]
-struct Module {
-    name: String,
-    // imports: Vec<String>,
-    // exports: Vec<String>,
+pub struct Module {
+    pub name: Symbol,
+    pub constants: HashMap<Arc<String>, Constant>,
+    pub variables: HashMap<Arc<String>, Variable>,
+    pub functions: HashMap<Arc<String>, Fun>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Constant {
+
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Variable {
+
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct NamedFun {
+    pub name: Symbol,
+    pub fun: Arc<Fun>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Fun {
+    pub params: Vec<Arc<String>>,
+    pub body: Arc<Expr>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct LetBinding {
-    pub bind: HashMap<Arc<String>, Arc<Value>>,
+    pub bind: HashMap<LocalSymbol, Arc<Value>>,
     pub body: Arc<Expr>,
 }
 
@@ -21,7 +46,7 @@ pub enum Expr {
     Let(Arc<LetBinding>),
     If(Arc<Value>, Arc<Expr>, Arc<Expr>),
     // Cond(Vec<(Value, Expr)>, Arc<Expr>),
-    While(Value, Arc<Expr>, Vec<Expr>),
+    While(Arc<Value>, Arc<Expr>, Vec<Expr>),
     Begin(Vec<Expr>),
     Store(Arc<Value>, Arc<Expr>),
     Val(Value),
@@ -29,12 +54,13 @@ pub enum Expr {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
-    Var(Arc<String>),
-    Lit(Arc<Literal>),
-    Call(Arc<String>, Vec<Value>),
-    Fun(Vec<Arc<String>>, Arc<Expr>),
+    Var(SymbolRef),
+    Lit(Arc<ConstantValue>),
+    Call(SymbolRef, Vec<Value>),
+    Fun(Fun),
 }
 
+/*
 #[derive(Debug, Clone, PartialEq)]
 pub enum Literal {
     SimpleLit(SimpleLiteral),
@@ -53,3 +79,4 @@ pub enum SimpleLiteral {
     F64(f64),
     Vector(Vec<SimpleLiteral>),
 }
+ */

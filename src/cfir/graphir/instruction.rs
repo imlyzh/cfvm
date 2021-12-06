@@ -55,22 +55,6 @@ pub enum Index {
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct IndexList(pub Vec<Index>);
 
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub struct IsExtend(pub bool);
-
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub enum RegisterType {
-    Register(IsExtend, usize),
-    RegisterRange(IsExtend, (usize, usize)),
-    Registers(IsExtend, BTreeSet<usize>),
-}
-
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub enum AllocaType {
-    RegisterType(RegisterType),
-    Stack,
-}
-
 #[derive(Debug, Clone)]
 pub enum Operator {
     Alloca(Option<AllocaType>, Type),

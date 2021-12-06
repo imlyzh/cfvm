@@ -49,18 +49,18 @@ pub struct Fun {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct LetBinding {
-    pub bind: HashMap<LocalSymbol, (Arc<Value>, Option<TypeBindAttr>)>,
+    pub bind: (LocalSymbol, Arc<Value>, Option<TypeBindAttr>),
     pub body: Arc<Expr>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expr {
     Let(Arc<LetBinding>),
-    If(Arc<Value>, Arc<Expr>, Arc<Expr>),
+    If(Arc<Value>, Arc<Expr>, Arc<Expr>), // cond, then, else
     // Cond(Vec<(Value, Expr)>, Arc<Expr>),
-    While(Arc<Value>, Arc<Expr>, Vec<Expr>),
+    While(Arc<Value>, Arc<Expr>, Arc<Expr>), // cond, body, accum
     Begin(Vec<Expr>),
-    Store(Arc<Value>, Arc<Expr>),
+    Store(Arc<Value>, Arc<Expr>), // name, value
     Val(Value),
 }
 
@@ -68,8 +68,44 @@ pub enum Expr {
 pub enum Value {
     Var(SymbolRef),
     Lit(Arc<ConstantValue>),
-    Call(SymbolRef, Vec<Value>),
-    Fun(Fun),
+    Call(Arc<Call>),
+    Fun(Arc<Fun>),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Literal {
+    ConstVal(Arc<ConstantValue>),
+    Fun(Arc<Fun>)
+}
+
+impl Value {
+    pub fn is_literal(&self) -> bool {
+        match self {
+            Value::Lit(_) |
+            Value::Fun(_) => true,
+            _ => false,
+        }
+    }
+    pub fn get_literal(&self) -> Option<Literal> {
+        match self {
+            Value::Lit(lit) => Some(Literal::ConstVal(lit.clone())),
+            Value::Fun(f) => Some(Literal::Fun(f.clone())),
+            _ => None,
+        }
+    }
+    pub fn get_bool_lit(&self) -> Option<bool> {
+        if let Value::Lit(l) = self {
+            l.get_bool_lit()
+        } else {
+            None
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Call {
+    fun: SymbolRef,
+    args: Vec<Value>,
 }
 
 /*

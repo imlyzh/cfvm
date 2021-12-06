@@ -2,7 +2,7 @@ use std::sync::{Arc, RwLock};
 
 
 pub type Handle<T> = Arc<T>;
-pub type MutHandle<T> = Handle<RwLock<T>>;
+pub type MutHandle<T> = Arc<RwLock<T>>;
 
 #[derive(Debug, Hash, Clone, Eq, PartialEq, PartialOrd)]
 pub struct GlobalSymbol(pub Option<Handle<String>>, pub DefineSymbol);
@@ -51,6 +51,7 @@ pub enum SimpleValue {
     FloatNumber(String),
     Number(String),
     Char(char),
+    Bool(bool),
     Vector(VectorValue),
 }
 
@@ -66,4 +67,24 @@ pub enum ConstantValue {
     ArrayValue(ArrayValue),
     RecordValue(RecordValue),
     StringLit(StringLit),
+}
+
+impl SimpleValue {
+    pub fn get_bool_lit(&self) -> Option<bool> {
+        if let SimpleValue::Bool(b) = self {
+            Some(*b)
+        } else {
+            None
+        }
+    }
+}
+
+impl ConstantValue {
+    pub fn get_bool_lit(&self) -> Option<bool> {
+        if let ConstantValue::SimpleValue(s) = self {
+            s.get_bool_lit()
+        } else {
+            None
+        }
+    }
 }

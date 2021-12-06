@@ -8,7 +8,6 @@ use crate::cfir::{
     types::Type
 };
 
-
 #[derive(Debug, Clone)]
 pub struct Context {
     pub local: LocalContext,

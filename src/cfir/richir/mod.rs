@@ -2,7 +2,7 @@ pub mod parser;
 
 use std::{sync::Arc, collections::HashMap};
 
-use super::{handles::{ConstantValue, Symbol, LocalSymbol, SymbolRef, DefineSymbol, TypeSymbol}, types::{FunctionType, ParamsType}};
+use super::{handles::{ConstantValue, Symbol, LocalSymbol, SymbolRef, DefineSymbol, TypeSymbol}, types::{FunctionType, ParamsType, TypeBindAttr}};
 
 
 #[derive(Debug, Clone, PartialEq)]
@@ -49,7 +49,7 @@ pub struct Fun {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct LetBinding {
-    pub bind: HashMap<LocalSymbol, Arc<Value>>,
+    pub bind: HashMap<LocalSymbol, (Arc<Value>, Option<TypeBindAttr>)>,
     pub body: Arc<Expr>,
 }
 

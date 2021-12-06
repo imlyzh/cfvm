@@ -5,13 +5,13 @@ pub type Handle<T> = Arc<T>;
 pub type MutHandle<T> = Arc<RwLock<T>>;
 
 #[derive(Debug, Hash, Clone, Eq, PartialEq, PartialOrd)]
-pub struct GlobalSymbol(pub Option<Handle<String>>, pub DefineSymbol);
+pub struct GlobalSymbol(pub Option<Symbol>, pub DefineSymbol);
 
 #[derive(Debug, Hash, Clone, Eq, PartialEq, PartialOrd)]
-pub struct TypeSymbol(pub Option<Handle<String>>, pub TypeDefineSymbol);
+pub struct TypeSymbol(pub Option<Symbol>, pub TypeDefineSymbol);
 
 #[derive(Debug, Hash, Clone, Eq, PartialEq, PartialOrd)]
-pub struct Symbol(pub Arc<String>); // record line key, params name, etc.
+pub struct Symbol(pub Handle<String>); // record line key, params name, etc.
 
 // text type
 

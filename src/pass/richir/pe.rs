@@ -5,9 +5,10 @@
 use core::panic;
 use std::sync::Arc;
 
+use crate::cfir::handles::SymbolRef;
 use crate::pass::richir::Context;
 
-use crate::cfir::richir::{LetBinding, Expr, Value, Fun, Call};
+use crate::cfir::richir::{LetBinding, Expr, Value, Fun, Call, Literal};
 
 
 trait Pe {
@@ -25,12 +26,13 @@ impl Pe for LetBinding {
         }
         let ctx = ctx.new_level();
         let boxed_value = Arc::new(value);
-        ctx.set_local(name, boxed_value.clone());
-        let body = self.body.pe(ctx);
         // fixme: if expr is a constant, we can evaluate the body immediately
-        if boxed_value.is_literal() {
+        if let Some(x) = boxed_value.get_literal() {
+            ctx.set_local(name, x);
+            let body = self.body.pe(ctx);
             body
         } else {
+            let body = self.body.pe(ctx);
             Expr::Let(Arc::new(LetBinding {
                 bind: (name.clone(), boxed_value, type_.clone()),
                 body: Arc::new(body),
@@ -92,7 +94,7 @@ impl Pe for Value {
     type Target = Value;
     fn pe(&self, ctx: Context) -> Self::Target {
         match self {
-            Value::Var(s) => todo!(),
+            Value::Var(s) => s.pe(ctx),
             Value::Call(call) => call.pe(ctx),
             Value::Fun(f) => Value::Fun(Arc::new(f.pe(ctx))),
             Value::Lit(_) => self.clone(),
@@ -103,7 +105,24 @@ impl Pe for Value {
 impl Pe for Call {
     type Target = Value;
     fn pe(&self, ctx: Context) -> Self::Target {
+        let r = self.fun.pe(ctx.clone());
+        let args = self.args.iter().map(|x| x.pe(ctx.clone()));
         todo!()
+    }
+}
+
+impl Pe for SymbolRef {
+    type Target = Value;
+
+    fn pe(&self, ctx: Context) -> Self::Target {
+        if let Some(x) = ctx.get(self) {
+            match x {
+                Literal::ConstVal(c) => Value::Lit(c),
+                Literal::Fun(f) => Value::Fun(f),
+            }
+        } else {
+            Value::Var(self.clone())
+        }
     }
 }
 

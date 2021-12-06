@@ -78,6 +78,38 @@ pub enum Literal {
     Fun(Arc<Fun>)
 }
 
+impl Literal {
+    pub fn is_const(&self) -> bool {
+        if let Literal::ConstVal(_) = self {
+            true
+        } else {
+            false
+        }
+    }
+    pub fn get_const(&self) -> Option<Arc<ConstantValue>> {
+        if let Literal::ConstVal(v) = self {
+            Some(v.clone())
+        } else {
+            None
+        }
+    }
+    pub fn is_fun(&self) -> bool {
+        if let Literal::Fun(_) = self {
+            true
+        } else {
+            false
+        }
+    }
+    pub fn get_fun(&self) -> Option<Arc<Fun>> {
+        if let Literal::Fun(f) = self {
+            Some(f.clone())
+        } else {
+            None
+        }
+    }
+
+}
+
 impl Value {
     pub fn is_literal(&self) -> bool {
         match self {
@@ -104,8 +136,8 @@ impl Value {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Call {
-    fun: SymbolRef,
-    args: Vec<Value>,
+    pub fun: SymbolRef,
+    pub args: Vec<Value>,
 }
 
 /*

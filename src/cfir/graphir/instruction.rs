@@ -1,5 +1,7 @@
 use std::collections::BTreeSet;
 
+use crate::cfir::types::AllocaType;
+
 use super::{
     handles::{LabelHandle, LocalHandle, LocalSymbol, SimpleValue, Symbol, ValueHandle},
     types::{FloatType, IntType, Type},

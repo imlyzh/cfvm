@@ -2,8 +2,11 @@ pub mod pe;
 
 use std::{collections::HashMap, sync::Arc};
 
-use crate::cfir::{richir::{Expr, Value}, handles::{MutHandle, DefineSymbol}, graphir::handles::{LocalSymbol, Symbol, TypeDefineSymbol}, types::Type};
-
+use crate::cfir::{
+    richir::{Expr, Value},
+    handles::{MutHandle, DefineSymbol, LocalSymbol, Symbol, TypeDefineSymbol},
+    types::Type
+};
 
 
 #[derive(Debug, Clone)]

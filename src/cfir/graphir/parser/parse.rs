@@ -127,6 +127,7 @@ fn option_inline_type_parse_from(pair: Pair<Rule>) -> Option<InlineType> {
     }
 }
 
+
 impl ParseFrom<Rule> for IsExtend {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::is_extend);

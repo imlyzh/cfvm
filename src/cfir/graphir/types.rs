@@ -1,7 +1,4 @@
-use super::{
-    handles::{Symbol},
-    instruction::AllocaType,
-};
+use super::{handles::{Symbol}};
 
 pub trait GetType {
     fn get_type(&self) -> Type;

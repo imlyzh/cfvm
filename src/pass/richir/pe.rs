@@ -5,7 +5,7 @@
 use core::panic;
 use std::sync::Arc;
 
-use crate::cfir::handles::SymbolRef;
+use crate::cfir::handles::{SymbolRef, Symbol};
 use crate::pass::richir::Context;
 
 use crate::cfir::richir::{LetBinding, Expr, Value, Fun, Call, Literal};
@@ -113,6 +113,9 @@ impl Pe for Call {
                 args: args.collect(),
             }));
         }
+        if let Some(SymbolRef::Symbol(s)) = fun.get_symbol() {
+            return builtin_function_call_pe(s, &args.collect());
+        }
         let fun = fun.get_fun();
         if let None = fun {
             panic!("TypeError: `Call` fun need function value");
@@ -138,6 +141,10 @@ impl Pe for Call {
         let result = fun.body.get_literal().unwrap();
         result.into()
     }
+}
+
+fn builtin_function_call_pe(s: &Symbol, args: &Vec<Value>) -> Value {
+    todo!()
 }
 
 impl Pe for SymbolRef {

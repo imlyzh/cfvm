@@ -106,6 +106,12 @@ impl Expr {
             _ => None,
         }
     }
+    pub fn get_value(&self) -> Option<&Value> {
+        match self {
+            Expr::Val(v) => Some(v),
+            _ => None,
+        }
+    }
 }
 
 impl Literal {
@@ -152,6 +158,12 @@ impl Value {
         match self {
             Value::Lit(lit) => Some(Literal::ConstVal(lit.clone())),
             Value::Fun(f) => Some(Literal::Fun(f.clone())),
+            _ => None,
+        }
+    }
+    pub fn get_symbol(&self) -> Option<&SymbolRef> {
+        match self {
+            Value::Var(sym) => Some(sym),
             _ => None,
         }
     }

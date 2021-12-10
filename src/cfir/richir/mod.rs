@@ -38,43 +38,49 @@ pub struct FunDecl {
 #[derive(Debug, Clone, PartialEq)]
 pub struct NamedFun {
     pub name: Symbol,
-    pub fun: Arc<Fun>,
+    pub fun: Fun,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Fun {
     pub args: ParamsType,
-    pub body: Arc<Expr>,
+    pub body: Box<Expr>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct LetBinding {
-    pub bind: (LocalSymbol, Arc<Value>, Option<TypeBindAttr>),
-    pub body: Arc<Expr>,
+    pub bind: (LocalSymbol, Value, Option<TypeBindAttr>),
+    pub body: Box<Expr>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expr {
-    Let(Arc<LetBinding>),
-    If(Arc<Value>, Arc<Expr>, Arc<Expr>), // cond, then, else
+    Let(LetBinding),
+    If(Value, Box<Expr>, Box<Expr>), // cond, then, else
     // Cond(Vec<(Value, Expr)>, Arc<Expr>),
-    While(Arc<Value>, Arc<Expr>, Arc<Expr>), // cond, body, accum
+    While(Value, Box<Expr>, Box<Expr>), // cond, body, accum
     Begin(Vec<Expr>),
-    Store(Arc<Value>, Arc<Expr>), // name, value
+    Store(Value, Box<Expr>), // name, value
     Val(Value),
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
     Var(SymbolRef),
-    Lit(Arc<ConstantValue>),
-    Call(Arc<Call>),
+    Lit(ConstantValue),
+    Call(Call),
     Fun(Arc<Fun>),
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct Call {
+    pub fun: Box<Value>,
+    pub args: Vec<Value>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum Literal {
-    ConstVal(Arc<ConstantValue>),
+    ConstVal(ConstantValue),
     Fun(Arc<Fun>)
 }
 
@@ -122,9 +128,9 @@ impl Literal {
             false
         }
     }
-    pub fn get_const(&self) -> Option<Arc<ConstantValue>> {
+    pub fn get_const(&self) -> Option<&ConstantValue> {
         if let Literal::ConstVal(v) = self {
-            Some(v.clone())
+            Some(v)
         } else {
             None
         }
@@ -181,12 +187,6 @@ impl Value {
             None
         }
     }
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct Call {
-    pub fun: Arc<Value>,
-    pub args: Vec<Value>,
 }
 
 /*

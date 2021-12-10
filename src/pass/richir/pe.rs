@@ -25,18 +25,17 @@ impl Pe for LetBinding {
             // todo: type check
         }
         let ctx = ctx.new_level();
-        let boxed_value = Arc::new(value);
         // fixme: if expr is a constant, we can evaluate the body immediately
-        if boxed_value.is_literal() {
-            ctx.set_local(name, boxed_value);
+        if value.is_literal() {
+            ctx.set_local(name, &value);
             let body = self.body.pe(ctx);
             body
         } else {
             let body = self.body.pe(ctx);
-            Expr::Let(Arc::new(LetBinding {
-                bind: (name.clone(), boxed_value, type_.clone()),
-                body: Arc::new(body),
-            }))
+            Expr::Let(LetBinding {
+                bind: (name.clone(), value, type_.clone()),
+                body: Box::new(body),
+            })
         }
     }
 }
@@ -51,7 +50,7 @@ impl Pe for Expr {
                 if !cond.is_literal() {
                     let then = then.pe(ctx.clone());
                     let els = els.pe(ctx);
-                    return Expr::If(Arc::new(cond), Arc::new(then), Arc::new(els));
+                    return Expr::If(cond, Box::new(then), Box::new(els));
                 }
                 let cond = if let Some(c) = cond.get_bool_lit() {
                     c
@@ -66,7 +65,7 @@ impl Pe for Expr {
                 if !cond.is_literal() {
                     let body = body.pe(ctx.clone());
                     let accum = accum.pe(ctx);
-                    return Expr::While(Arc::new(cond), Arc::new(body), Arc::new(accum));
+                    return Expr::While(cond, Box::new(body), Box::new(accum));
                 }
                 let c = if let Some(c) = cond.get_bool_lit() {
                     c
@@ -78,12 +77,12 @@ impl Pe for Expr {
                 }
                 let body = body.pe(ctx.clone());
                 let accum = accum.pe(ctx);
-                Expr::While(Arc::new(cond), Arc::new(body), Arc::new(accum))
+                Expr::While(cond, Box::new(body), Box::new(accum))
             },
             Expr::Begin(b) => Expr::Begin(b.iter().map(|e| e.pe(ctx.clone())).collect()),
             Expr::Store(var, value) => {
                 let value = value.pe(ctx);
-                Expr::Store(var.clone(), Arc::new(value)) // todo
+                Expr::Store(var.clone(), Box::new(value)) // todo
             },
             Expr::Val(v) => Expr::Val(v.pe(ctx)),
         }
@@ -108,10 +107,10 @@ impl Pe for Call {
         let fun = self.fun.pe(ctx.clone());
         let args = self.args.iter().map(|x| x.pe(ctx.clone()));
         if !fun.is_literal() {
-            return Value::Call(Arc::new(Call {
-                fun: Arc::new(fun),
+            return Value::Call(Call {
+                fun: Box::new(fun),
                 args: args.collect(),
-            }));
+            });
         }
         if let Some(SymbolRef::Symbol(s)) = fun.get_symbol() {
             return builtin_function_call_pe(s, &args.collect());
@@ -128,15 +127,15 @@ impl Pe for Call {
         for ((name, _typ), value) in fun.args.0.iter().zip(args.clone()) {
             // todo: type check
             if let Some(name) = name {
-                ctx.set_local(name, Arc::new(value))
+                ctx.set_local(name, &value)
             }
         }
         let fun = fun.pe(ctx);
         if !fun.body.is_literal() {
-            return Value::Call(Arc::new(Call {
-                fun: Arc::new(Value::Fun(Arc::new(fun))),
+            return Value::Call(Call {
+                fun: Box::new(Value::Fun(Arc::new(fun))),
                 args: args.collect(),
-            }));
+            });
         }
         let result = fun.body.get_literal().unwrap();
         result.into()
@@ -144,6 +143,14 @@ impl Pe for Call {
 }
 
 fn builtin_function_call_pe(s: &Symbol, args: &Vec<Value>) -> Value {
+    if args.len() != args.iter().filter(|x| x.is_literal()).count() {
+        return Value::Call(Call {
+            fun: Box::new(Value::Var(SymbolRef::Symbol(s.clone()))),
+            args: args.clone(),
+        });
+    }
+    let args: Vec<Literal> = args.into_iter().map(|x| x.get_literal().unwrap()).collect();
+
     todo!()
 }
 
@@ -167,7 +174,7 @@ impl Pe for Fun {
     fn pe(&self, ctx: Context) -> Self::Target {
         Fun {
             args: self.args.clone(),
-            body: Arc::new(self.body.pe(ctx)),
+            body: Box::new(self.body.pe(ctx)),
         }
     }
 }

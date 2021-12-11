@@ -189,7 +189,9 @@ params_name = @
 
 expr =
     { let_binding
+    | conds
     | if_expr
+    | switch
     | while_expr
     | begin
     | store
@@ -245,17 +247,27 @@ symbol_ref =
     | symbol
     }
 
-/*
 conds = {
-    "conds" ~ "[" ~ conds_pairs ~ conds_else_pair? ~ "]"
+    "if" ~ conds_pair ~
+    ("elif" ~ conds_pair)* ~
+    "else" ~ expr
 }
 
-conds_pairs = { conds_pair ~ ("," ~ conds_pair)* }
+conds_pair = {
+    value ~ "then" ~ expr
+}
 
-conds_pair = { value ~ ":" ~ label_symbol }
+switch = {
+    "switch" ~ value ~ "{" ~ (switch_case ~ ("," ~ switch_case)* ~ "," ~ default_case)? ~ "}"
+}
 
-conds_else_pair = { UNDERLINE ~ ":" ~ label_symbol }
-*/
+switch_case = {
+    "case" ~ constant_value ~ ":" ~ expr
+}
+
+default_case = {
+    "default" ~ ":" ~ expr
+}
 
 //////////////////////////////////////////////////////////
 

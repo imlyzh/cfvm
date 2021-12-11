@@ -57,7 +57,8 @@ pub struct LetBinding {
 pub enum Expr {
     Let(LetBinding),
     If(Value, Box<Expr>, Box<Expr>), // cond, then, else
-    // Cond(Vec<(Value, Expr)>, Arc<Expr>),
+    // Cond(Vec<(Value, Expr)>, Box<Expr>),
+    // Switch(Value, Vec<(ConstantValue, Expr)>, Box<Expr>),
     While(Value, Box<Expr>, Box<Expr>), // cond, body, accum
     Begin(Vec<Expr>),
     Store(Value, Box<Expr>), // name, value

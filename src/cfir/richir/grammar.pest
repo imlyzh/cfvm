@@ -47,11 +47,11 @@ array_value = {
 }
 
 record_value = {
-    "{" ~ params_name ~ ("," ~ params_name)* ~ "}"
+    "{" ~ record_value_kv_pair ~ ("," ~ record_value_kv_pair)* ~ "}"
 }
 
 record_value_kv_pair = {
-    params_name ~ ":" ~ constant_value
+    symbol ~ ":" ~ constant_value
 }
 
 
@@ -62,7 +62,7 @@ function_decl = {
 
 function_def = {
     function_attr ~ "fn" ~ global_define_symbol ~
-    function_type ~ "{" ~ blocks ~ "}"
+    function_type ~ begin
 }
 
 function_attr = { is_extern ~ is_pub ~ is_inline }
@@ -89,10 +89,27 @@ params_pair = {
 
 type_bind_metadata = { type_value ~ ("," ~ alloca_type)? }
 
-params_name = @
-    { UNDERLINE
-    | local_symbol
+
+alloca_type = {
+    ( alloca_type_reg
+    | alloca_type_stack)?
 }
+
+alloca_type_reg = {
+    "reg" ~ reg_type ~ (reg_enum | reg_range | reg_number)
+}
+
+reg_type = {
+    "int" | "float" | "simd" | "vector"
+}
+
+reg_enum = { "(" ~ reg_number ~ ("," ~ reg_number)* ~ ")" }
+
+reg_range = { reg_number ~ "-" ~ reg_number }
+
+reg_number = { number }
+
+alloca_type_stack = _{ "stack" }
 
 type_value =
     { type_
@@ -160,26 +177,73 @@ record_type = {
 is_not_aligned = { "#"? }
 
 record_kv_pair = {
-    params_name ~ ":" ~ type_
+    symbol ~ ":" ~ type_
+}
+
+params_name = @
+    { UNDERLINE
+    | local_symbol
 }
 
 // types end
 
+expr =
+    { let_binding
+    | if_expr
+    | while_expr
+    | begin
+    | store
+    | call
+    | value
+	}
 
-
-call = {
-    value ~ "(" ~ value ~ ("," ~ value)* ~ ")"
-}
-
-index_list = {
-    index ~ ("." ~ index)*
-}
-
-index =
-    { symbol
-    | number
+call_or_value =
+    { call
+    | value
     }
 
+let_binding = {
+    "let" ~ local_symbol ~ type_bind_opt ~ "=" ~ call_or_value ~ expr
+}
+
+type_bind_opt = {
+    (":" ~ type_bind_metadata)?
+}
+
+if_expr = {
+    "if" ~ value ~ "then" ~ expr ~ "else" ~ expr
+}
+
+while_expr = {
+    "while" ~ "(" ~ value ~ acc_opt ~ ")" ~ expr
+}
+
+acc_opt = {
+    (";" ~ store)?
+}
+
+begin = {
+    "{" ~ (expr ~ (";" ~ expr)*)? ~ "}"
+}
+
+store = {
+    symbol_ref ~ "=" ~ call_or_value
+}
+
+value =
+    { symbol_ref
+    | constant_value
+    }
+
+call = {
+    value ~ "(" ~ (value ~ ("," ~ value)*)? ~ ")"
+}
+
+symbol_ref =
+    { local_symbol
+    | global_symbol
+    | symbol
+    }
 
 /*
 conds = {
@@ -193,27 +257,15 @@ conds_pair = { value ~ ":" ~ label_symbol }
 conds_else_pair = { UNDERLINE ~ ":" ~ label_symbol }
 */
 
-switch = {
-    "switch" ~ value ~ "[" ~ switch_pair ~ ("," ~ switch_pair)* ~ "]"
-}
-
-switch_pair = { simple_value ~ ":" ~ label_symbol }
+//////////////////////////////////////////////////////////
 
 unrechable = { "unrechable" }
-
-value =
-    { local_symbol
-    | global_symbol
-    // | constant_value
-    }
 
 global_symbol = ${ (symbol ~ ".")? ~ global_define_symbol }
 
 global_define_symbol = ${ "@" ~ symbol }
 
-local_symbol = ${ "$" ~ symbol }
-
-label_symbol = ${ "%" ~ symbol }
+local_symbol = ${ "%" ~ symbol }
 
 symbol = $
     { _quoted_name
@@ -239,7 +291,9 @@ _quoted_name = @{ "\"" ~ (!"\"" ~ ANY)* ~ "\"" }
 
 _id = @{ ('0'..'9')+ }
 
-_name = $ { (ASCII_ALPHA_LOWER | UNDERLINE) ~ (ASCII_ALPHANUMERIC | UNDERLINE)* }
+_name = $ { !KEYWORD ~ (ASCII_ALPHA_LOWER | UNDERLINE) ~ (ASCII_ALPHANUMERIC | UNDERLINE)* }
+
+KEYWORD = ${ "let" | "if" | "then" | "else" | "cond" | "switch" | "while" }
 
 UNDERLINE = _{ "_" }
 

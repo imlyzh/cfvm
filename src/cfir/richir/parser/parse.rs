@@ -5,6 +5,8 @@ use pest_derive::*;
 
 use crate::cfir::types::*;
 use crate::cfir::handles::*;
+use crate::cfir::base::*;
+use crate::cfir::richir::*;
 
 #[derive(Parser)]
 #[grammar = "./cfir/richir/parser/richir.pest"]
@@ -78,7 +80,6 @@ where
 
 /// attr tags /////////////////////////////////////////////////////////////////////////////////
 
-/*
 impl ParseFrom<Rule> for IsExtern {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::is_extern);
@@ -112,41 +113,6 @@ fn option_inline_type_parse_from(pair: Pair<Rule>) -> Option<InlineType> {
         None
     }
 }
-
-
-impl ParseFrom<Rule> for IsExtend {
-    fn parse_from(pair: Pair<Rule>) -> Self {
-        debug_assert_eq!(pair.as_rule(), Rule::is_extend);
-        if pair.as_str() == "extend" {
-            IsExtend(true)
-        } else {
-            IsExtend(false)
-        }
-    }
-}
-
-impl ParseFrom<Rule> for IsAtomic {
-    fn parse_from(pair: Pair<Rule>) -> Self {
-        debug_assert_eq!(pair.as_rule(), Rule::is_atomic);
-        if pair.as_str() == "atomic" {
-            IsAtomic(true)
-        } else {
-            IsAtomic(false)
-        }
-    }
-}
-
-impl ParseFrom<Rule> for IsVolatile {
-    fn parse_from(pair: Pair<Rule>) -> Self {
-        debug_assert_eq!(pair.as_rule(), Rule::is_volatile);
-        if pair.as_str() == "volatile" {
-            IsVolatile(true)
-        } else {
-            IsVolatile(false)
-        }
-    }
-}
-*/
 
 impl ParseFrom<Rule> for IsNotAligned {
     fn parse_from(pair: Pair<Rule>) -> Self {
@@ -563,15 +529,18 @@ impl ParseFrom<Rule> for ConstantValue {
 
 /// defs ////////////////////////////////////////////////////////////////////////////////////
 
-/*
 impl ParseFrom<Rule> for TypeDef {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::type_def);
         let mut pairs = pair.into_inner();
         let is_pub = IsPublic::parse_from(pairs.next().unwrap());
         let name = TypeDefineSymbol::parse_from(pairs.next().unwrap());
-        let type_ = TypeHandle::parse_from(pairs.next().unwrap());
-        TypeDef(is_pub, name, type_)
+        let type_ = Type::parse_from(pairs.next().unwrap());
+        TypeDef {
+            is_pub,
+            name,
+            type_,
+        }
     }
 }
 
@@ -581,9 +550,14 @@ impl ParseFrom<Rule> for ConstantDef {
         let mut pairs = pair.into_inner();
         let is_pub = IsPublic::parse_from(pairs.next().unwrap());
         let name = DefineSymbol::parse_from(pairs.next().unwrap());
-        let ty = TypeHandle::parse_from(pairs.next().unwrap());
-        let const_value = ConstantValue::parse_from(pairs.next().unwrap());
-        ConstantDef(is_pub, name, ty, const_value)
+        let type_ = TypeSymbol::parse_from(pairs.next().unwrap());
+        let value = ConstantValue::parse_from(pairs.next().unwrap());
+        ConstantDef {
+            is_pub,
+            name,
+            type_,
+            value,
+        }
     }
 }
 
@@ -593,24 +567,126 @@ impl ParseFrom<Rule> for VariableDef {
         let mut pairs = pair.into_inner();
         let is_pub = IsPublic::parse_from(pairs.next().unwrap());
         let name = DefineSymbol::parse_from(pairs.next().unwrap());
-        let ty = TypeHandle::parse_from(pairs.next().unwrap());
-        let const_value = pairs.next().map(ConstantValue::parse_from);
-        VariableDef(is_pub, name, ty, const_value)
+        let type_ = TypeSymbol::parse_from(pairs.next().unwrap());
+        let value = pairs.next().map(ConstantValue::parse_from);
+        VariableDef {
+            is_pub,
+            name,
+            type_,
+            value,
+        }
     }
 }
 
-impl ParseFrom<Rule> for FunctionDecl {
+impl ParseFrom<Rule> for FunDecl {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::function_decl);
         let mut pairs = pair.into_inner();
         let name = DefineSymbol::parse_from(pairs.next().unwrap());
         let header = FunctionType::parse_from(pairs.next().unwrap());
-        FunctionDecl { name, header }
+        FunDecl {
+            name,
+            header,
+        }
     }
 }
-*/
+
+impl ParseFrom<Rule> for FunctionAttr {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::function_attr);
+        let mut pairs = pair.into_inner();
+        let is_extern = IsExtern::parse_from(pairs.next().unwrap());
+        let is_public = IsPublic::parse_from(pairs.next().unwrap());
+        let is_inline = option_inline_type_parse_from(pairs.next().unwrap());
+        FunctionAttr {
+            is_extern,
+            is_public,
+            is_inline,
+        }
+    }
+}
 
 /// function def
-fn foo() {
 
+impl ParseFrom<Rule> for NamedFun {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::function_def);
+        let mut pairs = pair.into_inner();
+        let attr = FunctionAttr::parse_from(pairs.next().unwrap());
+        let name = DefineSymbol::parse_from(pairs.next().unwrap());
+        let ftyp = FunctionType::parse_from(pairs.next().unwrap());
+        let begin = Expr::parse_from(pairs.next().unwrap());
+        let fun = Fun {
+            ftyp,
+            body: Box::new(begin),
+        };
+        NamedFun {
+            attr,
+            name,
+            fun,
+        }
+    }
+}
+
+impl ParseFrom<Rule> for Expr {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::expr);
+        let pair = pair.into_inner().next().unwrap();
+        match pair.as_rule() {
+            Rule::let_binding => todo!(),
+            Rule::conds => todo!(),
+            Rule::if_expr => todo!(),
+            Rule::switch => todo!(),
+            Rule::while_expr => todo!(),
+            Rule::begin => todo!(),
+            Rule::store => todo!(),
+            Rule::call => Expr::Val(Value::Call(Call::parse_from(pair))),
+            Rule::value => Expr::Val(Value::parse_from(pair)),
+            _ => unreachable!(),
+        }
+    }
+}
+
+/*
+impl ParseFrom<Rule> for Store {
+
+}
+ */
+
+impl ParseFrom<Rule> for Call {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::call);
+        let mut pairs = pair.into_inner();
+        let fun = Value::parse_from(pairs.next().unwrap());
+        let args: Vec<Value> = pairs.map(Value::parse_from).collect();
+        Call {
+            fun: Box::new(fun),
+            args,
+        }
+    }
+}
+
+impl ParseFrom<Rule> for Value {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::value);
+        let pair = pair.into_inner().next().unwrap();
+        match pair.as_rule() {
+            Rule::constant_value => Value::Lit(ConstantValue::parse_from(pair)),
+            Rule::symbol_ref => Value::Var(SymbolRef::parse_from(pair)),
+            _ => unreachable!(),
+        }
+    }
+}
+
+impl ParseFrom<Rule> for SymbolRef {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::symbol_ref);
+        let pair = pair.into_inner().next().unwrap();
+        match pair.as_rule() {
+            Rule::local_symbol => SymbolRef::Local(LocalSymbol::parse_from(pair)),
+            Rule::global_symbol => SymbolRef::Global(GlobalSymbol::parse_from(pair)),
+            Rule::symbol => SymbolRef::Symbol(Symbol::parse_from(pair)),
+            _ => unreachable!(),
+        }
+    }
 }

@@ -2,41 +2,60 @@ pub mod parser;
 
 use std::sync::Arc;
 
-use super::{handles::{ConstantValue, Symbol, LocalSymbol, SymbolRef}, types::{ParamsType, TypeBindAttr}, base::Module};
+use super::{handles::{ConstantValue, LocalSymbol, SymbolRef, DefineSymbol}, types::{TypeBindAttr, FunctionAttr, FunctionType, IsAtomic}, base::Module};
 
 
-pub type RichModule = Module<Fun>;
+pub type RichModule = Module<NamedFun>;
 
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct NamedFun {
-    pub name: Symbol,
+    pub attr: FunctionAttr,
+    pub name: DefineSymbol,
     pub fun: Fun,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Fun {
-    pub args: ParamsType,
+    pub ftyp: FunctionType,
     pub body: Box<Expr>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct LetBinding {
-    pub bind: (LocalSymbol, Value, Option<TypeBindAttr>),
+    pub bind: (LocalSymbol, Value, IsAtomic, Option<TypeBindAttr>),
     pub body: Box<Expr>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expr {
     Let(LetBinding),
-    If(Value, Box<Expr>, Box<Expr>), // cond, then, else
-    // Cond(Vec<(Value, Expr)>, Box<Expr>),
-    // Switch(Value, Vec<(ConstantValue, Expr)>, Box<Expr>),
-    While(Value, Box<Expr>, Box<Expr>), // cond, body, accum
-    Begin(Vec<Expr>),
-    Store(Value, Box<Expr>), // name, value
+    If(If),
+    Cond(Cond),
+    Switch(Switch),
+    While(While),
+    Begin(Begin),
+    Store(Store),
     Val(Value),
 }
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct If(pub Value, pub Box<Expr>, pub Box<Expr>); // cond, then, else
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Cond(pub Vec<(Value, Expr)>, pub Box<Expr>);
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Switch(pub Value, pub Vec<(ConstantValue, Expr)>, pub Box<Expr>);
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct While(pub Value, pub Box<Expr>, pub Box<Expr>);  // cond, body, accum
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Begin (pub Vec<Expr>);
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Store (pub SymbolRef, pub IsAtomic, pub Box<Expr>);  // name, value
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
@@ -71,18 +90,21 @@ impl Expr {
     pub fn is_let(&self) -> bool {
         matches!(self, Expr::Let(_))
     }
+
     pub fn is_literal(&self) -> bool {
         match self {
             Expr::Val(v) => v.is_literal(),
             _ => false,
         }
     }
+
     pub fn get_literal(&self) -> Option<Literal> {
         match self {
             Expr::Val(lit) => lit.get_literal(),
             _ => None,
         }
     }
+
     pub fn get_value(&self) -> Option<&Value> {
         match self {
             Expr::Val(v) => Some(v),

@@ -274,3 +274,25 @@ impl GetSize for FloatType {
         Some(map_array[*self as usize])
     }
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct IsExtern(pub bool);
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct IsPublic(pub bool);
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct IsAtomic(pub bool);
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum InlineType {
+    Inline,
+    Const,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct FunctionAttr {
+    pub is_extern: IsExtern,
+    pub is_public: IsPublic,
+    pub is_inline: Option<InlineType>,
+}

@@ -8,7 +8,7 @@ use std::sync::Arc;
 use crate::cfir::handles::{SymbolRef, Symbol};
 use crate::pass::richir::Context;
 
-use crate::cfir::richir::{LetBinding, Expr, Value, Fun, Call, Literal};
+use crate::cfir::richir::*;
 
 
 trait Pe {
@@ -19,7 +19,7 @@ trait Pe {
 impl Pe for LetBinding {
     type Target = Expr;
     fn pe(&self, ctx: Context) -> Self::Target {
-        let (name, value, type_) = &self.bind;
+        let (name, value, is_atomic, type_) = &self.bind;
         let value = value.pe(ctx.clone());
         if let Some(_t) = type_ {
             // todo: type check
@@ -32,7 +32,7 @@ impl Pe for LetBinding {
         } else {
             let body = self.body.pe(ctx);
             Expr::Let(LetBinding {
-                bind: (name.clone(), value, type_.clone()),
+                bind: (name.clone(), value, *is_atomic, type_.clone()),
                 body: Box::new(body),
             })
         }
@@ -44,12 +44,12 @@ impl Pe for Expr {
     fn pe(&self, ctx: Context) -> Self::Target {
         match self {
             Expr::Let(l) => l.pe(ctx),
-            Expr::If(cond, then, els) => {
+            Expr::If(If(cond, then, els)) => {
                 let cond = cond.pe(ctx.clone());
                 if !cond.is_literal() {
                     let then = then.pe(ctx.clone());
                     let els = els.pe(ctx);
-                    return Expr::If(cond, Box::new(then), Box::new(els));
+                    return Expr::If(If(cond, Box::new(then), Box::new(els)));
                 }
                 let cond = if let Some(c) = cond.get_bool_lit() {
                     c
@@ -59,12 +59,12 @@ impl Pe for Expr {
                 let expr = if cond { then } else { els };
                 expr.pe(ctx)
             },
-            Expr::While(cond, body, accum) => {
+            Expr::While(While(cond, body, accum)) => {
                 let cond = cond.pe(ctx.clone());
                 if !cond.is_literal() {
                     let body = body.pe(ctx.clone());
                     let accum = accum.pe(ctx);
-                    return Expr::While(cond, Box::new(body), Box::new(accum));
+                    return Expr::While(While(cond, Box::new(body), Box::new(accum)));
                 }
                 let c = if let Some(c) = cond.get_bool_lit() {
                     c
@@ -72,18 +72,43 @@ impl Pe for Expr {
                     panic!("TypeError: `While` cond need boolean value");
                 };
                 if !c {
-                    return Expr::Begin(vec![]);
+                    return Expr::Begin(Begin(vec![]));
                 }
                 let body = body.pe(ctx.clone());
                 let accum = accum.pe(ctx);
-                Expr::While(cond, Box::new(body), Box::new(accum))
+                Expr::While(While(cond, Box::new(body), Box::new(accum)))
             },
-            Expr::Begin(b) => Expr::Begin(b.iter().map(|e| e.pe(ctx.clone())).collect()),
-            Expr::Store(var, value) => {
+            Expr::Begin(Begin(b)) => Expr::Begin(Begin(b.iter().map(|e| e.pe(ctx.clone())).collect())),
+            Expr::Store(Store(var, is_atomic, value)) => {
                 let value = value.pe(ctx);
-                Expr::Store(var.clone(), Box::new(value)) // todo
+                Expr::Store(Store(var.clone(), *is_atomic, Box::new(value))) // todo
             },
             Expr::Val(v) => Expr::Val(v.pe(ctx)),
+            Expr::Cond(Cond(conds, els)) => {
+                todo!()
+            },
+            Expr::Switch(Switch(v, switch, els)) => {
+                let v = v.pe(ctx.clone());
+                if !v.is_literal() {
+                    let switch: Vec<_> = switch
+                        .iter()
+                        .map(|(v, e)| (v.clone(), e.pe(ctx.clone())))
+                        .collect();
+                    return Expr::Switch(Switch(v, switch, Box::new(els.pe(ctx))));
+                }
+                let v = v
+                    .get_literal()
+                    .unwrap();
+                let v = v
+                    .get_const().clone()
+                    .expect("TypeError: `Switch` value need constant value, not a fun");
+                let r = switch.iter().find(|(cv, _)| cv == v);
+                if let Some(x) = r {
+                    x.1.pe(ctx)
+                } else {
+                    els.pe(ctx)
+                }
+            },
         }
     }
 }
@@ -119,11 +144,11 @@ impl Pe for Call {
             panic!("TypeError: `Call` fun need function value");
         };
         let fun = fun.unwrap();
-        if fun.args.len() != args.len() {
+        if fun.ftyp.params.len() != args.len() {
             panic!("TypeError: `Call` args number mismatch");
         }
         let ctx = ctx.new_level();
-        for ((name, _typ), value) in fun.args.0.iter().zip(args.clone()) {
+        for ((name, _typ), value) in fun.ftyp.params.0.iter().zip(args.clone()) {
             // todo: type check
             if let Some(name) = name {
                 ctx.set_local(name, &value)
@@ -172,7 +197,7 @@ impl Pe for Fun {
     type Target = Fun;
     fn pe(&self, ctx: Context) -> Self::Target {
         Fun {
-            args: self.args.clone(),
+            ftyp: self.ftyp.clone(),
             body: Box::new(self.body.pe(ctx)),
         }
     }

@@ -375,24 +375,44 @@ fn register_parse_from(pair: Pair<Rule>) -> usize {
     pair.as_str().parse::<usize>().unwrap()
 }
 
-/*
-impl ParseFrom<Rule> for RegisterType {
+impl ParseFrom<Rule> for RegType {
     fn parse_from(pair: Pair<Rule>) -> Self {
-        debug_assert_eq!(pair.as_rule(), Rule::alloca_type_reg);
-        let mut pairs = pair.into_inner();
-        let is_extend = IsExtend::parse_from(pairs.next().unwrap());
-        let pair = pairs.next().unwrap();
-        match pair.as_rule() {
-            Rule::reg_enum => RegisterType::Registers(is_extend, register_set_parse_from(pair)),
-            Rule::reg_range => {
-                RegisterType::RegisterRange(is_extend, register_range_parse_from(pair))
-            }
-            Rule::reg_number => RegisterType::Register(is_extend, register_parse_from(pair)),
+        debug_assert_eq!(pair.as_rule(), Rule::reg_type);
+        match pair.as_str() {
+            "int" => RegType::Int,
+            "float" => RegType::Float,
+            "simd" => RegType::Simd,
+            "vector" => RegType::Vector,
             _ => unreachable!(),
         }
     }
 }
-*/
+
+impl ParseFrom<Rule> for RegPos {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::reg_pos);
+        let pair = pair.into_inner().next().unwrap();
+        match pair.as_rule() {
+            Rule::reg_enum => RegPos::Registers(register_set_parse_from(pair)),
+            Rule::reg_range => {
+                let (l, r) = register_range_parse_from(pair);
+                RegPos::RegisterRange(l, r)
+            },
+            Rule::reg_number => RegPos::Register(register_parse_from(pair)),
+            _ => unreachable!(),
+        }
+    }
+}
+
+impl ParseFrom<Rule> for RegAllocaType {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::alloca_type_reg);
+        let mut pairs = pair.into_inner();
+        let reg_type = RegType::parse_from(pairs.next().unwrap());
+        let reg_pos = RegPos::parse_from(pairs.next().unwrap());
+        RegAllocaType(reg_type, reg_pos)
+    }
+}
 
 impl ParseFrom<Rule> for AllocaType {
     fn parse_from(pair: Pair<Rule>) -> Self {
@@ -400,12 +420,13 @@ impl ParseFrom<Rule> for AllocaType {
         let pair = pair.into_inner().next().unwrap();
         match pair.as_rule() {
             Rule::alloca_type_stack => AllocaType::Stack,
-            Rule::alloca_type_reg => todo!(),
+            Rule::alloca_type_reg => AllocaType::Register(RegAllocaType::parse_from(pair)),
             _ => unreachable!(),
         }
     }
 }
 
+/*
 #[inline]
 fn option_alloca_type_parse_from(pair: Pair<Rule>) -> Option<AllocaType> {
     debug_assert_eq!(pair.as_rule(), Rule::alloca_type);
@@ -415,6 +436,7 @@ fn option_alloca_type_parse_from(pair: Pair<Rule>) -> Option<AllocaType> {
         Some(AllocaType::parse_from(pair))
     }
 }
+ */
 
 impl ParseFrom<Rule> for TypeBindAttr {
     fn parse_from(pair: Pair<Rule>) -> Self {

@@ -1,39 +1,12 @@
 pub mod parser;
 
-use std::{sync::Arc, collections::HashMap};
+use std::sync::Arc;
 
-use super::{handles::{ConstantValue, Symbol, LocalSymbol, SymbolRef, DefineSymbol, TypeSymbol}, types::{FunctionType, ParamsType, TypeBindAttr}};
+use super::{handles::{ConstantValue, Symbol, LocalSymbol, SymbolRef}, types::{ParamsType, TypeBindAttr}, base::Module};
 
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct Module {
-    pub name: Symbol,
-    pub constants: HashMap<DefineSymbol, Constant>,
-    pub variables: HashMap<DefineSymbol, Variable>,
-    pub function_decl: HashMap<DefineSymbol, FunDecl>,
-    pub functions: HashMap<DefineSymbol, Fun>,
-}
+pub type RichModule = Module<Fun>;
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct Constant {
-    pub name: Symbol,
-    pub type_: TypeSymbol,
-    pub value: ConstantValue,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct Variable {
-    pub name: Symbol,
-    pub type_: TypeSymbol,
-    pub value: Option<ConstantValue>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct FunDecl {
-    pub name: DefineSymbol,
-    pub header: FunctionType,
-    pub is_pure: bool,
-}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct NamedFun {

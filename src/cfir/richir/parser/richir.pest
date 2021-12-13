@@ -23,7 +23,6 @@ variable_def = {
     is_pub ~ "var" ~ global_define_symbol ~ ":" ~ type_value ~ ("=" ~ constant_value)? ~ ";"
 }
 
-
 constant_value =
     { simple_value
     | array_value
@@ -95,8 +94,10 @@ alloca_type = {
     | alloca_type_stack)?
 }
 
+reg_pos = { reg_enum | reg_range | reg_number }
+
 alloca_type_reg = {
-    "reg" ~ reg_type ~ (reg_enum | reg_range | reg_number)
+    "reg" ~ reg_type ~ reg_pos
 }
 
 reg_type = {

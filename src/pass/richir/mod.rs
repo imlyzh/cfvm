@@ -3,9 +3,9 @@ pub mod pe;
 use std::{collections::HashMap, sync::Arc, cell::RefCell, rc::Rc, ops::DerefMut, borrow::Borrow};
 
 use crate::cfir::{
-    richir::{Value, Fun, Literal},
     handles::{MutHandle, DefineSymbol, LocalSymbol, Symbol, TypeDefineSymbol, SymbolRef, GlobalSymbol},
-    types::Type
+    types::Type,
+    richir::{Value, Fun, Literal},
 };
 
 #[derive(Debug, Clone, Default)]

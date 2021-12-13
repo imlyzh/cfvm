@@ -7,7 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-emei = "^0.1.1"
+emei = "^0.3.0"
 
 pest = "2.1.3"
 pest_derive = "2.1.0"

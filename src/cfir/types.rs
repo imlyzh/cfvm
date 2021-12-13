@@ -9,8 +9,8 @@ pub trait GetType {
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Type {
     Void,
-    FirstClassType(FirstClassType),
-    FunctionType(FunctionType),
+    FCType(FirstClassType),
+    FunType(FunctionType),
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -122,11 +122,11 @@ impl Unify for Type {
         match (self, other) {
             (Type::Void, _) => Some(Type::Void),
             (t, Type::Void) => Some(t.clone()),
-            (Type::FirstClassType(t1), Type::FirstClassType(t2)) => {
-                t1.unify(t2).map(Type::FirstClassType)
+            (Type::FCType(t1), Type::FCType(t2)) => {
+                t1.unify(t2).map(Type::FCType)
             }
-            (Type::FunctionType(t1), Type::FunctionType(t2)) => {
-                t1.unify(t2).map(Type::FunctionType)
+            (Type::FunType(t1), Type::FunType(t2)) => {
+                t1.unify(t2).map(Type::FunType)
             }
             _ => None,
         }
@@ -193,7 +193,7 @@ pub trait GetSize {
 
 impl GetSize for Type {
     fn get_size(&self, platform_size: u8) -> Option<u64> {
-        if let Type::FirstClassType(t) = self {
+        if let Type::FCType(t) = self {
             t.get_size(platform_size)
         } else {
             None

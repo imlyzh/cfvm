@@ -28,8 +28,7 @@ impl Pe for LetBinding {
         // fixme: if expr is a constant, we can evaluate the body immediately
         if value.is_literal() {
             ctx.set_local(name, &value);
-            let body = self.body.pe(ctx);
-            body
+            self.body.pe(ctx)
         } else {
             let body = self.body.pe(ctx);
             Expr::Let(LetBinding {
@@ -113,10 +112,10 @@ impl Pe for Call {
             });
         }
         if let Some(SymbolRef::Symbol(s)) = fun.get_symbol() {
-            return builtin_function_call_pe(s, &args.collect());
+            return builtin_function_call_pe(s, &args.collect::<Vec<Value>>());
         }
         let fun = fun.get_fun();
-        if let None = fun {
+        if fun.is_none() {
             panic!("TypeError: `Call` fun need function value");
         };
         let fun = fun.unwrap();
@@ -142,14 +141,14 @@ impl Pe for Call {
     }
 }
 
-fn builtin_function_call_pe(s: &Symbol, args: &Vec<Value>) -> Value {
+fn builtin_function_call_pe(s: &Symbol, args: &[Value]) -> Value {
     if args.len() != args.iter().filter(|x| x.is_literal()).count() {
         return Value::Call(Call {
             fun: Box::new(Value::Var(SymbolRef::Symbol(s.clone()))),
-            args: args.clone(),
+            args: args.to_owned(),
         });
     }
-    let args: Vec<Literal> = args.into_iter().map(|x| x.get_literal().unwrap()).collect();
+    let _args: Vec<Literal> = args.iter().map(|x| x.get_literal().unwrap()).collect();
 
     todo!()
 }

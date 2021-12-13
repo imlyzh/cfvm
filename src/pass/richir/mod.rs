@@ -42,8 +42,8 @@ impl<'a> Context<'a> {
         let v = self.get_local_value(name)?;
         match v {
             Value::Var(name) => self.get(&name),
-            Value::Lit(v) => Some(Literal::ConstVal(v.clone())),
-            Value::Fun(f) => Some(Literal::Fun(f.clone())),
+            Value::Lit(v) => Some(Literal::ConstVal(v)),
+            Value::Fun(f) => Some(Literal::Fun(f)),
             Value::Call(_) => None,
         }
     }
@@ -57,13 +57,13 @@ impl<'a> Context<'a> {
         } else {
             &self.module
         };
-        if let Some(x) = module.functions.as_ref().borrow().read().unwrap().get(&name.1).map(|v| v.clone()) {
+        if let Some(x) = module.functions.as_ref().borrow().read().unwrap().get(&name.1).cloned() {
             return Some(Literal::Fun(x));
         }
-        if let Some(x) = module.constant.as_ref().borrow().read().unwrap().get(&name.1).map(|v| v.clone()) {
+        if let Some(x) = module.constant.as_ref().borrow().read().unwrap().get(&name.1).cloned() {
             return Some(x);
         }
-        if let Some((_ty, value)) = module.vars.as_ref().borrow().read().unwrap().get(&name.1).map(|v| v.clone()) {
+        if let Some((_ty, value)) = module.vars.as_ref().borrow().read().unwrap().get(&name.1).cloned() {
             return value;
         }
         None

@@ -49,7 +49,7 @@ pub struct Cond(pub Vec<(Value, Expr)>, pub Box<Expr>);
 pub struct Switch(pub Value, pub Vec<(ConstantValue, Expr)>, pub Box<Expr>);
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct While(pub Value, pub Box<Expr>, pub Box<Expr>);  // cond, body, accum
+pub struct While(pub Value, pub Box<Expr>, pub Option<Store>);  // cond, body, accum
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Begin (pub Vec<Expr>);

@@ -210,6 +210,19 @@ fn optional_local_symbol_parse_from(pair: Pair<Rule>) -> Option<LocalSymbol> {
     }
 }
 
+impl ParseFrom<Rule> for SymbolRef {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::symbol_ref);
+        let pair = pair.into_inner().next().unwrap();
+        match pair.as_rule() {
+            Rule::local_symbol => SymbolRef::Local(LocalSymbol::parse_from(pair)),
+            Rule::global_symbol => SymbolRef::Global(GlobalSymbol::parse_from(pair)),
+            Rule::symbol => SymbolRef::Symbol(Symbol::parse_from(pair)),
+            _ => unreachable!(),
+        }
+    }
+}
+
 /// types ////////////////////////////////////////////////////////////////////////////////////
 
 impl ParseFrom<Rule> for IntType {
@@ -527,6 +540,18 @@ impl ParseFrom<Rule> for ConstantValue {
     }
 }
 
+impl ParseFrom<Rule> for Value {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::value);
+        let pair = pair.into_inner().next().unwrap();
+        match pair.as_rule() {
+            Rule::constant_value => Value::Lit(ConstantValue::parse_from(pair)),
+            Rule::symbol_ref => Value::Var(SymbolRef::parse_from(pair)),
+            _ => unreachable!(),
+        }
+    }
+}
+
 /// defs ////////////////////////////////////////////////////////////////////////////////////
 
 impl ParseFrom<Rule> for TypeDef {
@@ -633,13 +658,13 @@ impl ParseFrom<Rule> for Expr {
         debug_assert_eq!(pair.as_rule(), Rule::expr);
         let pair = pair.into_inner().next().unwrap();
         match pair.as_rule() {
-            Rule::let_binding => todo!(),
-            Rule::conds => todo!(),
-            Rule::if_expr => todo!(),
-            Rule::switch => todo!(),
-            Rule::while_expr => todo!(),
-            Rule::begin => todo!(),
-            Rule::store => todo!(),
+            Rule::let_binding => Expr::Let(LetBinding::parse_from(pair)),
+            Rule::conds => Expr::Cond(Cond::parse_from(pair)),
+            Rule::if_expr => Expr::If(If::parse_from(pair)),
+            Rule::switch => Expr::Switch(Switch::parse_from(pair)),
+            Rule::while_expr => Expr::While(While::parse_from(pair)),
+            Rule::begin => Expr::Begin(Begin::parse_from(pair)),
+            Rule::store => Expr::Store(Store::parse_from(pair)),
             Rule::call => Expr::Val(Value::Call(Call::parse_from(pair))),
             Rule::value => Expr::Val(Value::parse_from(pair)),
             _ => unreachable!(),
@@ -647,11 +672,147 @@ impl ParseFrom<Rule> for Expr {
     }
 }
 
-/*
-impl ParseFrom<Rule> for Store {
-
+impl ParseFrom<Rule> for LetBinding {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::let_binding);
+        let mut pairs = pair.into_inner();
+        let name = LocalSymbol::parse_from(pairs.next().unwrap());
+        let type_ = type_bind_opt(pairs.next().unwrap());
+        let is_atomic = IsAtomic::parse_from(pairs.next().unwrap());
+        let value = call_or_value(pairs.next().unwrap());
+        let expr = Expr::parse_from(pairs.next().unwrap());
+        LetBinding {
+            bind: (name, value, is_atomic, type_),
+            body: Box::new(expr),
+        }
+    }
 }
- */
+
+#[inline]
+fn call_or_value(pair: Pair<Rule>) -> Value {
+    debug_assert_eq!(pair.as_rule(), Rule::call_or_value);
+    let pair = pair.into_inner().next().unwrap();
+    match pair.as_rule() {
+        Rule::call => Value::Call(Call::parse_from(pair)),
+        Rule::value => Value::parse_from(pair),
+        _ => unreachable!(),
+    }
+}
+
+#[inline]
+fn type_bind_opt(pair: Pair<Rule>) -> Option<TypeBindAttr> {
+    debug_assert_eq!(pair.as_rule(), Rule::type_bind_opt);
+    pair.into_inner().next().map(TypeBindAttr::parse_from)
+}
+
+impl ParseFrom<Rule> for Cond {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::conds);
+        let mut pairs = pair.into_inner();
+        let cond_pairs = cond_pairs(pairs.next().unwrap());
+        let els = Expr::parse_from(pairs.next().unwrap());
+        Cond(cond_pairs, Box::new(els))
+    }
+}
+
+impl ParseFrom<Rule> for If {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::conds);
+        let mut pairs = pair.into_inner();
+        let (value, then) = cond_pair(pairs.next().unwrap());
+        let els = Expr::parse_from(pairs.next().unwrap());
+        If(value, Box::new(then), Box::new(els))
+    }
+}
+
+#[inline]
+fn cond_pairs(pair: Pair<Rule>) -> Vec<(Value, Expr)> {
+    debug_assert_eq!(pair.as_rule(), Rule::cond_pairs);
+    pair.into_inner().map(cond_pair).collect()
+}
+
+#[inline]
+fn cond_pair(pair: Pair<Rule>) -> (Value, Expr) {
+    debug_assert_eq!(pair.as_rule(), Rule::cond_pair);
+    let mut pairs = pair.into_inner();
+    let cond = Value::parse_from(pairs.next().unwrap());
+    let body = Expr::parse_from(pairs.next().unwrap());
+    (cond, body)
+}
+
+impl ParseFrom<Rule> for Switch {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::switch);
+        let mut pairs = pair.into_inner();
+        let cond = Value::parse_from(pairs.next().unwrap());
+        let cases = switch_cases(pairs.next().unwrap());
+        let default = default_case(pairs.next().unwrap());
+        Switch(cond, cases, Box::new(default))
+    }
+}
+
+#[inline]
+fn switch_cases(pair: Pair<Rule>) -> Vec<(ConstantValue, Expr)> {
+    debug_assert_eq!(pair.as_rule(), Rule::switch_cases);
+    pair.into_inner().map(switch_case).collect()
+}
+
+#[inline]
+fn switch_case(pair: Pair<Rule>) -> (ConstantValue, Expr) {
+    debug_assert_eq!(pair.as_rule(), Rule::switch_case);
+    let mut pairs = pair.into_inner();
+    let value = ConstantValue::parse_from(pairs.next().unwrap());
+    let body = Expr::parse_from(pairs.next().unwrap());
+    (value, body)
+}
+
+#[inline]
+fn default_case(pair: Pair<Rule>) -> Expr {
+    debug_assert_eq!(pair.as_rule(), Rule::default_case);
+    Expr::parse_from(pair.into_inner().next().unwrap())
+}
+
+impl ParseFrom<Rule> for Begin {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::begin);
+        let pairs = pair.into_inner();
+        let exprs = pairs.map(Expr::parse_from).collect();
+        Begin(exprs)
+    }
+}
+
+impl ParseFrom<Rule> for While {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::while_expr);
+        let mut pairs = pair.into_inner();
+        let cond = Value::parse_from(pairs.next().unwrap());
+        let body = Expr::parse_from(pairs.next().unwrap());
+        let accum = pairs.next().map(Store::parse_from);
+        While(cond, Box::new(body), accum)
+    }
+}
+
+impl ParseFrom<Rule> for Store {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::store);
+        let mut pairs = pair.into_inner();
+        let name = SymbolRef::parse_from(pairs.next().unwrap());
+        let is_atomic = IsAtomic::parse_from(pairs.next().unwrap());
+        let value = Expr::parse_from(pairs.next().unwrap());
+        Store(name, is_atomic, Box::new(value))
+    }
+}
+
+impl ParseFrom<Rule> for IsAtomic {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::store_type);
+        match pair.as_str() {
+            ":=" => IsAtomic(true),
+            "=" => IsAtomic(false),
+            _ => unreachable!(),
+        }
+    }
+}
 
 impl ParseFrom<Rule> for Call {
     fn parse_from(pair: Pair<Rule>) -> Self {
@@ -662,31 +823,6 @@ impl ParseFrom<Rule> for Call {
         Call {
             fun: Box::new(fun),
             args,
-        }
-    }
-}
-
-impl ParseFrom<Rule> for Value {
-    fn parse_from(pair: Pair<Rule>) -> Self {
-        debug_assert_eq!(pair.as_rule(), Rule::value);
-        let pair = pair.into_inner().next().unwrap();
-        match pair.as_rule() {
-            Rule::constant_value => Value::Lit(ConstantValue::parse_from(pair)),
-            Rule::symbol_ref => Value::Var(SymbolRef::parse_from(pair)),
-            _ => unreachable!(),
-        }
-    }
-}
-
-impl ParseFrom<Rule> for SymbolRef {
-    fn parse_from(pair: Pair<Rule>) -> Self {
-        debug_assert_eq!(pair.as_rule(), Rule::symbol_ref);
-        let pair = pair.into_inner().next().unwrap();
-        match pair.as_rule() {
-            Rule::local_symbol => SymbolRef::Local(LocalSymbol::parse_from(pair)),
-            Rule::global_symbol => SymbolRef::Global(GlobalSymbol::parse_from(pair)),
-            Rule::symbol => SymbolRef::Symbol(Symbol::parse_from(pair)),
-            _ => unreachable!(),
         }
     }
 }

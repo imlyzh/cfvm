@@ -206,15 +206,33 @@ call_or_value =
     }
 
 let_binding = {
-    "let" ~ local_symbol ~ type_bind_opt ~ "=" ~ call_or_value ~ expr
+    "let" ~ local_symbol ~ type_bind_opt ~ store_type ~ call_or_value ~ expr
 }
+
+store_type =
+    { ":="
+    | "="
+    }
 
 type_bind_opt = {
     (":" ~ type_bind_metadata)?
 }
 
 if_expr = {
-    "if" ~ value ~ "then" ~ expr ~ "else" ~ expr
+    "if" ~ cond_pair ~ "else" ~ expr
+}
+
+conds = {
+    "if" ~ cond_pairs ~
+    "else" ~ expr
+}
+
+cond_pairs = {
+    cond_pair ~ ("elif" ~ cond_pair)*
+}
+
+cond_pair = {
+    value ~ "then" ~ expr
 }
 
 while_expr = {
@@ -230,7 +248,7 @@ begin = {
 }
 
 store = {
-    symbol_ref ~ "=" ~ call_or_value
+    symbol_ref ~ store_type ~ call_or_value
 }
 
 value =
@@ -248,18 +266,12 @@ symbol_ref =
     | symbol
     }
 
-conds = {
-    "if" ~ conds_pair ~
-    ("elif" ~ conds_pair)* ~
-    "else" ~ expr
-}
-
-conds_pair = {
-    value ~ "then" ~ expr
-}
-
 switch = {
-    "switch" ~ value ~ "{" ~ (switch_case ~ ("," ~ switch_case)* ~ "," ~ default_case)? ~ "}"
+    "switch" ~ value ~ "{" ~ switch_cases ~ default_case ~ "}"
+}
+
+switch_cases = {
+    (switch_case ~ ("," ~ switch_case)* ~ ",")
 }
 
 switch_case = {

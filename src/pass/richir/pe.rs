@@ -63,8 +63,8 @@ impl Pe for Expr {
                 let cond = cond.pe(ctx.clone());
                 if !cond.is_literal() {
                     let body = body.pe(ctx.clone());
-                    let accum = accum.pe(ctx);
-                    return Expr::While(While(cond, Box::new(body), Box::new(accum)));
+                    let accum = accum.as_ref().map(|x| x.pe(ctx.clone()));
+                    return Expr::While(While(cond, Box::new(body), accum));
                 }
                 let c = if let Some(c) = cond.get_bool_lit() {
                     c
@@ -75,8 +75,8 @@ impl Pe for Expr {
                     return Expr::Begin(Begin(vec![]));
                 }
                 let body = body.pe(ctx.clone());
-                let accum = accum.pe(ctx);
-                Expr::While(While(cond, Box::new(body), Box::new(accum)))
+                let accum = accum.as_ref().map(|x| x.pe(ctx.clone()));
+                Expr::While(While(cond, Box::new(body), accum))
             },
             Expr::Begin(Begin(b)) => Expr::Begin(Begin(b.iter().map(|e| e.pe(ctx.clone())).collect())),
             Expr::Store(Store(var, is_atomic, value)) => {
@@ -85,7 +85,18 @@ impl Pe for Expr {
             },
             Expr::Val(v) => Expr::Val(v.pe(ctx)),
             Expr::Cond(Cond(conds, els)) => {
-                todo!()
+                let conds: Vec<_> = conds.iter().map(|(c, e)| (c.pe(ctx.clone()), e)).collect();
+                let conds: Vec<_> = conds
+                    .iter()
+                    .filter(|x| x.0.get_bool_lit().unwrap_or(true))
+                    .map(|x| (x.0.clone(), x.1.pe(ctx.clone())))
+                    .collect();
+                let els = els.pe(ctx);
+                if conds.is_empty() {
+                    els
+                } else {
+                    Expr::Cond(Cond(conds, Box::new(els)))
+                }
             },
             Expr::Switch(Switch(v, switch, els)) => {
                 let v = v.pe(ctx.clone());
@@ -100,7 +111,7 @@ impl Pe for Expr {
                     .get_literal()
                     .unwrap();
                 let v = v
-                    .get_const().clone()
+                    .get_const()
                     .expect("TypeError: `Switch` value need constant value, not a fun");
                 let r = switch.iter().find(|(cv, _)| cv == v);
                 if let Some(x) = r {
@@ -122,6 +133,13 @@ impl Pe for Value {
             Value::Fun(f) => Value::Fun(Arc::new(f.pe(ctx))),
             Value::Lit(_) => self.clone(),
         }
+    }
+}
+
+impl Pe for Store {
+    type Target = Store;
+    fn pe(&self, ctx: Context) -> Self::Target {
+        Store(self.0.clone(), self.1, Box::new(self.2.pe(ctx)))
     }
 }
 

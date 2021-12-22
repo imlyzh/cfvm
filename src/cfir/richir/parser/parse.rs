@@ -75,7 +75,7 @@ impl ParseFrom<Rule> for DefineSymbol {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::global_define_symbol);
         let pair = pair.into_inner().next().unwrap();
-        DefineSymbol(Handle::new(pair.as_str().to_string())) // fixme: register in global intern string pool
+        DefineSymbol(Symbol::parse_from(pair)) // fixme: register in global intern string pool
     }
 }
 
@@ -97,16 +97,16 @@ impl ParseFrom<Rule> for TypeSymbol {
 impl ParseFrom<Rule> for TypeDefineSymbol {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::type_define_symbol);
-        TypeDefineSymbol(Handle::new(pair.as_str().to_string())) // fixme: register in global intern string pool
+        let pair = pair.into_inner().next().unwrap();
+        TypeDefineSymbol(Symbol::parse_from(pair))
     }
 }
 
 impl ParseFrom<Rule> for LocalSymbol {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::local_symbol);
-        let mut pairs = pair.into_inner();
-        let sym = pairs.next().unwrap().as_str().to_string();
-        LocalSymbol(Handle::new(sym))
+        let pair = pair.into_inner().next().unwrap();
+        LocalSymbol(Symbol::parse_from(pair))
     }
 }
 

@@ -1,11 +1,11 @@
-use std::collections::BTreeSet;
+// use std::collections::BTreeSet;
 
-use crate::cfir::types::AllocaType;
+use crate::cfir::{types::{AllocaType, TypeBindAttr, StoreType}, handles::MutHandle};
 
-use super::{
-    handles::{LabelHandle, LocalHandle, LocalSymbol, SimpleValue, Symbol, ValueHandle},
+use super::super::{
+    handles::{LabelSymbol, LocalSymbol, SimpleValue, Symbol, SymbolRef},
     types::{FloatType, IntType, Type},
-    MutHandle,
+    // MutHandle,
 };
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -59,56 +59,54 @@ pub struct IndexList(pub Vec<Index>);
 
 #[derive(Debug, Clone)]
 pub enum Operator {
-    Alloca(Option<AllocaType>, Type),
-    GetPtr(ValueHandle, Option<IndexList>),
-    Load(Type, ValueHandle),
-    Cast(Type, ValueHandle),
-    Add(ValueHandle, ValueHandle),
-    FAdd(ValueHandle, ValueHandle),
-    Sub(ValueHandle, ValueHandle),
-    FSub(ValueHandle, ValueHandle),
-    Mul(ValueHandle, ValueHandle),
-    FMul(ValueHandle, ValueHandle),
-    UDiv(ValueHandle, ValueHandle),
-    SDiv(ValueHandle, ValueHandle),
-    URem(ValueHandle, ValueHandle),
-    SRem(ValueHandle, ValueHandle),
-    FRem(ValueHandle, ValueHandle),
-    Shl(ValueHandle, ValueHandle),
-    LShr(ValueHandle, ValueHandle),
-    AShr(ValueHandle, ValueHandle),
-    And(ValueHandle, ValueHandle),
-    Or(ValueHandle, ValueHandle),
-    Xor(ValueHandle, ValueHandle),
-    GetValue(ValueHandle, IndexList),
-    GetItem(ValueHandle, ValueHandle),
-    SetValue(ValueHandle, IndexList, ValueHandle),
-    SetItem(ValueHandle, ValueHandle, ValueHandle),
-    Trunc(ValueHandle, IntType),
-    ZExt(ValueHandle, IntType),
-    SExt(ValueHandle, IntType),
-    FTrunc(ValueHandle, FloatType),
-    FExt(ValueHandle, FloatType),
-    ICmp(ICmpOp, ValueHandle, ValueHandle),
-    FCmp(FCmpOp, ValueHandle, ValueHandle),
-    Phi(Vec<(LabelHandle, ValueHandle)>),
-    Call(ValueHandle, Vec<ValueHandle>),
+    Alloca(Option<StoreType>, Type),
+    GetPtr(SymbolRef, Option<IndexList>),
+    Load(Type, SymbolRef),
+    Cast(Type, SymbolRef),
+    Add(SymbolRef, SymbolRef),
+    FAdd(SymbolRef, SymbolRef),
+    Sub(SymbolRef, SymbolRef),
+    FSub(SymbolRef, SymbolRef),
+    Mul(SymbolRef, SymbolRef),
+    FMul(SymbolRef, SymbolRef),
+    UDiv(SymbolRef, SymbolRef),
+    SDiv(SymbolRef, SymbolRef),
+    URem(SymbolRef, SymbolRef),
+    SRem(SymbolRef, SymbolRef),
+    FRem(SymbolRef, SymbolRef),
+    Shl(SymbolRef, SymbolRef),
+    LShr(SymbolRef, SymbolRef),
+    AShr(SymbolRef, SymbolRef),
+    And(SymbolRef, SymbolRef),
+    Or(SymbolRef, SymbolRef),
+    Xor(SymbolRef, SymbolRef),
+    GetValue(SymbolRef, IndexList),
+    GetItem(SymbolRef, SymbolRef),
+    SetValue(SymbolRef, IndexList, SymbolRef),
+    SetItem(SymbolRef, SymbolRef, SymbolRef),
+    Trunc(SymbolRef, IntType),
+    ZExt(SymbolRef, IntType),
+    SExt(SymbolRef, IntType),
+    FTrunc(SymbolRef, FloatType),
+    FExt(SymbolRef, FloatType),
+    ICmp(ICmpOp, SymbolRef, SymbolRef),
+    FCmp(FCmpOp, SymbolRef, SymbolRef),
+    Phi(Vec<(LabelSymbol, SymbolRef)>),
+    Call(SymbolRef, Vec<SymbolRef>),
 }
 
 #[derive(Debug, Clone)]
 pub struct Store(
-    pub LocalHandle,
-    pub ValueHandle,
-    pub IsAtomic,
-    pub IsVolatile,
+    pub LocalSymbol,
+    pub SymbolRef,
+    pub TypeBindAttr,
 );
 
 #[derive(Debug, Clone)]
 pub struct BindOperator(
     pub LocalSymbol,
     pub MutHandle<Operator>,
-    pub IsAtomic,
-    pub IsVolatile,
+    pub TypeBindAttr,
 );
 
 #[derive(Debug, Clone)]
@@ -119,21 +117,21 @@ pub enum Instruction {
 }
 
 #[derive(Debug, Clone)]
-pub struct Ret(pub Option<ValueHandle>);
+pub struct Ret(pub Option<SymbolRef>);
 
 #[derive(Debug, Clone)]
 pub struct Branch(
     pub BranchOp,
-    pub ValueHandle,
-    pub LabelHandle,
-    pub LabelHandle,
+    pub SymbolRef,
+    pub LabelSymbol,
+    pub LabelSymbol,
 );
 
 #[derive(Debug, Clone)]
-pub struct Conds(pub Vec<(ValueHandle, LabelHandle)>, pub Option<LabelHandle>);
+pub struct Conds(pub Vec<(SymbolRef, LabelSymbol)>, pub Option<LabelSymbol>);
 
 #[derive(Debug, Clone)]
-pub struct Switch(pub ValueHandle, pub Vec<(SimpleValue, LabelHandle)>);
+pub struct Switch(pub SymbolRef, pub Vec<(SimpleValue, LabelSymbol)>);
 
 #[derive(Debug, Clone)]
 pub enum Terminator {

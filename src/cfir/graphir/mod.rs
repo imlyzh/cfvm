@@ -1,12 +1,13 @@
-// pub mod basicblock;
-// pub mod instruction;
+pub mod instruction;
 
 pub mod parser;
 
 use std::{
     collections::HashMap,
-    sync::{Arc, RwLock},
+    // sync::{Arc, RwLock},
 };
+
+use self::instruction::{BindOperator, Instruction, Terminator};
 
 use super::{
     base::{
@@ -15,31 +16,30 @@ use super::{
     },
     types::{
         Type, FunctionType, PointerType, FirstClassType, SimpleType, GetType,
-        IsExtern, IsPublic, InlineType
+        IsExtern, IsPublic, InlineType, FunctionAttr
     },
-    handles::{DefineSymbol, LabelSymbol}
+    handles::{DefineSymbol, LabelSymbol, MutHandle, ConstantValue, SymbolRef}
 };
 
 
-pub type MutHandle<T> = Arc<RwLock<T>>;
-
-
 pub type RichModule = Module<FunctionDef>;
-
-#[derive(Debug, Clone)]
-pub struct FunctionAttr {
-    pub is_extern: IsExtern,
-    pub is_public: IsPublic,
-    pub is_inline: Option<InlineType>,
-}
 
 #[derive(Debug, Clone)]
 pub struct FunctionDef {
     pub name: DefineSymbol,
     pub header: FunctionType,
     pub function_attr: FunctionAttr,
-    // pub blocks: MutHandle<Vec<MutHandle<BasicBlockDef>>>,
+    pub blocks: MutHandle<Vec<MutHandle<BasicBlockDef>>>,
     pub block_map: MutHandle<HashMap<LabelSymbol, usize>>,
+}
+
+#[derive(Debug, Clone)]
+pub struct BasicBlockDef {
+    pub label: Option<LabelSymbol>,
+    // pub prev_block: MutHandle<Vec<MutHandle<BasicBlockDef>>>,
+    // pub variable_defs: MutHandle<HashMap<LabelSymbol, MutHandle<BindOperator>>>,
+    pub instructions: MutHandle<Vec<MutHandle<Instruction>>>,
+    pub terminator: MutHandle<Terminator>,
 }
 
 impl GetType for FunctionDef {
@@ -51,4 +51,11 @@ impl GetType for FunctionDef {
         )));
         r
     }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Value {
+    Var(SymbolRef),
+    Lit(ConstantValue),
+    // Call(Call),
 }

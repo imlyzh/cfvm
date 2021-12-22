@@ -18,16 +18,16 @@ pub struct Symbol(pub Handle<String>); // record line key, type name, etc.
 // text type
 
 #[derive(Debug, Hash, Clone, Eq, PartialEq, PartialOrd)]
-pub struct DefineSymbol(pub Handle<String>);
+pub struct DefineSymbol(pub Symbol);
 
 #[derive(Debug, Hash, Clone, Eq, PartialEq, PartialOrd)]
-pub struct LocalSymbol(pub Handle<String>);
+pub struct LocalSymbol(pub Symbol);
 
 #[derive(Debug, Hash, Clone, Eq, PartialEq, PartialOrd)]
-pub struct LabelSymbol(pub Handle<String>);
+pub struct LabelSymbol(pub Symbol);
 
 #[derive(Debug, Hash, Clone, Eq, PartialEq, PartialOrd)]
-pub struct TypeDefineSymbol(pub Handle<String>);
+pub struct TypeDefineSymbol(pub Symbol);
 
 #[derive(Debug, Hash, Clone, Eq, PartialEq, PartialOrd)]
 pub enum SymbolRef {

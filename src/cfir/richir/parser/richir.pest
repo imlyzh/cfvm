@@ -57,12 +57,6 @@ function_decl = {
     "import" ~ "fn" ~ global_define_symbol ~ function_type ~ ";"
 }
 
-
-function_def = {
-    function_attr ~ "fn" ~ global_define_symbol ~
-    function_type ~ begin
-}
-
 function_attr = { is_extern ~ is_pub ~ is_inline }
 
 is_extern = { "extern"? }
@@ -190,6 +184,11 @@ params_name = @
 
 // types end
 
+function_def = {
+    function_attr ~ "fn" ~ global_define_symbol ~
+    function_type ~ begin
+}
+
 expr =
     { let_binding
     | conds
@@ -257,12 +256,6 @@ call = {
     value ~ "(" ~ (value ~ ("," ~ value)*)? ~ ")"
 }
 
-symbol_ref =
-    { local_symbol
-    | global_symbol
-    | symbol
-    }
-
 switch = {
     "switch" ~ value ~ "{" ~ switch_cases ~ default_case ~ "}"
 }
@@ -288,6 +281,12 @@ global_symbol = ${ (symbol ~ ".")? ~ global_define_symbol }
 global_define_symbol = ${ "@" ~ symbol }
 
 local_symbol = ${ "%" ~ symbol }
+
+symbol_ref =
+    { local_symbol
+    | global_symbol
+    | symbol
+    }
 
 symbol = $
     { _quoted_name

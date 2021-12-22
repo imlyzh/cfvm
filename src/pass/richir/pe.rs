@@ -19,7 +19,7 @@ trait Pe {
 impl Pe for LetBinding {
     type Target = Expr;
     fn pe(&self, ctx: Context) -> Self::Target {
-        let (name, value, is_atomic, type_) = &self.bind;
+        let (name, value, type_) = &self.bind;
         let value = value.pe(ctx.clone());
         if let Some(_t) = type_ {
             // todo: type check
@@ -32,7 +32,7 @@ impl Pe for LetBinding {
         } else {
             let body = self.body.pe(ctx);
             Expr::Let(LetBinding {
-                bind: (name.clone(), value, *is_atomic, type_.clone()),
+                bind: (name.clone(), value, type_.clone()),
                 body: Box::new(body),
             })
         }
@@ -79,9 +79,9 @@ impl Pe for Expr {
                 Expr::While(While(cond, Box::new(body), accum))
             },
             Expr::Begin(Begin(b)) => Expr::Begin(Begin(b.iter().map(|e| e.pe(ctx.clone())).collect())),
-            Expr::Store(Store(var, is_atomic, value)) => {
+            Expr::Store(Store(var, store_type, value)) => {
                 let value = value.pe(ctx);
-                Expr::Store(Store(var.clone(), *is_atomic, Box::new(value))) // todo
+                Expr::Store(Store(var.clone(), *store_type, Box::new(value))) // todo
             },
             Expr::Val(v) => Expr::Val(v.pe(ctx)),
             Expr::Cond(Cond(conds, els)) => {

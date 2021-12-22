@@ -95,21 +95,6 @@ pub enum Operator {
     Call(ValueHandle, Vec<ValueHandle>),
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub struct IsAtomic(pub bool);
-
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub struct IsVolatile(pub bool);
-
-/*
-#[derive(Debug, Clone)]
-pub struct BindMetadata {
-    pub is_atomic: IsAtomic,
-    pub is_volatile: IsVolatile,
-    pub is_mutable: Option<bool>,
-}
-*/
-
 #[derive(Debug, Clone)]
 pub struct Store(
     pub LocalHandle,

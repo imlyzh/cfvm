@@ -13,7 +13,7 @@ pub struct GlobalSymbol(pub Option<Symbol>, pub DefineSymbol);
 pub struct TypeSymbol(pub Option<Symbol>, pub TypeDefineSymbol);
 
 #[derive(Debug, Hash, Clone, Eq, PartialEq, PartialOrd)]
-pub struct Symbol(pub Handle<String>); // record line key, params name, etc.
+pub struct Symbol(pub Handle<String>); // record line key, type name, etc.
 
 // text type
 
@@ -23,6 +23,11 @@ pub struct DefineSymbol(pub Handle<String>);
 #[derive(Debug, Hash, Clone, Eq, PartialEq, PartialOrd)]
 pub struct LocalSymbol(pub Handle<String>);
 
+#[derive(Debug, Hash, Clone, Eq, PartialEq, PartialOrd)]
+pub struct LabelSymbol(pub Handle<String>);
+
+#[derive(Debug, Hash, Clone, Eq, PartialEq, PartialOrd)]
+pub struct TypeDefineSymbol(pub Handle<String>);
 
 #[derive(Debug, Hash, Clone, Eq, PartialEq, PartialOrd)]
 pub enum SymbolRef {
@@ -30,15 +35,6 @@ pub enum SymbolRef {
     Global(GlobalSymbol),
     Symbol(Symbol),
 }
-
-/*
-#[derive(Debug, Hash, Clone, Eq, PartialEq, PartialOrd)]
-pub struct LabelSymbol(pub Handle<String>);
- */
-
-#[derive(Debug, Hash, Clone, Eq, PartialEq, PartialOrd)]
-pub struct TypeDefineSymbol(pub Handle<String>);
-
 
 // literal values
 

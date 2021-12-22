@@ -172,15 +172,8 @@ impl ParseFrom<Rule> for SymbolRef {
 impl ParseFrom<Rule> for IntType {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::int_type);
-        match pair.as_str() {
-            "i1" => IntType::I1,
-            "i8" => IntType::I8,
-            "i16" => IntType::I16,
-            "i32" => IntType::I32,
-            "i64" => IntType::I64,
-            "i128" => IntType::I128,
-            _ => unreachable!(),
-        }
+        let pair = pair.into_inner().next().unwrap();
+        IntType(str::parse(pair.as_str()).unwrap())
     }
 }
 
@@ -337,12 +330,30 @@ impl ParseFrom<Rule> for RegAllocaType {
     }
 }
 
+impl ParseFrom<Rule> for StoreType {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::store_type);
+        let pair = pair.into_inner().next().unwrap();
+        match pair.as_str() {
+            "atomic" => StoreType::Atomic,
+            "volatile" => StoreType::Volatile,
+            _ => unreachable!()
+        }
+    }
+}
+
+#[inline]
+fn store_type_opt_parse_from(pair: Pair<Rule>) -> Option<StoreType> {
+    debug_assert_eq!(pair.as_rule(), Rule::store_type_opt);
+    pair.into_inner().next().map(StoreType::parse_from)
+}
+
 impl ParseFrom<Rule> for AllocaType {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::alloca_type);
         let pair = pair.into_inner().next().unwrap();
         match pair.as_rule() {
-            Rule::alloca_type_stack => AllocaType::Stack,
+            Rule::alloca_type_stack => AllocaType::Stack(store_type_opt_parse_from(pair.into_inner().next().unwrap())),
             Rule::alloca_type_reg => AllocaType::Register(RegAllocaType::parse_from(pair)),
             _ => unreachable!(),
         }
@@ -634,11 +645,10 @@ impl ParseFrom<Rule> for LetBinding {
         let mut pairs = pair.into_inner();
         let name = LocalSymbol::parse_from(pairs.next().unwrap());
         let type_ = type_bind_opt(pairs.next().unwrap());
-        let is_atomic = IsAtomic::parse_from(pairs.next().unwrap());
         let value = call_or_value(pairs.next().unwrap());
         let expr = Expr::parse_from(pairs.next().unwrap());
         LetBinding {
-            bind: (name, value, is_atomic, type_),
+            bind: (name, value, type_),
             body: Box::new(expr),
         }
     }
@@ -753,20 +763,9 @@ impl ParseFrom<Rule> for Store {
         debug_assert_eq!(pair.as_rule(), Rule::store);
         let mut pairs = pair.into_inner();
         let name = SymbolRef::parse_from(pairs.next().unwrap());
-        let is_atomic = IsAtomic::parse_from(pairs.next().unwrap());
+        let store_type = StoreType::parse_from(pairs.next().unwrap());
         let value = Expr::parse_from(pairs.next().unwrap());
-        Store(name, is_atomic, Box::new(value))
-    }
-}
-
-impl ParseFrom<Rule> for IsAtomic {
-    fn parse_from(pair: Pair<Rule>) -> Self {
-        debug_assert_eq!(pair.as_rule(), Rule::store_type);
-        match pair.as_str() {
-            ":=" => IsAtomic(true),
-            "=" => IsAtomic(false),
-            _ => unreachable!(),
-        }
+        Store(name, store_type, Box::new(value))
     }
 }
 

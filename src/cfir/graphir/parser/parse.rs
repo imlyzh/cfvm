@@ -1,81 +1,25 @@
 use std::collections::BTreeSet;
+use std::collections::HashMap;
 
+use pest::Parser;
+use pest::error::Error;
 use pest::iterators::Pair;
 use pest_derive::*;
 
-use crate::cfir::graphir::handles::*;
-use crate::cfir::graphir::instruction::Store;
-use crate::cfir::graphir::instruction::*;
-use crate::cfir::graphir::*;
+use crate::cfir::types::*;
+use crate::cfir::handles::*;
+use crate::cfir::base::*;
+use crate::cfir::richir::*;
 
 #[derive(Parser)]
-#[grammar = "./cfir/graphir/parser/grammar.pest"]
-pub enum CFIR {}
+#[grammar = "./cfir/richir/parser/richir.pest"]
+pub enum RICHIR {}
 
 pub trait ParseFrom<T>
 where
     Self: std::marker::Sized,
 {
     fn parse_from(pair: Pair<T>) -> Self;
-}
-
-impl ParseFrom<Rule> for Module {
-    fn parse_from(pair: Pair<Rule>) -> Self {
-        debug_assert_eq!(pair.as_rule(), Rule::module);
-        let mut pairs = pair.into_inner();
-        let name = Handle::new(pairs.next().unwrap().as_str().to_string());
-        let bodys = pairs.next().unwrap().into_inner();
-
-        let mut type_defs: HashMap<TypeDefineSymbol, Handle<TypeDef>> = Default::default();
-        let mut constant_defs: HashMap<DefineSymbol, Handle<ConstantDef>> = Default::default();
-        let mut variable_defs: HashMap<DefineSymbol, Handle<VariableDef>> = Default::default();
-        let mut functions: HashMap<DefineSymbol, Handle<FunctionDef>> = Default::default();
-        let mut function_decls: HashMap<DefineSymbol, Handle<FunctionDecl>> = Default::default();
-
-        for pair in bodys {
-            match pair.as_rule() {
-                Rule::type_def => {
-                    let pair = pair.into_inner().next().unwrap();
-                    let type_def = Handle::new(TypeDef::parse_from(pair));
-                    let name = type_def.1.clone();
-                    type_defs.insert(name, type_def);
-                }
-                Rule::constant_def => {
-                    let pair = pair.into_inner().next().unwrap();
-                    let constant_def = Handle::new(ConstantDef::parse_from(pair));
-                    let name = constant_def.1.clone();
-                    constant_defs.insert(name, constant_def);
-                }
-                Rule::variable_def => {
-                    let pair = pair.into_inner().next().unwrap();
-                    let variable_def = Handle::new(VariableDef::parse_from(pair));
-                    let name = variable_def.1.clone();
-                    variable_defs.insert(name, variable_def);
-                }
-                Rule::function_def => {
-                    let pair = pair.into_inner().next().unwrap();
-                    let function_def = Handle::new(FunctionDef::parse_from(pair));
-                    let name = function_def.name.clone();
-                    functions.insert(name, function_def);
-                }
-                Rule::function_decl => {
-                    let pair = pair.into_inner().next().unwrap();
-                    let function_decl = Handle::new(FunctionDecl::parse_from(pair));
-                    let name = function_decl.name.clone();
-                    function_decls.insert(name, function_decl);
-                }
-                _ => unreachable!(),
-            }
-        }
-        Module {
-            name,
-            type_defs,
-            constant_defs,
-            variable_defs,
-            functions,
-            function_decls,
-        }
-    }
 }
 
 /// attr tags /////////////////////////////////////////////////////////////////////////////////
@@ -102,19 +46,6 @@ impl ParseFrom<Rule> for IsPublic {
     }
 }
 
-impl ParseFrom<Rule> for BranchOp {
-    fn parse_from(pair: Pair<Rule>) -> Self {
-        debug_assert_eq!(pair.as_rule(), Rule::branch_op);
-        if pair.as_str() == "if-nil" {
-            BranchOp::IfNil
-        } else if pair.as_str() == "if-non-nil" {
-            BranchOp::IfNonNil
-        } else {
-            BranchOp::IfNil
-        }
-    }
-}
-
 #[inline]
 fn option_inline_type_parse_from(pair: Pair<Rule>) -> Option<InlineType> {
     debug_assert_eq!(pair.as_rule(), Rule::is_inline);
@@ -127,18 +58,6 @@ fn option_inline_type_parse_from(pair: Pair<Rule>) -> Option<InlineType> {
     }
 }
 
-
-impl ParseFrom<Rule> for IsExtend {
-    fn parse_from(pair: Pair<Rule>) -> Self {
-        debug_assert_eq!(pair.as_rule(), Rule::is_extend);
-        if pair.as_str() == "extend" {
-            IsExtend(true)
-        } else {
-            IsExtend(false)
-        }
-    }
-}
-
 impl ParseFrom<Rule> for IsNotAligned {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::is_not_aligned);
@@ -146,28 +65,6 @@ impl ParseFrom<Rule> for IsNotAligned {
             IsNotAligned(true)
         } else {
             IsNotAligned(false)
-        }
-    }
-}
-
-impl ParseFrom<Rule> for IsAtomic {
-    fn parse_from(pair: Pair<Rule>) -> Self {
-        debug_assert_eq!(pair.as_rule(), Rule::is_atomic);
-        if pair.as_str() == "atomic" {
-            IsAtomic(true)
-        } else {
-            IsAtomic(false)
-        }
-    }
-}
-
-impl ParseFrom<Rule> for IsVolatile {
-    fn parse_from(pair: Pair<Rule>) -> Self {
-        debug_assert_eq!(pair.as_rule(), Rule::is_volatile);
-        if pair.as_str() == "volatile" {
-            IsVolatile(true)
-        } else {
-            IsVolatile(false)
         }
     }
 }
@@ -189,7 +86,7 @@ impl ParseFrom<Rule> for TypeSymbol {
         let sym = TypeDefineSymbol::parse_from(pairs.next().unwrap());
         if let Some(x) = pairs.next() {
             let namespace = x.as_str().to_string();
-            TypeSymbol(Some(Handle::new(namespace)), sym)
+            TypeSymbol(Some(Symbol(Handle::new(namespace))), sym)
         } else {
             TypeSymbol(None, sym)
         }
@@ -204,38 +101,12 @@ impl ParseFrom<Rule> for TypeDefineSymbol {
     }
 }
 
-impl ParseFrom<Rule> for LabelSymbol {
-    fn parse_from(pair: Pair<Rule>) -> Self {
-        debug_assert_eq!(pair.as_rule(), Rule::label_symbol);
-        let pair = pair.into_inner().next().unwrap();
-        LabelSymbol(Handle::new(pair.as_str().to_string())) // fixme: register in global intern string pool
-    }
-}
-
-impl ParseFrom<Rule> for LabelHandle {
-    fn parse_from(pair: Pair<Rule>) -> Self {
-        LabelHandle::from(LabelSymbol::parse_from(pair))
-    }
-}
-
 impl ParseFrom<Rule> for LocalSymbol {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::local_symbol);
         let mut pairs = pair.into_inner();
         let sym = pairs.next().unwrap().as_str().to_string();
-        if let Some(x) = pairs.next() {
-            let namespace = x.as_str().to_string();
-            LocalSymbol(Some(Handle::new(namespace)), Handle::new(sym))
-        } else {
-            LocalSymbol(None, Handle::new(sym))
-        }
-        // fixme: register in global intern string pool
-    }
-}
-
-impl ParseFrom<Rule> for LocalHandle {
-    fn parse_from(pair: Pair<Rule>) -> Self {
-        LocalHandle::from(LocalSymbol::parse_from(pair))
+        LocalSymbol(Handle::new(sym))
     }
 }
 
@@ -246,33 +117,11 @@ impl ParseFrom<Rule> for GlobalSymbol {
         let sym = DefineSymbol::parse_from(pairs.next().unwrap());
         if let Some(x) = pairs.next() {
             let namespace = x.as_str().to_string();
-            GlobalSymbol(Some(Handle::new(namespace)), sym)
+            GlobalSymbol(Some(Symbol(Handle::new(namespace))), sym)
         } else {
             GlobalSymbol(None, sym)
         }
         // fixme: register in global intern string pool
-    }
-}
-
-impl ParseFrom<Rule> for GlobalHandle {
-    fn parse_from(pair: Pair<Rule>) -> Self {
-        GlobalHandle::from(GlobalSymbol::parse_from(pair))
-    }
-}
-
-impl ParseFrom<Rule> for ValueHandle {
-    fn parse_from(pair: Pair<Rule>) -> Self {
-        debug_assert_eq!(pair.as_rule(), Rule::ret);
-        let pair = pair.into_inner().next().unwrap();
-        match pair.as_rule() {
-            Rule::local_symbol => {
-                SymbolHandle::from(SymbolRef::Local(LocalSymbol::parse_from(pair)))
-            }
-            Rule::global_symbol => {
-                SymbolHandle::from(SymbolRef::Global(GlobalSymbol::parse_from(pair)))
-            }
-            _ => unreachable!(),
-        }
     }
 }
 
@@ -291,6 +140,30 @@ fn optional_symbol_parse_from(pair: Pair<Rule>) -> Option<Symbol> {
         Rule::symbol => Some(Symbol::parse_from(pair)), // fixme: register in global internstring pool
         Rule::UNDERLINE => None,
         _ => unreachable!(),
+    }
+}
+
+#[inline]
+fn optional_local_symbol_parse_from(pair: Pair<Rule>) -> Option<LocalSymbol> {
+    debug_assert_eq!(pair.as_rule(), Rule::params_name);
+    let pair = pair.into_inner().next().unwrap();
+    match pair.as_rule() {
+        Rule::symbol => Some(LocalSymbol::parse_from(pair)), // fixme: register in global internstring pool
+        Rule::UNDERLINE => None,
+        _ => unreachable!(),
+    }
+}
+
+impl ParseFrom<Rule> for SymbolRef {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::symbol_ref);
+        let pair = pair.into_inner().next().unwrap();
+        match pair.as_rule() {
+            Rule::local_symbol => SymbolRef::Local(LocalSymbol::parse_from(pair)),
+            Rule::global_symbol => SymbolRef::Global(GlobalSymbol::parse_from(pair)),
+            Rule::symbol => SymbolRef::Symbol(Symbol::parse_from(pair)),
+            _ => unreachable!(),
+        }
     }
 }
 
@@ -425,21 +298,61 @@ fn register_parse_from(pair: Pair<Rule>) -> usize {
     pair.as_str().parse::<usize>().unwrap()
 }
 
-impl ParseFrom<Rule> for RegisterType {
+impl ParseFrom<Rule> for RegType {
     fn parse_from(pair: Pair<Rule>) -> Self {
-        debug_assert_eq!(pair.as_rule(), Rule::alloca_type_reg);
-        let mut pairs = pair.into_inner();
-        let is_extend = IsExtend::parse_from(pairs.next().unwrap());
-        let pair = pairs.next().unwrap();
-        match pair.as_rule() {
-            Rule::reg_enum => RegisterType::Registers(is_extend, register_set_parse_from(pair)),
-            Rule::reg_range => {
-                RegisterType::RegisterRange(is_extend, register_range_parse_from(pair))
-            }
-            Rule::reg_number => RegisterType::Register(is_extend, register_parse_from(pair)),
+        debug_assert_eq!(pair.as_rule(), Rule::reg_type);
+        match pair.as_str() {
+            "int" => RegType::Int,
+            "float" => RegType::Float,
+            "simd" => RegType::Simd,
+            "vector" => RegType::Vector,
             _ => unreachable!(),
         }
     }
+}
+
+impl ParseFrom<Rule> for RegPos {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::reg_pos);
+        let pair = pair.into_inner().next().unwrap();
+        match pair.as_rule() {
+            Rule::reg_enum => RegPos::Registers(register_set_parse_from(pair)),
+            Rule::reg_range => {
+                let (l, r) = register_range_parse_from(pair);
+                RegPos::RegisterRange(l, r)
+            },
+            Rule::reg_number => RegPos::Register(register_parse_from(pair)),
+            _ => unreachable!(),
+        }
+    }
+}
+
+impl ParseFrom<Rule> for RegAllocaType {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::alloca_type_reg);
+        let mut pairs = pair.into_inner();
+        let reg_type = RegType::parse_from(pairs.next().unwrap());
+        let reg_pos = RegPos::parse_from(pairs.next().unwrap());
+        RegAllocaType(reg_type, reg_pos)
+    }
+}
+
+impl ParseFrom<Rule> for StoreType {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::store_type);
+        let pair = pair.into_inner().next().unwrap();
+        match pair.as_str() {
+            "atomic" => StoreType::Atomic,
+            "volatile" => StoreType::Volatile,
+            _ => unreachable!()
+        }
+    }
+}
+
+#[inline]
+fn store_type_opt_parse_from(pair: Pair<Rule>) -> Option<StoreType> {
+    debug_assert_eq!(pair.as_rule(), Rule::store_type_opt);
+    pair.into_inner().next().map(StoreType::parse_from)
 }
 
 impl ParseFrom<Rule> for AllocaType {
@@ -447,20 +360,34 @@ impl ParseFrom<Rule> for AllocaType {
         debug_assert_eq!(pair.as_rule(), Rule::alloca_type);
         let pair = pair.into_inner().next().unwrap();
         match pair.as_rule() {
-            Rule::alloca_type_stack => AllocaType::Stack,
-            Rule::alloca_type_reg => todo!(),
+            Rule::alloca_type_stack => AllocaType::Stack(store_type_opt_parse_from(pair.into_inner().next().unwrap())),
+            Rule::alloca_type_reg => AllocaType::Register(RegAllocaType::parse_from(pair)),
             _ => unreachable!(),
         }
     }
 }
 
+/*
 #[inline]
 fn option_alloca_type_parse_from(pair: Pair<Rule>) -> Option<AllocaType> {
     debug_assert_eq!(pair.as_rule(), Rule::alloca_type);
-    if pair.as_str().len() == 0 {
+    if pair.as_str().is_empty() {
         None
     } else {
         Some(AllocaType::parse_from(pair))
+    }
+}
+ */
+
+impl ParseFrom<Rule> for TypeHandle {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::type_value);
+        let pair = pair.into_inner().next().unwrap();
+        match pair.as_rule() {
+            Rule::type_ => TypeHandle::Reference(Box::new(Type::parse_from(pair))),
+            Rule::type_symbol => TypeHandle::Symbol(TypeSymbol::parse_from(pair)),
+            _ => unreachable!(),
+        }
     }
 }
 
@@ -468,17 +395,17 @@ impl ParseFrom<Rule> for TypeBindAttr {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::type_bind_metadata);
         let mut pairs = pair.into_inner();
-        let ty = Type::parse_from(pairs.next().unwrap());
+        let ty = TypeHandle::parse_from(pairs.next().unwrap());
         let alloc_type = pairs.next().map(AllocaType::parse_from);
-        TypeBindAttr(Box::new(ty), alloc_type)
+        TypeBindAttr(ty, alloc_type)
     }
 }
 
 #[inline]
-fn params_pair_parse_from(pair: Pair<Rule>) -> (Option<Symbol>, TypeBindAttr) {
+fn params_pair_parse_from(pair: Pair<Rule>) -> (Option<LocalSymbol>, TypeBindAttr) {
     debug_assert_eq!(pair.as_rule(), Rule::params_pair);
     let mut pairs = pair.into_inner();
-    let name = optional_symbol_parse_from(pairs.next().unwrap());
+    let name = optional_local_symbol_parse_from(pairs.next().unwrap());
     let ty = TypeBindAttr::parse_from(pairs.next().unwrap());
     (name, ty)
 }
@@ -509,20 +436,8 @@ impl ParseFrom<Rule> for Type {
         let pair = pair.into_inner().next().unwrap();
         match pair.as_rule() {
             Rule::void_type => Type::Void,
-            Rule::first_class_type => Type::FirstClassType(FirstClassType::parse_from(pair)),
-            Rule::function_type => Type::FunctionType(FunctionType::parse_from(pair)),
-            _ => unreachable!(),
-        }
-    }
-}
-
-impl ParseFrom<Rule> for TypeHandle {
-    fn parse_from(pair: Pair<Rule>) -> Self {
-        debug_assert_eq!(pair.as_rule(), Rule::type_value);
-        let pair = pair.into_inner().next().unwrap();
-        match pair.as_rule() {
-            Rule::type_ => TypeHandle::new(Handle::new(Type::parse_from(pair))),
-            Rule::type_symbol => TypeHandle::from(TypeSymbol::parse_from(pair)),
+            Rule::first_class_type => Type::FCType(FirstClassType::parse_from(pair)),
+            Rule::function_type => Type::FunType(FunctionType::parse_from(pair)),
             _ => unreachable!(),
         }
     }
@@ -599,6 +514,18 @@ impl ParseFrom<Rule> for ConstantValue {
     }
 }
 
+impl ParseFrom<Rule> for Value {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::value);
+        let pair = pair.into_inner().next().unwrap();
+        match pair.as_rule() {
+            Rule::constant_value => Value::Lit(ConstantValue::parse_from(pair)),
+            Rule::symbol_ref => Value::Var(SymbolRef::parse_from(pair)),
+            _ => unreachable!(),
+        }
+    }
+}
+
 /// defs ////////////////////////////////////////////////////////////////////////////////////
 
 impl ParseFrom<Rule> for TypeDef {
@@ -607,8 +534,12 @@ impl ParseFrom<Rule> for TypeDef {
         let mut pairs = pair.into_inner();
         let is_pub = IsPublic::parse_from(pairs.next().unwrap());
         let name = TypeDefineSymbol::parse_from(pairs.next().unwrap());
-        let type_ = TypeHandle::parse_from(pairs.next().unwrap());
-        TypeDef(is_pub, name, type_)
+        let type_ = Type::parse_from(pairs.next().unwrap());
+        TypeDef {
+            is_pub,
+            name,
+            type_,
+        }
     }
 }
 
@@ -618,9 +549,14 @@ impl ParseFrom<Rule> for ConstantDef {
         let mut pairs = pair.into_inner();
         let is_pub = IsPublic::parse_from(pairs.next().unwrap());
         let name = DefineSymbol::parse_from(pairs.next().unwrap());
-        let ty = TypeHandle::parse_from(pairs.next().unwrap());
-        let const_value = ConstantValue::parse_from(pairs.next().unwrap());
-        ConstantDef(is_pub, name, ty, const_value)
+        let type_ = TypeSymbol::parse_from(pairs.next().unwrap());
+        let value = ConstantValue::parse_from(pairs.next().unwrap());
+        ConstantDef {
+            is_pub,
+            name,
+            type_,
+            value,
+        }
     }
 }
 
@@ -630,23 +566,29 @@ impl ParseFrom<Rule> for VariableDef {
         let mut pairs = pair.into_inner();
         let is_pub = IsPublic::parse_from(pairs.next().unwrap());
         let name = DefineSymbol::parse_from(pairs.next().unwrap());
-        let ty = TypeHandle::parse_from(pairs.next().unwrap());
-        let const_value = pairs.next().map(ConstantValue::parse_from);
-        VariableDef(is_pub, name, ty, const_value)
+        let type_ = TypeSymbol::parse_from(pairs.next().unwrap());
+        let value = pairs.next().map(ConstantValue::parse_from);
+        VariableDef {
+            is_pub,
+            name,
+            type_,
+            value,
+        }
     }
 }
 
-impl ParseFrom<Rule> for FunctionDecl {
+impl ParseFrom<Rule> for FunDecl {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::function_decl);
         let mut pairs = pair.into_inner();
         let name = DefineSymbol::parse_from(pairs.next().unwrap());
         let header = FunctionType::parse_from(pairs.next().unwrap());
-        FunctionDecl { name, header }
+        FunDecl {
+            name,
+            header,
+        }
     }
 }
-
-/// function def
 
 impl ParseFrom<Rule> for FunctionAttr {
     fn parse_from(pair: Pair<Rule>) -> Self {
@@ -663,459 +605,252 @@ impl ParseFrom<Rule> for FunctionAttr {
     }
 }
 
-#[inline]
-fn insts_parse_from(pair: Pair<Rule>) -> Vec<MutHandle<Instruction>> {
-    debug_assert_eq!(pair.as_rule(), Rule::insts);
-    pair.into_inner()
-        .map(|x| Handle::new(RwLock::new(Instruction::parse_from(x))))
-        .collect()
-}
+/// function def
 
-impl ParseFrom<Rule> for BasicBlockDef {
-    fn parse_from(pair: Pair<Rule>) -> Self {
-        let t = pair.as_rule();
-        debug_assert!(t == Rule::basic_block || t == Rule::basic_init_block);
-        let mut pairs = pair.into_inner();
-        let label = if let Rule::basic_block = t {
-            Some(LabelSymbol::parse_from(pairs.next().unwrap()))
-        } else {
-            None
-        };
-        let insts = insts_parse_from(pairs.next().unwrap());
-        let terminator = Terminator::parse_from(pairs.next().unwrap());
-        let variable_defs = insts
-            .iter()
-            .filter(|x| if let Instruction::BindOperator(_) = x.read().unwrap().to_owned() {true} else {false})
-            .map(|x|
-                if let Instruction::BindOperator(b) = x.read().unwrap().to_owned() {
-                    (b.0.clone(), Handle::new(RwLock::new(b)))
-                } else {
-                    unreachable!()
-                })
-            .collect();
-        let variable_defs = Handle::new(RwLock::new(variable_defs));
-        BasicBlockDef {
-            label,
-            variable_defs,
-            instructions: Handle::new(RwLock::new(insts)),
-            terminator: Handle::new(RwLock::new(terminator)),
-        }
-    }
-}
-
-#[inline]
-fn blocks_parse_from(pair: Pair<Rule>) -> Vec<MutHandle<BasicBlockDef>> {
-    debug_assert_eq!(pair.as_rule(), Rule::blocks);
-    pair.into_inner()
-        .map(|x| Handle::new(RwLock::new(BasicBlockDef::parse_from(x))))
-        .collect()
-}
-
-impl ParseFrom<Rule> for FunctionDef {
+impl ParseFrom<Rule> for NamedFun {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::function_def);
         let mut pairs = pair.into_inner();
         let attr = FunctionAttr::parse_from(pairs.next().unwrap());
         let name = DefineSymbol::parse_from(pairs.next().unwrap());
-        let header = FunctionType::parse_from(pairs.next().unwrap());
-        let blocks = blocks_parse_from(pairs.next().unwrap());
-        let block_map = blocks
-            .iter()
-            .enumerate()
-            .map(|(usize, x)| (x.read().unwrap().label.clone().unwrap(), usize))
-            .collect();
-        let block_map = Handle::new(RwLock::new(block_map));
-        FunctionDef {
+        let ftyp = FunctionType::parse_from(pairs.next().unwrap());
+        let begin = Begin::parse_from(pairs.next().unwrap());
+        let fun = Fun {
+            ftyp,
+            body: Box::new(Expr::Begin(begin)),
+        };
+        NamedFun {
+            attr,
             name,
-            header,
-            function_attr: attr,
-            blocks: Handle::new(RwLock::new(blocks)),
-            block_map,
+            fun,
         }
     }
 }
 
-// terminators /////////////////////////////////////////////////////////////////////////////////
-
-impl ParseFrom<Rule> for Ret {
+impl ParseFrom<Rule> for Expr {
     fn parse_from(pair: Pair<Rule>) -> Self {
-        debug_assert_eq!(pair.as_rule(), Rule::ret);
+        debug_assert_eq!(pair.as_rule(), Rule::expr);
         let pair = pair.into_inner().next().unwrap();
-        let value = pair.into_inner().next().map(|x| ValueHandle::parse_from(x));
-        Ret(value)
+        match pair.as_rule() {
+            Rule::let_binding => Expr::Let(LetBinding::parse_from(pair)),
+            Rule::conds => Expr::Cond(Cond::parse_from(pair)),
+            Rule::if_expr => Expr::If(If::parse_from(pair)),
+            Rule::switch => Expr::Switch(Switch::parse_from(pair)),
+            Rule::while_expr => Expr::While(While::parse_from(pair)),
+            Rule::begin => Expr::Begin(Begin::parse_from(pair)),
+            Rule::store => Expr::Store(Store::parse_from(pair)),
+            Rule::call => Expr::Val(Value::Call(Call::parse_from(pair))),
+            Rule::value => Expr::Val(Value::parse_from(pair)),
+            _ => unreachable!(),
+        }
     }
 }
 
-impl ParseFrom<Rule> for Branch {
+impl ParseFrom<Rule> for LetBinding {
     fn parse_from(pair: Pair<Rule>) -> Self {
-        debug_assert_eq!(pair.as_rule(), Rule::branch);
+        debug_assert_eq!(pair.as_rule(), Rule::let_binding);
         let mut pairs = pair.into_inner();
-        let branch_op = BranchOp::parse_from(pairs.next().unwrap());
-        let cond = ValueHandle::parse_from(pairs.next().unwrap());
-        let true_block = LabelSymbol::parse_from(pairs.next().unwrap());
-        let false_block = LabelSymbol::parse_from(pairs.next().unwrap());
-        Branch(
-            branch_op,
-            cond,
-            LabelHandle::from(true_block),
-            LabelHandle::from(false_block),
-        )
+        let name = LocalSymbol::parse_from(pairs.next().unwrap());
+        let type_ = type_bind_opt(pairs.next().unwrap());
+        let value = call_or_value(pairs.next().unwrap());
+        let expr = Expr::parse_from(pairs.next().unwrap());
+        LetBinding {
+            bind: (name, value, type_),
+            body: Box::new(expr),
+        }
     }
 }
-
-/*
-fn conds_pair_parse_from(pair: Pair<Rule>) -> {
-
-}
-
-impl ParseFrom<Rule> for Conds {
-    fn parse_from(pair: Pair<Rule>) -> Self {
-        debug_assert_eq!(pair.as_rule(), Rule::conds);
-    }
-}
-*/
 
 #[inline]
-fn switch_pair_parse_from(pair: Pair<Rule>) -> (SimpleValue, LabelHandle) {
-    debug_assert_eq!(pair.as_rule(), Rule::switch_pair);
+fn call_or_value(pair: Pair<Rule>) -> Value {
+    debug_assert_eq!(pair.as_rule(), Rule::call_or_value);
+    let pair = pair.into_inner().next().unwrap();
+    match pair.as_rule() {
+        Rule::call => Value::Call(Call::parse_from(pair)),
+        Rule::value => Value::parse_from(pair),
+        _ => unreachable!(),
+    }
+}
+
+#[inline]
+fn type_bind_opt(pair: Pair<Rule>) -> Option<TypeBindAttr> {
+    debug_assert_eq!(pair.as_rule(), Rule::type_bind_opt);
+    pair.into_inner().next().map(TypeBindAttr::parse_from)
+}
+
+impl ParseFrom<Rule> for Cond {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::conds);
+        let mut pairs = pair.into_inner();
+        let cond_pairs = cond_pairs(pairs.next().unwrap());
+        let els = Expr::parse_from(pairs.next().unwrap());
+        Cond(cond_pairs, Box::new(els))
+    }
+}
+
+impl ParseFrom<Rule> for If {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::conds);
+        let mut pairs = pair.into_inner();
+        let (value, then) = cond_pair(pairs.next().unwrap());
+        let els = Expr::parse_from(pairs.next().unwrap());
+        If(value, Box::new(then), Box::new(els))
+    }
+}
+
+#[inline]
+fn cond_pairs(pair: Pair<Rule>) -> Vec<(Value, Expr)> {
+    debug_assert_eq!(pair.as_rule(), Rule::cond_pairs);
+    pair.into_inner().map(cond_pair).collect()
+}
+
+#[inline]
+fn cond_pair(pair: Pair<Rule>) -> (Value, Expr) {
+    debug_assert_eq!(pair.as_rule(), Rule::cond_pair);
     let mut pairs = pair.into_inner();
-    let value = SimpleValue::parse_from(pairs.next().unwrap());
-    let label = LabelHandle::parse_from(pairs.next().unwrap());
-    (value, label)
+    let cond = Value::parse_from(pairs.next().unwrap());
+    let body = Expr::parse_from(pairs.next().unwrap());
+    (cond, body)
 }
 
 impl ParseFrom<Rule> for Switch {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::switch);
         let mut pairs = pair.into_inner();
-        let cond = ValueHandle::parse_from(pairs.next().unwrap());
-        let map = pairs.map(switch_pair_parse_from).collect();
-        Switch(cond, map)
+        let cond = Value::parse_from(pairs.next().unwrap());
+        let cases = switch_cases(pairs.next().unwrap());
+        let default = default_case(pairs.next().unwrap());
+        Switch(cond, cases, Box::new(default))
     }
 }
 
-impl ParseFrom<Rule> for Terminator {
+#[inline]
+fn switch_cases(pair: Pair<Rule>) -> Vec<(ConstantValue, Expr)> {
+    debug_assert_eq!(pair.as_rule(), Rule::switch_cases);
+    pair.into_inner().map(switch_case).collect()
+}
+
+#[inline]
+fn switch_case(pair: Pair<Rule>) -> (ConstantValue, Expr) {
+    debug_assert_eq!(pair.as_rule(), Rule::switch_case);
+    let mut pairs = pair.into_inner();
+    let value = ConstantValue::parse_from(pairs.next().unwrap());
+    let body = Expr::parse_from(pairs.next().unwrap());
+    (value, body)
+}
+
+#[inline]
+fn default_case(pair: Pair<Rule>) -> Expr {
+    debug_assert_eq!(pair.as_rule(), Rule::default_case);
+    Expr::parse_from(pair.into_inner().next().unwrap())
+}
+
+impl ParseFrom<Rule> for Begin {
     fn parse_from(pair: Pair<Rule>) -> Self {
-        debug_assert_eq!(pair.as_rule(), Rule::terminator);
-        let pair = pair.into_inner().next().unwrap();
-        match pair.as_rule() {
-            Rule::ret => Terminator::Ret(Ret::parse_from(pair)),
-            Rule::branch => Terminator::Branch(Branch::parse_from(pair)),
-            // Rule::conds => Terminator::Conds(Conds::parse_from(pair)),
-            Rule::switch => Terminator::Switch(Switch::parse_from(pair)),
-            Rule::unrechable => Terminator::Unrechable,
-            _ => unreachable!(),
-        }
+        debug_assert_eq!(pair.as_rule(), Rule::begin);
+        let pairs = pair.into_inner();
+        let exprs = pairs.map(Expr::parse_from).collect();
+        Begin(exprs)
     }
 }
 
-/// insts //////////////////////////////////////////////////////////////////////////////////////
+impl ParseFrom<Rule> for While {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::while_expr);
+        let mut pairs = pair.into_inner();
+        let cond = Value::parse_from(pairs.next().unwrap());
+        let body = Expr::parse_from(pairs.next().unwrap());
+        let accum = pairs.next().map(Store::parse_from);
+        While(cond, Box::new(body), accum)
+    }
+}
 
 impl ParseFrom<Rule> for Store {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::store);
         let mut pairs = pair.into_inner();
-        let is_atomic = IsAtomic::parse_from(pairs.next().unwrap());
-        let is_volatile = IsVolatile::parse_from(pairs.next().unwrap());
-        let dst = LocalHandle::parse_from(pairs.next().unwrap());
-        let src = ValueHandle::parse_from(pairs.next().unwrap());
-        Store(dst, src, is_atomic, is_volatile)
+        let name = SymbolRef::parse_from(pairs.next().unwrap());
+        let store_type = StoreType::parse_from(pairs.next().unwrap());
+        let value = Expr::parse_from(pairs.next().unwrap());
+        Store(name, store_type, Box::new(value))
     }
 }
 
-impl ParseFrom<Rule> for Index {
+impl ParseFrom<Rule> for Call {
     fn parse_from(pair: Pair<Rule>) -> Self {
-        debug_assert_eq!(pair.as_rule(), Rule::index);
-        let pair = pair.into_inner().next().unwrap();
-        match pair.as_rule() {
-            Rule::symbol => Index::Symbol(Symbol::parse_from(pair)),
-            Rule::number => Index::Index(pair.as_str().parse().unwrap()),
-            _ => unreachable!(),
-        }
-    }
-}
-
-impl ParseFrom<Rule> for IndexList {
-    fn parse_from(pair: Pair<Rule>) -> Self {
-        debug_assert_eq!(pair.as_rule(), Rule::index_list);
-        IndexList(pair.into_inner().map(Index::parse_from).collect())
-    }
-}
-
-impl ParseFrom<Rule> for BindOperator {
-    fn parse_from(pair: Pair<Rule>) -> Self {
-        debug_assert_eq!(pair.as_rule(), Rule::bind);
+        debug_assert_eq!(pair.as_rule(), Rule::call);
         let mut pairs = pair.into_inner();
-        let symbol = LocalSymbol::parse_from(pairs.next().unwrap());
-        let is_atomic = IsAtomic::parse_from(pairs.next().unwrap());
-        let is_volatile = IsVolatile::parse_from(pairs.next().unwrap());
-        let operator = Operator::parse_from(pairs.next().unwrap());
-        BindOperator(
-            symbol,
-            Handle::new(RwLock::new(operator)),
-            is_atomic,
-            is_volatile,
-        )
-    }
-}
-
-impl ParseFrom<Rule> for Instruction {
-    fn parse_from(pair: Pair<Rule>) -> Self {
-        debug_assert_eq!(pair.as_rule(), Rule::inst);
-        let pair = pair.into_inner().next().unwrap();
-        match pair.as_rule() {
-            Rule::store => Instruction::Store(Store::parse_from(pair)),
-            Rule::bind => Instruction::BindOperator(BindOperator::parse_from(pair)),
-            Rule::operator => {
-                Instruction::Operator(Handle::new(RwLock::new(Operator::parse_from(pair))))
-            }
-            _ => unreachable!(),
+        let fun = Value::parse_from(pairs.next().unwrap());
+        let args: Vec<Value> = pairs.map(Value::parse_from).collect();
+        Call {
+            fun: Box::new(fun),
+            args,
         }
     }
 }
 
-impl ParseFrom<Rule> for ICmpOp {
-    fn parse_from(pair: Pair<Rule>) -> Self {
-        debug_assert_eq!(pair.as_rule(), Rule::icmp_op);
-        match pair.as_str() {
-            "eq" => ICmpOp::Eq,
-            "ne" => ICmpOp::Ne,
-            "sge" => ICmpOp::Sge,
-            "sgt" => ICmpOp::Sgt,
-            "sle" => ICmpOp::Sle,
-            "slt" => ICmpOp::Slt,
-            "uge" => ICmpOp::Uge,
-            "ugt" => ICmpOp::Ugt,
-            "ule" => ICmpOp::Ule,
-            "ult" => ICmpOp::Ult,
-            _ => unreachable!(),
-        }
-    }
-}
+// module pars
 
-impl ParseFrom<Rule> for FCmpOp {
+impl ParseFrom<Rule> for Module<NamedFun> {
     fn parse_from(pair: Pair<Rule>) -> Self {
-        debug_assert_eq!(pair.as_rule(), Rule::icmp_op);
-        match pair.as_str() {
-            "false" => FCmpOp::False,
-            "oeq" => FCmpOp::Oeq,
-            "oge" => FCmpOp::Oge,
-            "ogt" => FCmpOp::Ogt,
-            "ole" => FCmpOp::Ole,
-            "olt" => FCmpOp::Olt,
-            "one" => FCmpOp::One,
-            "ord" => FCmpOp::Ord,
-            "true" => FCmpOp::True,
-            "ueq" => FCmpOp::Ueq,
-            "uge" => FCmpOp::Uge,
-            "ugt" => FCmpOp::Ugt,
-            "ule" => FCmpOp::Ule,
-            "ult" => FCmpOp::Ult,
-            "une" => FCmpOp::Une,
-            "uno" => FCmpOp::Uno,
-            _ => unreachable!(),
-        }
-    }
-}
-
-#[inline]
-fn phi_pair_parse_from(pair: Pair<Rule>) -> (LabelHandle, ValueHandle) {
-    debug_assert_eq!(pair.as_rule(), Rule::phi_pair);
-    let mut pairs = pair.into_inner();
-    let label = LabelHandle::parse_from(pairs.next().unwrap());
-    let value = ValueHandle::parse_from(pairs.next().unwrap());
-    (label, value)
-}
-
-impl ParseFrom<Rule> for Operator {
-    fn parse_from(pair: Pair<Rule>) -> Self {
-        debug_assert_eq!(pair.as_rule(), Rule::operator);
-        let pair = pair.into_inner().next().unwrap();
-        let t = pair.as_rule();
+        debug_assert_eq!(pair.as_rule(), Rule::module);
         let mut pairs = pair.into_inner();
-        match t {
-            Rule::alloca => {
-                let alloca_type = option_alloca_type_parse_from(pairs.next().unwrap());
-                let ty = Type::parse_from(pairs.next().unwrap());
-                // let value = pairs.next().map(ValueHandle::parse_from);
-                Operator::Alloca(alloca_type, ty,
-                    // value
-                )
+        let name = Symbol::parse_from(pairs.next().unwrap());
+        let bodys = pairs.next().unwrap().into_inner();
+
+        let mut type_defs: HashMap<TypeDefineSymbol, TypeDef> = Default::default();
+        let mut constant_defs: HashMap<DefineSymbol, ConstantDef> = Default::default();
+        let mut variable_defs: HashMap<DefineSymbol, VariableDef> = Default::default();
+        let mut function_defs: HashMap<DefineSymbol, NamedFun> = Default::default();
+        let mut function_decls: HashMap<DefineSymbol, FunDecl> = Default::default();
+
+        for pair in bodys {
+            match dbg!(pair.as_rule()) {
+                Rule::type_def => {
+                    let type_def = TypeDef::parse_from(pair);
+                    let name = type_def.name.clone();
+                    type_defs.insert(name, type_def);
+                }
+                Rule::constant_def => {
+                    let constant_def = ConstantDef::parse_from(pair);
+                    let name = constant_def.name.clone();
+                    constant_defs.insert(name, constant_def);
+                }
+                Rule::variable_def => {
+                    let variable_def = VariableDef::parse_from(pair);
+                    let name = variable_def.name.clone();
+                    variable_defs.insert(name, variable_def);
+                }
+                Rule::function_def => {
+                    let function_def = NamedFun::parse_from(pair);
+                    let name = function_def.name.clone();
+                    function_defs.insert(name, function_def);
+                }
+                Rule::function_decl => {
+                    let function_decl = FunDecl::parse_from(pair);
+                    let name = function_decl.name.clone();
+                    function_decls.insert(name, function_decl);
+                }
+                _ => unreachable!(),
             }
-            Rule::get_ptr => {
-                let value = ValueHandle::parse_from(pairs.next().unwrap());
-                let index = pairs.next().map(IndexList::parse_from);
-                Operator::GetPtr(value, index)
-            }
-            Rule::load => {
-                let ty = Type::parse_from(pairs.next().unwrap());
-                let value = ValueHandle::parse_from(pairs.next().unwrap());
-                Operator::Load(ty, value)
-            }
-            Rule::cast => {
-                let ty = Type::parse_from(pairs.next().unwrap());
-                let value = ValueHandle::parse_from(pairs.next().unwrap());
-                Operator::Cast(ty, value)
-            }
-            Rule::add => {
-                let value1 = ValueHandle::parse_from(pairs.next().unwrap());
-                let value2 = ValueHandle::parse_from(pairs.next().unwrap());
-                Operator::Add(value1, value2)
-            }
-            Rule::fadd => {
-                let value1 = ValueHandle::parse_from(pairs.next().unwrap());
-                let value2 = ValueHandle::parse_from(pairs.next().unwrap());
-                Operator::FAdd(value1, value2)
-            }
-            Rule::sub => {
-                let value1 = ValueHandle::parse_from(pairs.next().unwrap());
-                let value2 = ValueHandle::parse_from(pairs.next().unwrap());
-                Operator::Sub(value1, value2)
-            }
-            Rule::fsub => {
-                let value1 = ValueHandle::parse_from(pairs.next().unwrap());
-                let value2 = ValueHandle::parse_from(pairs.next().unwrap());
-                Operator::FSub(value1, value2)
-            }
-            Rule::mul => {
-                let value1 = ValueHandle::parse_from(pairs.next().unwrap());
-                let value2 = ValueHandle::parse_from(pairs.next().unwrap());
-                Operator::Mul(value1, value2)
-            }
-            Rule::fmul => {
-                let value1 = ValueHandle::parse_from(pairs.next().unwrap());
-                let value2 = ValueHandle::parse_from(pairs.next().unwrap());
-                Operator::FMul(value1, value2)
-            }
-            Rule::udiv => {
-                let value1 = ValueHandle::parse_from(pairs.next().unwrap());
-                let value2 = ValueHandle::parse_from(pairs.next().unwrap());
-                Operator::UDiv(value1, value2)
-            }
-            Rule::sdiv => {
-                let value1 = ValueHandle::parse_from(pairs.next().unwrap());
-                let value2 = ValueHandle::parse_from(pairs.next().unwrap());
-                Operator::SDiv(value1, value2)
-            }
-            Rule::urem => {
-                let value1 = ValueHandle::parse_from(pairs.next().unwrap());
-                let value2 = ValueHandle::parse_from(pairs.next().unwrap());
-                Operator::URem(value1, value2)
-            }
-            Rule::srem => {
-                let value1 = ValueHandle::parse_from(pairs.next().unwrap());
-                let value2 = ValueHandle::parse_from(pairs.next().unwrap());
-                Operator::SRem(value1, value2)
-            }
-            Rule::frem => {
-                let value1 = ValueHandle::parse_from(pairs.next().unwrap());
-                let value2 = ValueHandle::parse_from(pairs.next().unwrap());
-                Operator::FRem(value1, value2)
-            }
-            Rule::shl => {
-                let value1 = ValueHandle::parse_from(pairs.next().unwrap());
-                let value2 = ValueHandle::parse_from(pairs.next().unwrap());
-                Operator::Shl(value1, value2)
-            }
-            Rule::lshr => {
-                let value1 = ValueHandle::parse_from(pairs.next().unwrap());
-                let value2 = ValueHandle::parse_from(pairs.next().unwrap());
-                Operator::LShr(value1, value2)
-            }
-            Rule::ashr => {
-                let value1 = ValueHandle::parse_from(pairs.next().unwrap());
-                let value2 = ValueHandle::parse_from(pairs.next().unwrap());
-                Operator::AShr(value1, value2)
-            }
-            Rule::and => {
-                let value1 = ValueHandle::parse_from(pairs.next().unwrap());
-                let value2 = ValueHandle::parse_from(pairs.next().unwrap());
-                Operator::And(value1, value2)
-            }
-            Rule::or => {
-                let value1 = ValueHandle::parse_from(pairs.next().unwrap());
-                let value2 = ValueHandle::parse_from(pairs.next().unwrap());
-                Operator::Or(value1, value2)
-            }
-            Rule::xor => {
-                let value1 = ValueHandle::parse_from(pairs.next().unwrap());
-                let value2 = ValueHandle::parse_from(pairs.next().unwrap());
-                Operator::Xor(value1, value2)
-            }
-            Rule::get_value => {
-                let value = ValueHandle::parse_from(pairs.next().unwrap());
-                let index = IndexList::parse_from(pairs.next().unwrap());
-                Operator::GetValue(value, index)
-            }
-            Rule::get_item => {
-                let value1 = ValueHandle::parse_from(pairs.next().unwrap());
-                let index = ValueHandle::parse_from(pairs.next().unwrap());
-                Operator::GetItem(value1, index)
-            }
-            Rule::set_value => {
-                let value1 = ValueHandle::parse_from(pairs.next().unwrap());
-                let index = IndexList::parse_from(pairs.next().unwrap());
-                let value2 = ValueHandle::parse_from(pairs.next().unwrap());
-                Operator::SetValue(value1, index, value2)
-            }
-            Rule::set_item => {
-                let value1 = ValueHandle::parse_from(pairs.next().unwrap());
-                let index = ValueHandle::parse_from(pairs.next().unwrap());
-                let value2 = ValueHandle::parse_from(pairs.next().unwrap());
-                Operator::SetItem(value1, index, value2)
-            }
-            Rule::trunc => {
-                let ty = IntType::parse_from(pairs.next().unwrap());
-                let value1 = ValueHandle::parse_from(pairs.next().unwrap());
-                Operator::Trunc(value1, ty)
-            }
-            Rule::zext => {
-                let ty = IntType::parse_from(pairs.next().unwrap());
-                let value1 = ValueHandle::parse_from(pairs.next().unwrap());
-                Operator::ZExt(value1, ty)
-            }
-            Rule::sext => {
-                let ty = IntType::parse_from(pairs.next().unwrap());
-                let value1 = ValueHandle::parse_from(pairs.next().unwrap());
-                Operator::SExt(value1, ty)
-            }
-            Rule::ftrunc => {
-                let ty = FloatType::parse_from(pairs.next().unwrap());
-                let value1 = ValueHandle::parse_from(pairs.next().unwrap());
-                Operator::FTrunc(value1, ty)
-            }
-            Rule::fext => {
-                let ty = FloatType::parse_from(pairs.next().unwrap());
-                let value1 = ValueHandle::parse_from(pairs.next().unwrap());
-                Operator::FExt(value1, ty)
-            }
-            Rule::icmp => {
-                let op = ICmpOp::parse_from(pairs.next().unwrap());
-                let value1 = ValueHandle::parse_from(pairs.next().unwrap());
-                let value2 = ValueHandle::parse_from(pairs.next().unwrap());
-                Operator::ICmp(op, value1, value2)
-            }
-            Rule::fcmp => {
-                let op = FCmpOp::parse_from(pairs.next().unwrap());
-                let value1 = ValueHandle::parse_from(pairs.next().unwrap());
-                let value2 = ValueHandle::parse_from(pairs.next().unwrap());
-                Operator::FCmp(op, value1, value2)
-            }
-            Rule::phi => {
-                let pairs = pairs.next().unwrap().into_inner();
-                Operator::Phi(pairs.map(phi_pair_parse_from).collect())
-            }
-            Rule::call => {
-                let callee = ValueHandle::parse_from(pairs.next().unwrap());
-                let args = pairs
-                    .next()
-                    .unwrap()
-                    .into_inner()
-                    .map(ValueHandle::parse_from)
-                    .collect();
-                Operator::Call(callee, args)
-            }
-            _ => unreachable!(),
+        }
+        Module {
+            name,
+            type_defs,
+            constant_defs,
+            variable_defs,
+            function_defs,
+            function_decls,
         }
     }
+}
+
+pub fn file_parse(input: &str) -> Result<Vec<Module<NamedFun>>, Error<Rule>> {
+    let mut p = dbg!(RICHIR::parse(Rule::file, input))?;
+    let r = p.next().unwrap()
+        .into_inner()
+        .filter(|x| x.as_rule() == Rule::module)
+        .map(|x| Module::parse_from(x))
+        .collect();
+    Ok(r)
 }

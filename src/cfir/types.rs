@@ -47,8 +47,7 @@ pub struct RecordType(pub IsNotAligned, pub Vec<(Option<Symbol>, Type)>);
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct TypeBindAttr(pub TypeHandle, pub Option<AllocaType>);
 
-
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum RegType {
     Int,
     Float,
@@ -66,10 +65,16 @@ pub enum RegPos {
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct RegAllocaType (pub RegType, pub RegPos);
 
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+pub enum StoreType {
+    Volatile,
+    Atomic,
+}
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum AllocaType {
     Register(RegAllocaType),
-    Stack,
+    Stack(Option<StoreType>),
 }
 
 
@@ -92,15 +97,8 @@ pub struct FunctionType {
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
-#[repr(u8)]
-pub enum IntType {
-    I1 = 0,
-    I8 = 1,
-    I16 = 2,
-    I32 = 3,
-    I64 = 4,
-    I128 = 5,
-}
+// #[repr(u8)]
+pub struct IntType(pub u64);
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 #[repr(u8)]
@@ -192,14 +190,21 @@ impl Unify for FunctionType {
 }
  */
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PlarformWidth {
+    pub data_size: u64,
+    pub ptr_size: u64,
+    pub aligned_size: u64,
+}
+
 pub trait GetSize {
-    fn get_size(&self, platform_size: u8, aligned_size: u8) -> Option<u64>;
+    fn get_size(&self, platform_size: PlarformWidth) -> Option<u64>;
 }
 
 impl GetSize for Type {
-    fn get_size(&self, platform_size: u8, aligned_size: u8) -> Option<u64> {
+    fn get_size(&self, platform_size: PlarformWidth) -> Option<u64> {
         if let Type::FCType(t) = self {
-            t.get_size(platform_size, aligned_size)
+            t.get_size(platform_size)
         } else {
             None
         }
@@ -207,42 +212,45 @@ impl GetSize for Type {
 }
 
 impl GetSize for FirstClassType {
-    fn get_size(&self, platform_size: u8, aligned_size: u8) -> Option<u64> {
+    fn get_size(&self, platform_size: PlarformWidth) -> Option<u64> {
         match self {
             FirstClassType::OpaqueType => None,
-            FirstClassType::SimpleType(t) => t.get_size(platform_size, aligned_size),
-            FirstClassType::Array(t) => t.get_size(platform_size, aligned_size),
-            FirstClassType::Record(t) => t.get_size(platform_size, aligned_size),
+            FirstClassType::SimpleType(t) => t.get_size(platform_size),
+            FirstClassType::Array(t) => t.get_size(platform_size),
+            FirstClassType::Record(t) => t.get_size(platform_size),
         }
     }
 }
 
 impl GetSize for SimpleType {
-    fn get_size(&self, platform_size: u8, aligned_size: u8) -> Option<u64> {
+    fn get_size(&self, platform_size: PlarformWidth) -> Option<u64> {
         match self {
-            SimpleType::Int(t) => t.get_size(platform_size, aligned_size),
-            SimpleType::Float(t) => t.get_size(platform_size, aligned_size),
-            SimpleType::Pointer(_) => Some(platform_size as u64),
-            SimpleType::Vector(t) => t.get_size(platform_size, aligned_size),
+            SimpleType::Int(t) => t.get_size(platform_size),
+            SimpleType::Float(t) => t.get_size(platform_size),
+            SimpleType::Pointer(_) => Some(size_align(
+                platform_size.ptr_size,
+                platform_size.aligned_size
+            ) as u64),
+            SimpleType::Vector(t) => t.get_size(platform_size),
         }
     }
 }
 
 impl GetSize for VectorType {
-    fn get_size(&self, platform_size: u8, aligned_size: u8) -> Option<u64> {
+    fn get_size(&self, platform_size: PlarformWidth) -> Option<u64> {
         let VectorType(t, s) = self;
-        t.get_size(platform_size, aligned_size).map(|x| x * s)
+        t.get_size(platform_size).map(|x| size_align(x * s, platform_size.aligned_size))
     }
 }
 
 impl GetSize for ArrayType {
-    fn get_size(&self, platform_size: u8, aligned_size: u8) -> Option<u64> {
+    fn get_size(&self, platform_size: PlarformWidth) -> Option<u64> {
         let ArrayType(t, s) = self;
-        t.get_size(platform_size, aligned_size).map(|x| x * s)
+        t.get_size(platform_size).map(|x| size_align(x * s, platform_size.aligned_size))
     }
 }
 
-fn size_align(i: u64, aligned_size: u8) -> u64 {
+fn size_align(i: u64, aligned_size: u64) -> u64 {
     let platform_size = aligned_size as u64;
     let i_mod = i % platform_size;
     if i_mod == 0 {
@@ -253,27 +261,26 @@ fn size_align(i: u64, aligned_size: u8) -> u64 {
 }
 
 impl GetSize for RecordType {
-    fn get_size(&self, platform_size: u8, aligned_size: u8) -> Option<u64> {
-        let r = self.1.iter().map(|(_, t)| t.get_size(platform_size, aligned_size));
+    fn get_size(&self, platform_size: PlarformWidth) -> Option<u64> {
+        let r = self.1.iter().map(|(_, t)| t.get_size(platform_size));
         if self.0 .0 {
             r.sum()
         } else {
-            r.map(|x| x.map(|x| size_align(x, platform_size))).sum()
+            r.map(|x| x.map(|x| size_align(x, platform_size.aligned_size))).sum()
         }
     }
 }
 
 impl GetSize for IntType {
-    fn get_size(&self, _: u8, _: u8) -> Option<u64> {
-        let map_array = [1, 1, 2, 4, 8, 16];
-        Some(map_array[*self as usize])
+    fn get_size(&self, platform_size: PlarformWidth) -> Option<u64> {
+        Some(size_align(self.0, platform_size.aligned_size))
     }
 }
 
 impl GetSize for FloatType {
-    fn get_size(&self, _: u8, _: u8) -> Option<u64> {
-        let map_array = [1, 2, 4, 8, 16, 16];
-        Some(map_array[*self as usize])
+    fn get_size(&self, platform_size: PlarformWidth) -> Option<u64> {
+        let map_array = [8, 16, 31, 64, 128, 128];
+        Some(size_align(map_array[*self as usize], platform_size.aligned_size))
     }
 }
 

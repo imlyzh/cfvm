@@ -2,7 +2,7 @@ pub mod parser;
 
 use std::sync::Arc;
 
-use super::{handles::{ConstantValue, LocalSymbol, SymbolRef, DefineSymbol}, types::{TypeBindAttr, FunctionAttr, FunctionType, IsAtomic}, base::Module};
+use super::{handles::{ConstantValue, LocalSymbol, SymbolRef, DefineSymbol}, types::{TypeBindAttr, FunctionAttr, FunctionType, StoreType}, base::Module};
 
 
 pub type RichModule = Module<NamedFun>;
@@ -23,7 +23,7 @@ pub struct Fun {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct LetBinding {
-    pub bind: (LocalSymbol, Value, IsAtomic, Option<TypeBindAttr>),
+    pub bind: (LocalSymbol, Value, Option<TypeBindAttr>),
     pub body: Box<Expr>,
 }
 
@@ -55,7 +55,7 @@ pub struct While(pub Value, pub Box<Expr>, pub Option<Store>);  // cond, body, a
 pub struct Begin (pub Vec<Expr>);
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Store (pub SymbolRef, pub IsAtomic, pub Box<Expr>);  // name, value
+pub struct Store (pub SymbolRef, pub StoreType, pub Box<Expr>);  // name, value
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {

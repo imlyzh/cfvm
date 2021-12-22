@@ -1,5 +1,7 @@
 use std::sync::{Arc, RwLock};
 
+use super::types::Type;
+
 
 pub type Handle<T> = Arc<T>;
 pub type MutHandle<T> = Arc<RwLock<T>>;
@@ -88,3 +90,12 @@ impl ConstantValue {
         }
     }
 }
+
+
+#[derive(Debug, Hash, Clone, Eq, PartialEq, PartialOrd, Ord)]
+pub enum SymbolHandle<T, R> {
+    Symbol(T),
+    Reference(R),
+}
+
+pub type TypeHandle = SymbolHandle<TypeSymbol, Box<Type>>;

@@ -1,6 +1,6 @@
 use std::collections::BTreeSet;
 
-use super::handles::{Symbol, LocalSymbol};
+use super::handles::{Symbol, LocalSymbol, TypeHandle};
 
 pub trait GetType {
     fn get_type(&self) -> Type;
@@ -45,7 +45,7 @@ pub struct IsNotAligned(pub bool);
 pub struct RecordType(pub IsNotAligned, pub Vec<(Option<Symbol>, Type)>);
 
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub struct TypeBindAttr(pub Box<Type>, pub Option<AllocaType>);
+pub struct TypeBindAttr(pub TypeHandle, pub Option<AllocaType>);
 
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -113,6 +113,7 @@ pub enum FloatType {
     PpcF128 = 5,
 }
 
+/*
 pub trait Unify {
     type Target;
     fn unify(&self, other: &Self) -> Option<Self::Target>;
@@ -189,6 +190,7 @@ impl Unify for FunctionType {
         Some(r)
     }
 }
+ */
 
 pub trait GetSize {
     fn get_size(&self, platform_size: u8, aligned_size: u8) -> Option<u64>;

@@ -1,5 +1,8 @@
 use std::collections::BTreeSet;
+use std::collections::HashMap;
 
+use pest::Parser;
+use pest::error::Error;
 use pest::iterators::Pair;
 use pest_derive::*;
 
@@ -18,65 +21,6 @@ where
 {
     fn parse_from(pair: Pair<T>) -> Self;
 }
-
-/* impl ParseFrom<Rule> for Module {
-    fn parse_from(pair: Pair<Rule>) -> Self {
-        debug_assert_eq!(pair.as_rule(), Rule::module);
-        let mut pairs = pair.into_inner();
-        let name = Handle::new(pairs.next().unwrap().as_str().to_string());
-        let bodys = pairs.next().unwrap().into_inner();
-
-        let mut type_defs: HashMap<TypeDefineSymbol, Handle<TypeDef>> = Default::default();
-        let mut constant_defs: HashMap<DefineSymbol, Handle<ConstantDef>> = Default::default();
-        let mut variable_defs: HashMap<DefineSymbol, Handle<VariableDef>> = Default::default();
-        let mut functions: HashMap<DefineSymbol, Handle<FunctionDef>> = Default::default();
-        let mut function_decls: HashMap<DefineSymbol, Handle<FunctionDecl>> = Default::default();
-
-        for pair in bodys {
-            match pair.as_rule() {
-                Rule::type_def => {
-                    let pair = pair.into_inner().next().unwrap();
-                    let type_def = Handle::new(TypeDef::parse_from(pair));
-                    let name = type_def.1.clone();
-                    type_defs.insert(name, type_def);
-                }
-                Rule::constant_def => {
-                    let pair = pair.into_inner().next().unwrap();
-                    let constant_def = Handle::new(ConstantDef::parse_from(pair));
-                    let name = constant_def.1.clone();
-                    constant_defs.insert(name, constant_def);
-                }
-                Rule::variable_def => {
-                    let pair = pair.into_inner().next().unwrap();
-                    let variable_def = Handle::new(VariableDef::parse_from(pair));
-                    let name = variable_def.1.clone();
-                    variable_defs.insert(name, variable_def);
-                }
-                Rule::function_def => {
-                    let pair = pair.into_inner().next().unwrap();
-                    let function_def = Handle::new(FunctionDef::parse_from(pair));
-                    let name = function_def.name.clone();
-                    functions.insert(name, function_def);
-                }
-                Rule::function_decl => {
-                    let pair = pair.into_inner().next().unwrap();
-                    let function_decl = Handle::new(FunctionDecl::parse_from(pair));
-                    let name = function_decl.name.clone();
-                    function_decls.insert(name, function_decl);
-                }
-                _ => unreachable!(),
-            }
-        }
-        Module {
-            name,
-            type_defs,
-            constant_defs,
-            variable_defs,
-            functions,
-            function_decls,
-        }
-    }
-} */
 
 /// attr tags /////////////////////////////////////////////////////////////////////////////////
 
@@ -417,13 +361,25 @@ fn option_alloca_type_parse_from(pair: Pair<Rule>) -> Option<AllocaType> {
 }
  */
 
+impl ParseFrom<Rule> for TypeHandle {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::type_value);
+        let pair = pair.into_inner().next().unwrap();
+        match pair.as_rule() {
+            Rule::type_ => TypeHandle::Reference(Box::new(Type::parse_from(pair))),
+            Rule::type_symbol => TypeHandle::Symbol(TypeSymbol::parse_from(pair)),
+            _ => unreachable!(),
+        }
+    }
+}
+
 impl ParseFrom<Rule> for TypeBindAttr {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::type_bind_metadata);
         let mut pairs = pair.into_inner();
-        let ty = Type::parse_from(pairs.next().unwrap());
+        let ty = TypeHandle::parse_from(pairs.next().unwrap());
         let alloc_type = pairs.next().map(AllocaType::parse_from);
-        TypeBindAttr(Box::new(ty), alloc_type)
+        TypeBindAttr(ty, alloc_type)
     }
 }
 
@@ -640,10 +596,10 @@ impl ParseFrom<Rule> for NamedFun {
         let attr = FunctionAttr::parse_from(pairs.next().unwrap());
         let name = DefineSymbol::parse_from(pairs.next().unwrap());
         let ftyp = FunctionType::parse_from(pairs.next().unwrap());
-        let begin = Expr::parse_from(pairs.next().unwrap());
+        let begin = Begin::parse_from(pairs.next().unwrap());
         let fun = Fun {
             ftyp,
-            body: Box::new(begin),
+            body: Box::new(Expr::Begin(begin)),
         };
         NamedFun {
             attr,
@@ -825,4 +781,70 @@ impl ParseFrom<Rule> for Call {
             args,
         }
     }
+}
+
+// module pars
+
+impl ParseFrom<Rule> for Module<NamedFun> {
+    fn parse_from(pair: Pair<Rule>) -> Self {
+        debug_assert_eq!(pair.as_rule(), Rule::module);
+        let mut pairs = pair.into_inner();
+        let name = Symbol::parse_from(pairs.next().unwrap());
+        let bodys = pairs.next().unwrap().into_inner();
+
+        let mut type_defs: HashMap<TypeDefineSymbol, TypeDef> = Default::default();
+        let mut constant_defs: HashMap<DefineSymbol, ConstantDef> = Default::default();
+        let mut variable_defs: HashMap<DefineSymbol, VariableDef> = Default::default();
+        let mut function_defs: HashMap<DefineSymbol, NamedFun> = Default::default();
+        let mut function_decls: HashMap<DefineSymbol, FunDecl> = Default::default();
+
+        for pair in bodys {
+            match dbg!(pair.as_rule()) {
+                Rule::type_def => {
+                    let type_def = TypeDef::parse_from(pair);
+                    let name = type_def.name.clone();
+                    type_defs.insert(name, type_def);
+                }
+                Rule::constant_def => {
+                    let constant_def = ConstantDef::parse_from(pair);
+                    let name = constant_def.name.clone();
+                    constant_defs.insert(name, constant_def);
+                }
+                Rule::variable_def => {
+                    let variable_def = VariableDef::parse_from(pair);
+                    let name = variable_def.name.clone();
+                    variable_defs.insert(name, variable_def);
+                }
+                Rule::function_def => {
+                    let function_def = NamedFun::parse_from(pair);
+                    let name = function_def.name.clone();
+                    function_defs.insert(name, function_def);
+                }
+                Rule::function_decl => {
+                    let function_decl = FunDecl::parse_from(pair);
+                    let name = function_decl.name.clone();
+                    function_decls.insert(name, function_decl);
+                }
+                _ => unreachable!(),
+            }
+        }
+        Module {
+            name,
+            type_defs,
+            constant_defs,
+            variable_defs,
+            function_defs,
+            function_decls,
+        }
+    }
+}
+
+pub fn file_parse(input: &str) -> Result<Vec<Module<NamedFun>>, Error<Rule>> {
+    let mut p = dbg!(RICHIR::parse(Rule::file, input))?;
+    let r = p.next().unwrap()
+        .into_inner()
+        .filter(|x| x.as_rule() == Rule::module)
+        .map(|x| Module::parse_from(x))
+        .collect();
+    Ok(r)
 }

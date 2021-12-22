@@ -1,7 +1,6 @@
+file = { (!EOI ~ module)* ~ EOI }
 
-module = { "mod" ~ symbol ~ ":" ~ module_bodys ~ EOI }
-
-module_bodys = { module_body* }
+module = { "mod" ~ symbol ~ "{" ~ module_body* ~ "}" }
 
 module_body =
     { function_def
@@ -318,7 +317,7 @@ _id = @{ ('0'..'9')+ }
 
 _name = $ { !KEYWORD ~ (ASCII_ALPHA_LOWER | UNDERLINE) ~ (ASCII_ALPHANUMERIC | UNDERLINE)* }
 
-KEYWORD = ${ "let" | "if" | "then" | "else" | "cond" | "switch" | "while" }
+KEYWORD = ${ "let" | "if" | "then" | "else" | "cond" | "switch" | "while" | "var" | "mod" }
 
 UNDERLINE = _{ "_" }
 

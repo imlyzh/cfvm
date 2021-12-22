@@ -6,11 +6,11 @@ use super::{handles::{ConstantValue, Symbol, DefineSymbol, TypeSymbol, TypeDefin
 #[derive(Debug, Clone, PartialEq)]
 pub struct Module<FunType> {
     pub name: Symbol,
-    pub type_defs: HashMap<DefineSymbol, TypeDef>,
+    pub type_defs: HashMap<TypeDefineSymbol, TypeDef>,
     pub constant_defs: HashMap<DefineSymbol, ConstantDef>,
     pub variable_defs: HashMap<DefineSymbol, VariableDef>,
-    pub function_decl: HashMap<DefineSymbol, FunDecl>,
     pub function_defs: HashMap<DefineSymbol, FunType>,
+    pub function_decls: HashMap<DefineSymbol, FunDecl>,
 }
 
 #[derive(Debug, Clone, PartialEq)]

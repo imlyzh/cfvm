@@ -1,0 +1,8 @@
+
+mod demo114 {
+    fn @fn_demo114() -> i32 {
+        let %x = 1
+        let %y = x
+        add(%x, %y)
+    }
+}

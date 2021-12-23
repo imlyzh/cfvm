@@ -98,7 +98,8 @@ impl ParseFrom<Rule> for TypeDefineSymbol {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::type_define_symbol);
         let pair = pair.into_inner().next().unwrap();
-        TypeDefineSymbol(Symbol::parse_from(pair))
+        // TypeDefineSymbol(Symbol::parse_from(pair))
+        TypeDefineSymbol(Handle::new(pair.as_str().to_string())) // fixme: register in global intern string pool // fixme: register in global intern string pool
     }
 }
 

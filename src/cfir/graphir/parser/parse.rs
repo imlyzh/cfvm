@@ -100,7 +100,8 @@ impl ParseFrom<Rule> for TypeSymbol {
 impl ParseFrom<Rule> for TypeDefineSymbol {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::type_define_symbol);
-        TypeDefineSymbol(Symbol::parse_from(pair)) // fixme: register in global intern string pool
+        // let pair = pair.into_inner().next().unwrap();
+        TypeDefineSymbol(Handle::new(pair.as_str().to_string())) // fixme: register in global intern string pool // fixme: register in global intern string pool
     }
 }
 
@@ -362,18 +363,6 @@ impl ParseFrom<Rule> for AllocaType {
     }
 }
 
-/*
-#[inline]
-fn option_alloca_type_parse_from(pair: Pair<Rule>) -> Option<AllocaType> {
-    debug_assert_eq!(pair.as_rule(), Rule::alloca_type);
-    if pair.as_str().is_empty() {
-        None
-    } else {
-        Some(AllocaType::parse_from(pair))
-    }
-}
- */
-
 impl ParseFrom<Rule> for TypeHandle {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::type_value);
@@ -619,22 +608,30 @@ fn insts_parse_from(pair: Pair<Rule>) -> Vec<MutHandle<Instruction>> {
         .collect()
 }
 
+/*
 #[inline]
 pub fn label_symbol_opt_parse_from(pair: Pair<Rule>) -> Option<LabelSymbol> {
     debug_assert_eq!(pair.as_rule(), Rule::label_symbol_opt);
     pair.into_inner().next().map(LabelSymbol::parse_from)
 }
+ */
 
 impl ParseFrom<Rule> for BasicBlockDef {
     fn parse_from(pair: Pair<Rule>) -> Self {
+        let t = pair.as_rule();
+        debug_assert!(matches!(t, Rule::basic_block | Rule::begin_basic_block));
         let mut pairs = pair.into_inner();
-        let label = label_symbol_opt_parse_from(pairs.next().unwrap());
-        let insts = insts_parse_from(pairs.next().unwrap());
-        let terminator = Terminator::parse_from(pairs.next().unwrap());
+        let label = if let Rule::basic_block = t {
+            Some(LabelSymbol::parse_from(pairs.next().unwrap()))
+        } else {
+            None
+        };
+        let instructions = Handle::new(RwLock::new(insts_parse_from(pairs.next().unwrap())));
+        let terminator = pairs.next().map(|x| Handle::new(RwLock::new(Terminator::parse_from(x))));
         BasicBlockDef {
             label,
-            instructions: Handle::new(RwLock::new(insts)),
-            terminator: Handle::new(RwLock::new(terminator)),
+            instructions,
+            terminator,
         }
     }
 }
@@ -653,18 +650,21 @@ impl ParseFrom<Rule> for FunctionDef {
         let name = DefineSymbol::parse_from(pairs.next().unwrap());
         let header = FunctionType::parse_from(pairs.next().unwrap());
         let blocks = blocks_parse_from(pairs);
+        // let block_map = HashMap::new();
+        /*
         let block_map = blocks
             .iter()
             .enumerate()
-            .map(|(usize, x)| (x.read().unwrap().label.clone().unwrap(), usize))
+            .map(|(usize, x)| (x.read().unwrap(), usize))
             .collect();
         let block_map = Handle::new(RwLock::new(block_map));
+         */
         FunctionDef {
             name,
             header,
             function_attr: attr,
             blocks: Handle::new(RwLock::new(blocks)),
-            block_map,
+            // block_map,
         }
     }
 }
@@ -674,7 +674,6 @@ impl ParseFrom<Rule> for FunctionDef {
 impl ParseFrom<Rule> for Ret {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::ret);
-        let pair = pair.into_inner().next().unwrap();
         let value = pair.into_inner().next().map(|x| SymbolRef::parse_from(x));
         Ret(value)
     }
@@ -778,12 +777,11 @@ impl ParseFrom<Rule> for BindOperator {
         debug_assert_eq!(pair.as_rule(), Rule::bind);
         let mut pairs = pair.into_inner();
         let symbol = LocalSymbol::parse_from(pairs.next().unwrap());
-        let ty = TypeBindAttr::parse_from(pairs.next().unwrap());
         let operator = Operator::parse_from(pairs.next().unwrap());
         BindOperator(
             symbol,
             Handle::new(RwLock::new(operator)),
-            ty,
+            // ty,
         )
     }
 }
@@ -856,6 +854,12 @@ fn phi_pair_parse_from(pair: Pair<Rule>) -> (LabelSymbol, SymbolRef) {
     (label, value)
 }
 
+#[inline]
+fn alloca_type_opt_parse_from(pair: Pair<Rule>) -> Option<AllocaType> {
+    debug_assert_eq!(pair.as_rule(), Rule::alloca_type_opt);
+    pair.into_inner().next().map(AllocaType::parse_from)
+}
+
 impl ParseFrom<Rule> for Operator {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::operator);
@@ -864,12 +868,12 @@ impl ParseFrom<Rule> for Operator {
         let mut pairs = pair.into_inner();
         match t {
             Rule::alloca => {
-                let alloca_type = store_type_opt_parse_from(pairs.next().unwrap());
-                let ty = Type::parse_from(pairs.next().unwrap());
-                // let value = pairs.next().map(SymbolRef::parse_from);
-                Operator::Alloca(alloca_type, ty,
-                    // value
-                )
+                // let ty = TypeSymbol::parse_from(pairs.next().unwrap());
+                // let aty = alloca_type_opt_parse_from(pairs.next().unwrap());
+                let ty = TypeBindAttr::parse_from(pairs.next().unwrap());
+                let value = pairs.next().map(SymbolRef::parse_from);
+                // Operator::Alloca(ty, aty, value)
+                Operator::Alloca(ty, value)
             }
             Rule::get_ptr => {
                 let value = SymbolRef::parse_from(pairs.next().unwrap());

@@ -27,7 +27,7 @@ pub struct LocalSymbol(pub Symbol);
 pub struct LabelSymbol(pub Symbol);
 
 #[derive(Debug, Hash, Clone, Eq, PartialEq, PartialOrd)]
-pub struct TypeDefineSymbol(pub Symbol);
+pub struct TypeDefineSymbol(pub Handle<String>);
 
 #[derive(Debug, Hash, Clone, Eq, PartialEq, PartialOrd)]
 pub enum SymbolRef {

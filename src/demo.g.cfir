@@ -1,0 +1,9 @@
+
+mod demo114 {
+    fn @fn_demo114() -> i32 {
+        %x = alloca i32, stack
+        %y = alloca i32 <- %x
+    r:
+        ret
+    }
+}

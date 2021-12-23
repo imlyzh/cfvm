@@ -1,6 +1,6 @@
 // use std::collections::BTreeSet;
 
-use crate::cfir::{types::{AllocaType, TypeBindAttr, StoreType}, handles::MutHandle};
+use crate::cfir::{types::{TypeBindAttr, StoreType, AllocaType}, handles::{MutHandle, TypeSymbol}};
 
 use super::super::{
     handles::{LabelSymbol, LocalSymbol, SimpleValue, Symbol, SymbolRef},
@@ -59,7 +59,10 @@ pub struct IndexList(pub Vec<Index>);
 
 #[derive(Debug, Clone)]
 pub enum Operator {
-    Alloca(Option<StoreType>, Type),
+    Alloca(
+        // TypeSymbol, Option<AllocaType>,
+        TypeBindAttr,
+        Option<SymbolRef>),
     GetPtr(SymbolRef, Option<IndexList>),
     Load(Type, SymbolRef),
     Cast(Type, SymbolRef),
@@ -106,7 +109,7 @@ pub struct Store(
 pub struct BindOperator(
     pub LocalSymbol,
     pub MutHandle<Operator>,
-    pub TypeBindAttr,
+    // pub TypeBindAttr,
 );
 
 #[derive(Debug, Clone)]

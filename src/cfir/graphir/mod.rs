@@ -7,7 +7,7 @@ use std::{
     // sync::{Arc, RwLock},
 };
 
-use self::instruction::{BindOperator, Instruction, Terminator};
+use self::instruction::{Instruction, Terminator};
 
 use super::{
     base::{
@@ -16,11 +16,10 @@ use super::{
     },
     types::{
         Type, FunctionType, PointerType, FirstClassType, SimpleType, GetType,
-        IsExtern, IsPublic, InlineType, FunctionAttr
+        FunctionAttr
     },
     handles::{DefineSymbol, LabelSymbol, MutHandle, ConstantValue, SymbolRef}
 };
-
 
 pub type RichModule = Module<FunctionDef>;
 
@@ -30,7 +29,7 @@ pub struct FunctionDef {
     pub header: FunctionType,
     pub function_attr: FunctionAttr,
     pub blocks: MutHandle<Vec<MutHandle<BasicBlockDef>>>,
-    pub block_map: MutHandle<HashMap<LabelSymbol, usize>>,
+    // pub block_map: MutHandle<HashMap<LabelSymbol, usize>>,
 }
 
 #[derive(Debug, Clone)]
@@ -39,7 +38,7 @@ pub struct BasicBlockDef {
     // pub prev_block: MutHandle<Vec<MutHandle<BasicBlockDef>>>,
     // pub variable_defs: MutHandle<HashMap<LabelSymbol, MutHandle<BindOperator>>>,
     pub instructions: MutHandle<Vec<MutHandle<Instruction>>>,
-    pub terminator: MutHandle<Terminator>,
+    pub terminator: Option<MutHandle<Terminator>>,
 }
 
 impl GetType for FunctionDef {
@@ -57,5 +56,4 @@ impl GetType for FunctionDef {
 pub enum Value {
     Var(SymbolRef),
     Lit(ConstantValue),
-    // Call(Call),
 }

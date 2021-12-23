@@ -187,6 +187,7 @@ params_name = @
 function_def = {
     function_attr ~ "fn" ~ global_define_symbol ~
     function_type ~ "{" ~
+    	begin_basic_block? ~
         basic_block*
     ~ "}"
 }
@@ -195,13 +196,19 @@ label_symbol_opt = {
     label_symbol?
 }
 
-basic_block = {
-    label_symbol_opt ~
+begin_basic_block = {
+    label_symbol? ~
     insts ~
-    terminator
+    terminator?
 }
 
-insts = { inst* }
+basic_block = {
+    label_symbol ~
+    insts ~
+    terminator?
+}
+
+insts = { (!terminator ~ inst)* }
 
 inst =
     { store
@@ -210,11 +217,11 @@ inst =
     }
 
 store = {
-    "store" ~ local_symbol ~ ":" ~ type_bind_metadata  ~ value
+    "store" ~ local_symbol ~ value
 }
 
 bind = {
-    local_symbol ~ ":" ~ type_bind_metadata ~ "=" ~ operator
+    local_symbol ~ "=" ~ operator
 }
 
 // is_mutable = { "mut"? }
@@ -261,7 +268,13 @@ operator =
     | call
 }
 
-alloca = { "alloca" ~ alloca_type }
+alloca_type_opt = {
+    alloca_type?
+}
+
+alloca = {
+    "alloca" ~ type_bind_metadata ~ ("<-" ~ symbol_ref)?
+}
 
 get_ptr = {
     "get-ptr" ~ value ~ ("," ~ index_list)?
@@ -409,7 +422,7 @@ global_define_symbol = ${ "@" ~ symbol }
 
 local_symbol = ${ "%" ~ symbol }
 
-label_symbol = ${ ":" ~ symbol }
+label_symbol = ${ symbol ~ ":" }
 
 symbol_ref =
     { local_symbol

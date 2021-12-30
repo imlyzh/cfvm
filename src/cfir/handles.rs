@@ -17,6 +17,12 @@ pub struct TypeSymbol(pub Option<Symbol>, pub TypeDefineSymbol);
 #[derive(Debug, Hash, Clone, Eq, PartialEq, PartialOrd)]
 pub struct Symbol(pub Handle<String>); // record line key, type name, etc.
 
+impl Symbol {
+    pub fn new(s: String) -> Self {
+        Symbol(Arc::new(s))
+    }
+}
+
 // text type
 
 #[derive(Debug, Hash, Clone, Eq, PartialEq, PartialOrd)]

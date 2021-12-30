@@ -2,11 +2,11 @@
 
 use crate::cfir::{types::TypeBindAttr, handles::LTMHand};
 
-use super::super::{
+use super::{super::{
     handles::{LabelSymbol, LocalSymbol, SimpleValue, Symbol, SymbolRef},
     types::{FloatType, IntType, Type},
     // MutHandle,
-};
+}, Value};
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum BranchOp {
@@ -120,7 +120,7 @@ pub enum Instruction {
 }
 
 #[derive(Debug, Clone)]
-pub struct Ret(pub Option<SymbolRef>);
+pub struct Ret(pub Option<Value>);
 
 #[derive(Debug, Clone)]
 pub struct Branch(

@@ -1,6 +1,10 @@
 use std::cell::RefCell;
 use std::collections::BTreeSet;
 use std::collections::HashMap;
+use std::sync::atomic::AtomicUsize;
+use std::sync::atomic::Ordering;
+
+use lazy_static::lazy_static;
 
 use pest::Parser;
 use pest::error::Error;
@@ -616,6 +620,14 @@ pub fn label_symbol_opt_parse_from(pair: Pair<Rule>) -> Option<LabelSymbol> {
 }
  */
 
+lazy_static! {
+    static ref LABEL_NUMBER: AtomicUsize = AtomicUsize::new(0);
+}
+
+pub fn gen_label() -> LabelSymbol {
+    LabelSymbol(Symbol::new(format!("GL_{}", LABEL_NUMBER.fetch_add(1, Ordering::SeqCst))))
+}
+
 impl ParseFrom<Rule> for BasicBlockDef {
     fn parse_from(pair: Pair<Rule>) -> Self {
         let t = pair.as_rule();
@@ -624,7 +636,7 @@ impl ParseFrom<Rule> for BasicBlockDef {
         let label = if let Rule::basic_block = t {
             LabelSymbol::parse_from(pairs.next().unwrap())
         } else {
-            todo!()
+            gen_label()
         };
         let instructions = LTMHand::new(insts_parse_from(pairs.next().unwrap()));
         let terminator = pairs.next().map(|x| LTMHand::new(Terminator::parse_from(x)));
@@ -674,7 +686,7 @@ impl ParseFrom<Rule> for FunctionDef {
 impl ParseFrom<Rule> for Ret {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::ret);
-        let value = pair.into_inner().next().map(SymbolRef::parse_from);
+        let value = pair.into_inner().next().map(Value::parse_from);
         Ret(value)
     }
 }
@@ -1123,7 +1135,7 @@ impl ParseFrom<Rule> for Module<FunctionDef> {
 }
 
 pub fn file_parse(input: &str) -> Result<Vec<Module<FunctionDef>>, Error<Rule>> {
-    let mut p = dbg!(GRAPHIR::parse(Rule::file, input))?;
+    let mut p = GRAPHIR::parse(Rule::file, input)?;
     let r = p.next().unwrap()
         .into_inner()
         .filter(|x| x.as_rule() == Rule::module)

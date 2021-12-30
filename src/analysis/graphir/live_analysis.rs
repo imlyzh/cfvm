@@ -1,7 +1,7 @@
 use std::collections::{HashMap, VecDeque, HashSet};
 
 use crate::cfir::{
-    graphir::{BasicBlockDef, FunctionDef, instruction::{Instruction, Operator, BindOperator, Store, Terminator, Conds, Branch, Switch, Ret}},
+    graphir::{BasicBlockDef, FunctionDef, instruction::{Instruction, Operator, BindOperator, Store, Terminator, Conds, Branch, Switch, Ret}, Value},
     handles::{LocalSymbol, LabelSymbol, SymbolRef}
 };
 
@@ -16,7 +16,6 @@ pub trait RootLiveAnalysis {
 }
 
 pub trait LiveAnalysis {
-
     fn live_analysis(&self, record: BBSLiveVar) -> BBSLiveVar;
 }
 
@@ -31,7 +30,7 @@ impl RootLiveAnalysis for FunctionDef {
             .map(|x| (x.borrow().label.clone(), vars.clone()))
             .collect();
         loop {
-            let new = one_pass(self, old.clone());
+            let new = once_pass(self, old.clone());
             if old == new {
                 break;
             } else {
@@ -43,24 +42,25 @@ impl RootLiveAnalysis for FunctionDef {
 
 }
 
-pub fn one_pass(fun_def: &FunctionDef, mut inp: FunLiveVar) -> FunLiveVar {
+pub fn once_pass(fun_def: &FunctionDef, mut inp: FunLiveVar) -> FunLiveVar {
+    dbg!("once_pass");
     let mapping = fun_def.bbs.borrow().iter().enumerate()
         .map(|(offset, x)| (x.borrow().label.clone(), offset)).collect::<HashMap<_, _>>();
     let mut next_set: VecDeque<LabelSymbol> = VecDeque::new();
     let mut used_bb: HashSet<LabelSymbol> = HashSet::new();
     next_set.push_back(fun_def.bbs.borrow()[0].borrow().label.clone());
-    while next_set.is_empty() {
+    while !next_set.is_empty() {
         let task = next_set.pop_front().unwrap();
         if !used_bb.contains(&task) {
-            let bb_size = mapping.get(&task).unwrap();
-            let bb = &fun_def.bbs.borrow()[*bb_size];
+            let bb_offset = mapping.get(&task).unwrap();
+            let bb = &fun_def.bbs.borrow()[*bb_offset];
             inp.insert(task.clone(), bb.borrow().live_analysis(inp.get(&task).unwrap().clone()));
             if let Some(x) = bb.borrow().get_next() {
                 for next in x.iter() {
                     next_set.push_back(next.clone().clone());
                 }
-                if x.is_empty() && bb_size + 1 < fun_def.bbs.borrow().len() {
-                    next_set.push_back(fun_def.bbs.borrow()[bb_size + 1].borrow().label.clone());
+                if x.is_empty() && bb_offset + 1 < fun_def.bbs.borrow().len() {
+                    next_set.push_back(fun_def.bbs.borrow()[bb_offset + 1].borrow().label.clone());
                 }
             } else {
                 return inp;
@@ -68,32 +68,37 @@ pub fn one_pass(fun_def: &FunctionDef, mut inp: FunLiveVar) -> FunLiveVar {
             used_bb.insert(task);
         }
     }
-    todo!()
+    inp
 }
 
 impl LiveAnalysis for BasicBlockDef {
     fn live_analysis(&self, mut record: BBSLiveVar) -> BBSLiveVar {
+        dbg!("live_analysis");
         for i in self.instructions.borrow().iter() {
             use_variable_for_insts(&i.borrow().to_owned(), &mut record);
         }
         if let Some(x) = &self.terminator {
-            match x.borrow().to_owned() {
-                Terminator::Branch(Branch(_, v, _, _)) |
-                Terminator::Switch(Switch(v, _)) => use_variable_for_symbolref(&v, &mut record),
-                Terminator::Ret(Ret(v)) => {
-                    if let Some(v) = v {
-                        use_variable_for_symbolref(&v, &mut record);
-                    }
-                },
-                Terminator::Conds(Conds(cs, _)) => {
-                    for (v, _) in cs {
-                        use_variable_for_symbolref(&v, &mut record);
-                    }
-                },
-                _ => todo!()
-            }
+            use_variable_for_terminator(&x.borrow(), &mut record);
         }
         record
+    }
+}
+
+pub fn use_variable_for_terminator(ter: &Terminator, record: &mut BBSLiveVar) {
+    match ter {
+        Terminator::Branch(Branch(_, v, _, _)) |
+        Terminator::Switch(Switch(v, _)) => use_variable_for_symbolref(&v, record),
+        Terminator::Ret(Ret(v)) => {
+            if let Some(Value::Var(v)) = v {
+                use_variable_for_symbolref(&v, record);
+            }
+        },
+        Terminator::Conds(Conds(cs, _)) => {
+            for (v, _) in cs {
+                use_variable_for_symbolref(&v, record);
+            }
+        },
+        Terminator::Unrechable => {},
     }
 }
 
@@ -112,7 +117,7 @@ pub fn use_variable_for_insts(inst: &Instruction, record: &mut BBSLiveVar) {
 
 pub fn use_variable_for_opers(oper: &Operator, record: &mut BBSLiveVar) {
     match oper {
-        Operator::Alloca(_, _v) => todo!(),
+        Operator::Alloca(_, _v) => {},
         Operator::GetPtr(v, _)  |
         Operator::Load(_, v)    |
         Operator::Cast(_, v)    |

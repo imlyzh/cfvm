@@ -840,7 +840,7 @@ impl ParseFrom<Rule> for Module<NamedFun> {
 }
 
 pub fn file_parse(input: &str) -> Result<Vec<Module<NamedFun>>, Error<Rule>> {
-    let mut p = dbg!(RICHIR::parse(Rule::file, input))?;
+    let mut p = RICHIR::parse(Rule::file, input)?;
     let r = p.next().unwrap()
         .into_inner()
         .filter(|x| x.as_rule() == Rule::module)

@@ -4,6 +4,6 @@ mod demo114 {
         %x = alloca i32, stack
         %y = alloca i32 <- %x
     r:
-        ret
+        ret %x
     }
 }

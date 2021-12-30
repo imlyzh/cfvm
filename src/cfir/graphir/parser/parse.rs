@@ -1,7 +1,6 @@
 use std::cell::RefCell;
 use std::collections::BTreeSet;
 use std::collections::HashMap;
-use std::sync::RwLock;
 
 use pest::Parser;
 use pest::error::Error;
@@ -675,7 +674,7 @@ impl ParseFrom<Rule> for FunctionDef {
 impl ParseFrom<Rule> for Ret {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::ret);
-        let value = pair.into_inner().next().map(|x| SymbolRef::parse_from(x));
+        let value = pair.into_inner().next().map(SymbolRef::parse_from);
         Ret(value)
     }
 }
@@ -691,8 +690,8 @@ impl ParseFrom<Rule> for Branch {
         Branch(
             branch_op,
             cond,
-            LabelSymbol::from(true_block),
-            LabelSymbol::from(false_block),
+            true_block,
+            false_block,
         )
     }
 }
@@ -1128,7 +1127,7 @@ pub fn file_parse(input: &str) -> Result<Vec<Module<FunctionDef>>, Error<Rule>> 
     let r = p.next().unwrap()
         .into_inner()
         .filter(|x| x.as_rule() == Rule::module)
-        .map(|x| Module::parse_from(x))
+        .map(Module::parse_from)
         .collect();
     Ok(r)
 }

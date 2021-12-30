@@ -1,6 +1,6 @@
 // use std::collections::BTreeSet;
 
-use crate::cfir::{types::{TypeBindAttr, StoreType, AllocaType}, handles::{MutHandle, TypeSymbol, LTMHand}};
+use crate::cfir::{types::TypeBindAttr, handles::LTMHand};
 
 use super::super::{
     handles::{LabelSymbol, LocalSymbol, SimpleValue, Symbol, SymbolRef},

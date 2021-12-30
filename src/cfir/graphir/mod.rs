@@ -2,12 +2,7 @@ pub mod instruction;
 
 pub mod parser;
 
-use std::{
-    collections::HashMap,
-    // sync::{Arc, RwLock},
-};
-
-use self::instruction::{Instruction, Terminator};
+use self::instruction::{Instruction, Terminator, Branch, Conds, Switch};
 
 use super::{
     base::{
@@ -18,7 +13,7 @@ use super::{
         Type, FunctionType, PointerType, FirstClassType, SimpleType, GetType,
         FunctionAttr
     },
-    handles::{DefineSymbol, LabelSymbol, MutHandle, ConstantValue, SymbolRef, LTMHand}
+    handles::{DefineSymbol, LabelSymbol, ConstantValue, SymbolRef, LTMHand}
 };
 
 pub type GraphModule = Module<FunctionDef>;
@@ -41,14 +36,34 @@ pub struct BasicBlockDef {
     pub terminator: Option<LTMHand<Terminator>>,
 }
 
+impl BasicBlockDef {
+    pub fn get_next(&self) -> Option<Vec<LabelSymbol>> {
+        self.terminator.as_ref().map_or(Some(vec![]), |x|
+            match x.borrow().to_owned() {
+                Terminator::Branch(Branch(_, _, t, e)) =>
+                    Some(vec![t, e]),
+                Terminator::Conds(Conds(bs, e)) =>{
+                    let mut r: Vec<_> = bs.iter().map(|x| x.1.clone()).collect();
+                    if let Some(x) = e {
+                        r.push(x);
+                    }
+                    Some(r)
+                },
+                Terminator::Switch(Switch(_, bs)) =>
+                    Some(bs.iter().map(|x| x.1.clone()).collect()),
+                Terminator::Unrechable |
+                Terminator::Ret(_) => None,
+            })
+    }
+}
+
 impl GetType for FunctionDef {
     fn get_type(&self) -> Type {
         let func_type = Type::FunType(self.header.clone());
         // let r = func_type;
-        let r = Type::FCType(FirstClassType::SimpleType(SimpleType::Pointer(
+        Type::FCType(FirstClassType::SimpleType(SimpleType::Pointer(
             PointerType(Box::new(func_type)),
-        )));
-        r
+        )))
     }
 }
 

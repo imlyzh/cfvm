@@ -844,7 +844,7 @@ pub fn file_parse(input: &str) -> Result<Vec<Module<NamedFun>>, Error<Rule>> {
     let r = p.next().unwrap()
         .into_inner()
         .filter(|x| x.as_rule() == Rule::module)
-        .map(|x| Module::parse_from(x))
+        .map(Module::parse_from)
         .collect();
     Ok(r)
 }

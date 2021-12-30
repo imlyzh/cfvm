@@ -1,3 +1,4 @@
+use std::cell::RefCell;
 use std::collections::BTreeSet;
 use std::collections::HashMap;
 use std::sync::RwLock;
@@ -600,11 +601,11 @@ impl ParseFrom<Rule> for LabelSymbol {
 /// function def
 
 #[inline]
-fn insts_parse_from(pair: Pair<Rule>) -> Vec<MutHandle<Instruction>> {
+fn insts_parse_from(pair: Pair<Rule>) -> Vec<LTMHand<Instruction>> {
     debug_assert_eq!(pair.as_rule(), Rule::insts);
     pair
         .into_inner()
-        .map(|x| Handle::new(RwLock::new(Instruction::parse_from(x))))
+        .map(|x| LTMHand::new(Instruction::parse_from(x)))
         .collect()
 }
 
@@ -622,12 +623,12 @@ impl ParseFrom<Rule> for BasicBlockDef {
         debug_assert!(matches!(t, Rule::basic_block | Rule::begin_basic_block));
         let mut pairs = pair.into_inner();
         let label = if let Rule::basic_block = t {
-            Some(LabelSymbol::parse_from(pairs.next().unwrap()))
+            LabelSymbol::parse_from(pairs.next().unwrap())
         } else {
-            None
+            todo!()
         };
-        let instructions = Handle::new(RwLock::new(insts_parse_from(pairs.next().unwrap())));
-        let terminator = pairs.next().map(|x| Handle::new(RwLock::new(Terminator::parse_from(x))));
+        let instructions = LTMHand::new(insts_parse_from(pairs.next().unwrap()));
+        let terminator = pairs.next().map(|x| LTMHand::new(Terminator::parse_from(x)));
         BasicBlockDef {
             label,
             instructions,
@@ -637,8 +638,8 @@ impl ParseFrom<Rule> for BasicBlockDef {
 }
 
 #[inline]
-fn blocks_parse_from(pair: Pairs<Rule>) -> Vec<MutHandle<BasicBlockDef>> {
-    pair.map(|x| Handle::new(RwLock::new(BasicBlockDef::parse_from(x))))
+fn blocks_parse_from(pair: Pairs<Rule>) -> Vec<LTMHand<BasicBlockDef>> {
+    pair.map(|x| LTMHand::new(BasicBlockDef::parse_from(x)))
         .collect()
 }
 
@@ -663,7 +664,7 @@ impl ParseFrom<Rule> for FunctionDef {
             name,
             header,
             function_attr: attr,
-            blocks: Handle::new(RwLock::new(blocks)),
+            bbs: RefCell::new(blocks),
             // block_map,
         }
     }
@@ -780,7 +781,7 @@ impl ParseFrom<Rule> for BindOperator {
         let operator = Operator::parse_from(pairs.next().unwrap());
         BindOperator(
             symbol,
-            Handle::new(RwLock::new(operator)),
+            LTMHand::new(operator),
             // ty,
         )
     }
@@ -794,7 +795,7 @@ impl ParseFrom<Rule> for Instruction {
             Rule::store => Instruction::Store(Store::parse_from(pair)),
             Rule::bind => Instruction::BindOperator(BindOperator::parse_from(pair)),
             Rule::operator => {
-                Instruction::Operator(Handle::new(RwLock::new(Operator::parse_from(pair))))
+                Instruction::Operator(LTMHand::new(Operator::parse_from(pair)))
             }
             _ => unreachable!(),
         }

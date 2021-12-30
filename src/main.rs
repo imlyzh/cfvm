@@ -1,5 +1,6 @@
 mod cfir;
 mod pass;
+mod analysis;
 mod codegen;
 
 use cfir::richir::parser::parse::file_parse as rparse;

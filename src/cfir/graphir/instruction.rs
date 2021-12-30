@@ -1,6 +1,6 @@
 // use std::collections::BTreeSet;
 
-use crate::cfir::{types::{TypeBindAttr, StoreType, AllocaType}, handles::{MutHandle, TypeSymbol}};
+use crate::cfir::{types::{TypeBindAttr, StoreType, AllocaType}, handles::{MutHandle, TypeSymbol, LTMHand}};
 
 use super::super::{
     handles::{LabelSymbol, LocalSymbol, SimpleValue, Symbol, SymbolRef},
@@ -108,7 +108,7 @@ pub struct Store(
 #[derive(Debug, Clone)]
 pub struct BindOperator(
     pub LocalSymbol,
-    pub MutHandle<Operator>,
+    pub LTMHand<Operator>,
     // pub TypeBindAttr,
 );
 
@@ -116,7 +116,7 @@ pub struct BindOperator(
 pub enum Instruction {
     Store(Store),
     BindOperator(BindOperator),
-    Operator(MutHandle<Operator>),
+    Operator(LTMHand<Operator>),
 }
 
 #[derive(Debug, Clone)]

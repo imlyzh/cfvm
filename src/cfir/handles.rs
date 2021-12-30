@@ -1,10 +1,12 @@
-use std::sync::{Arc, RwLock};
+use std::{sync::{Arc, RwLock}, cell::RefCell};
 
 use super::types::Type;
 
 
 pub type Handle<T> = Arc<T>;
 pub type MutHandle<T> = Arc<RwLock<T>>;
+// Local Thread Mutable
+pub type LTMHand<T> = RefCell<T>;
 
 #[derive(Debug, Hash, Clone, Eq, PartialEq, PartialOrd)]
 pub struct GlobalSymbol(pub Option<Symbol>, pub DefineSymbol);

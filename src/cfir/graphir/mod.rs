@@ -18,27 +18,27 @@ use super::{
         Type, FunctionType, PointerType, FirstClassType, SimpleType, GetType,
         FunctionAttr
     },
-    handles::{DefineSymbol, LabelSymbol, MutHandle, ConstantValue, SymbolRef}
+    handles::{DefineSymbol, LabelSymbol, MutHandle, ConstantValue, SymbolRef, LTMHand}
 };
 
-pub type RichModule = Module<FunctionDef>;
+pub type GraphModule = Module<FunctionDef>;
 
 #[derive(Debug, Clone)]
 pub struct FunctionDef {
     pub name: DefineSymbol,
     pub header: FunctionType,
     pub function_attr: FunctionAttr,
-    pub blocks: MutHandle<Vec<MutHandle<BasicBlockDef>>>,
-    // pub block_map: MutHandle<HashMap<LabelSymbol, usize>>,
+    pub bbs: LTMHand<Vec<LTMHand<BasicBlockDef>>>,
+    // pub bbs_map: LTMHand<HashMap<LabelSymbol, usize>>,
 }
 
 #[derive(Debug, Clone)]
 pub struct BasicBlockDef {
-    pub label: Option<LabelSymbol>,
-    // pub prev_block: MutHandle<Vec<MutHandle<BasicBlockDef>>>,
-    // pub variable_defs: MutHandle<HashMap<LabelSymbol, MutHandle<BindOperator>>>,
-    pub instructions: MutHandle<Vec<MutHandle<Instruction>>>,
-    pub terminator: Option<MutHandle<Terminator>>,
+    pub label: LabelSymbol,
+    // pub prev_block: LTMHand<Vec<LTMHand<BasicBlockDef>>>,
+    // pub variable_defs: LTMHand<HashMap<LabelSymbol, LTMHand<BindOperator>>>,
+    pub instructions: LTMHand<Vec<LTMHand<Instruction>>>,
+    pub terminator: Option<LTMHand<Terminator>>,
 }
 
 impl GetType for FunctionDef {

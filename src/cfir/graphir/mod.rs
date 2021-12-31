@@ -6,7 +6,7 @@ use std::{fmt::{Display, Debug}, collections::{HashSet, VecDeque, HashMap}};
 
 use tracing::{debug, instrument};
 
-use self::instruction::{Instruction, Terminator, Branch, Conds, Switch};
+use self::instruction::{Instruction, Terminator, Branch, Conds, Switch, BindOperator, Operator};
 
 use super::{
     base::{
@@ -17,7 +17,7 @@ use super::{
         Type, FunctionType, PointerType, FirstClassType, SimpleType, GetType,
         FunctionAttr
     },
-    handles::{DefineSymbol, LabelSymbol, ConstantValue, SymbolRef, LTMHand}
+    handles::{DefineSymbol, LabelSymbol, ConstantValue, SymbolRef, LTMHand, GlobalSymbol}
 };
 
 pub type GraphModule = Env<FunctionDef>;
@@ -103,6 +103,13 @@ impl FunctionDef {
         }
         return r;
     }
+
+    pub fn make_call_target(&self) -> HashSet<SymbolRef> {
+        let bbs: &Vec<_> = &self.bbs.borrow();
+        bbs.iter()
+            .flat_map(|x| x.borrow().get_call_targets())
+            .collect()
+    }
 }
 
 impl Debug for FunctionDef {
@@ -159,6 +166,24 @@ impl BasicBlockDef {
             });
             debug!("get_next: {:?}", r);
             r
+    }
+    fn get_call_targets(&self) -> HashSet<SymbolRef> {
+        let is: &Vec<_> = &self.instructions.borrow();
+        let mut r = HashSet::new();
+        for i in is {
+            let i: &Instruction = &i.borrow();
+            match i {
+                Instruction::BindOperator(BindOperator(_, op)) |
+                Instruction::Operator(op) => {
+                    let op: &Operator = &op.borrow();
+                    if let Operator::Call(f, _) = op {
+                        r.insert(f.clone());
+                    }
+                },
+                _ => {}
+            }
+        }
+        r
     }
 }
 

@@ -626,7 +626,7 @@ lazy_static! {
 }
 
 pub fn gen_label() -> LabelSymbol {
-    LabelSymbol(Symbol::new(format!("GL_{}", LABEL_NUMBER.fetch_add(1, Ordering::SeqCst))))
+    LabelSymbol(Symbol::new(format!("GEN_{}", LABEL_NUMBER.fetch_add(1, Ordering::SeqCst))))
 }
 
 impl ParseFrom<Rule> for BasicBlockDef {

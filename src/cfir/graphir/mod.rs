@@ -17,10 +17,49 @@ use super::{
         Type, FunctionType, PointerType, FirstClassType, SimpleType, GetType,
         FunctionAttr
     },
-    handles::{DefineSymbol, LabelSymbol, ConstantValue, SymbolRef, LTMHand}
+    handles::{DefineSymbol, LabelSymbol, ConstantValue, SymbolRef, LTMHand, GlobalSymbol}
 };
 
 pub type GraphModule = Module<FunctionDef>;
+
+impl GraphModule {
+    pub fn make_call_graph(&self) -> Vec<(DefineSymbol, SymbolRef)> {
+        let root = self.function_defs
+            .iter()
+            .filter(|(_, f)| f.function_attr.is_extern.0)
+            .map(|(k, _)| k.clone());
+        let mut used_bbs: HashSet<DefineSymbol> = HashSet::new();
+        let mut next_set: VecDeque<DefineSymbol> = VecDeque::new();
+        let mut r = Vec::new();
+        next_set.extend(root);
+        while !next_set.is_empty() {
+            let task = next_set.pop_front().unwrap();
+            if !used_bbs.contains(&task) {
+                // let bb = self.function_defs.task;
+                /*
+                if let Some(x) = bb.borrow().get_next() {
+                    if x.is_empty() && bb_offset + 1 < bbs.len() {
+                        let target = bbs[bb_offset + 1].borrow().label.clone();
+                        next_set.push_back(target.clone());
+                        r.push((task.clone(), target));
+                    } else {
+                        for i in x {
+                            next_set.push_back(i.clone());
+                            r.push((task.clone(), i));
+                        }
+                    }
+                } else {
+                    return r;
+                }
+                used_bbs.insert(task);
+                 */
+                todo!()
+            }
+        }
+        return r;
+        todo!()
+    }
+}
 
 #[derive(Clone)]
 pub struct FunctionDef {

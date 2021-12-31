@@ -2,6 +2,10 @@ pub mod instruction;
 
 pub mod parser;
 
+use std::{fmt::{Display, Debug}, collections::{HashSet, VecDeque, HashMap}};
+
+use tracing::{debug, instrument};
+
 use self::instruction::{Instruction, Terminator, Branch, Conds, Switch};
 
 use super::{
@@ -18,7 +22,7 @@ use super::{
 
 pub type GraphModule = Module<FunctionDef>;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct FunctionDef {
     pub name: DefineSymbol,
     pub header: FunctionType,
@@ -27,7 +31,51 @@ pub struct FunctionDef {
     // pub bbs_map: LTMHand<HashMap<LabelSymbol, usize>>,
 }
 
-#[derive(Debug, Clone)]
+impl FunctionDef {
+    pub fn make_control_flow_graph(&self) -> Vec<(LabelSymbol, LabelSymbol)> {
+        let bbs = self.bbs.borrow();
+        let mapping = bbs.iter().enumerate()
+            .map(|(offset, x)| (x.borrow().label.clone(), offset)).collect::<HashMap<_, _>>();
+        let mut used_bbs: HashSet<LabelSymbol> = HashSet::new();
+        let mut next_set: VecDeque<LabelSymbol> = VecDeque::new();
+        let mut r = Vec::new();
+        next_set.push_back(self.bbs.borrow()[0].borrow().label.clone());
+        while !next_set.is_empty() {
+            let task = next_set.pop_front().unwrap();
+            if !used_bbs.contains(&task) {
+                let bb_offset = mapping.get(&task).unwrap();
+                let bb = &bbs[*bb_offset];
+                if let Some(x) = bb.borrow().get_next() {
+                    if x.is_empty() && bb_offset + 1 < bbs.len() {
+                        next_set.push_back(bbs[bb_offset + 1].borrow().label.clone());
+                    }
+                    for i in x {
+                        next_set.push_back(i.clone());
+                        r.push((task.clone(), i));
+                    }
+                } else {
+                    return r;
+                }
+                used_bbs.insert(task);
+            }
+        }
+        return r;
+    }
+}
+
+impl Debug for FunctionDef {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "<Fun {}>", (self.name.0).0)
+    }
+}
+
+impl Display for FunctionDef {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "<Fun {}>", (self.name.0).0)
+    }
+}
+
+#[derive(Clone)]
 pub struct BasicBlockDef {
     pub label: LabelSymbol,
     // pub prev_block: LTMHand<Vec<LTMHand<BasicBlockDef>>>,
@@ -36,9 +84,22 @@ pub struct BasicBlockDef {
     pub terminator: Option<LTMHand<Terminator>>,
 }
 
+impl Debug for BasicBlockDef {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "<BasicBlock {}>", (self.label.0).0)
+    }
+}
+
+impl Display for BasicBlockDef {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "<BasicBlock {}>", (self.label.0).0)
+    }
+}
+
 impl BasicBlockDef {
+    #[instrument(level = "debug")]
     pub fn get_next(&self) -> Option<Vec<LabelSymbol>> {
-        self.terminator.as_ref().map_or(Some(vec![]), |x|
+        let r = self.terminator.as_ref().map_or(Some(vec![]), |x|
             match x.borrow().to_owned() {
                 Terminator::Branch(Branch(_, _, t, e)) =>
                     Some(vec![t, e]),
@@ -53,7 +114,9 @@ impl BasicBlockDef {
                     Some(bs.iter().map(|x| x.1.clone()).collect()),
                 Terminator::Unrechable |
                 Terminator::Ret(_) => None,
-            })
+            });
+            debug!("get_next: {:?}", r);
+            r
     }
 }
 

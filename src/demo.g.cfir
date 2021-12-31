@@ -3,7 +3,11 @@ mod demo114 {
     fn @fn_demo114() -> i32 {
         %x = alloca i32, stack
         %y = alloca i32 <- %x
+        %c = icmp eq %x, %y
+        br if-nil %c? r:, r1:
     r:
         ret %x
+    r1:
+        ret %y
     }
 }

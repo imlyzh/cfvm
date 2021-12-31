@@ -1,12 +1,12 @@
 // use std::collections::BTreeSet;
 
-use crate::cfir::{types::TypeBindAttr, handles::LTMHand};
+use crate::cfir::{types::TypeBindAttr, handles::{LTMHand, SymbolRef}};
 
-use super::{super::{
-    handles::{LabelSymbol, LocalSymbol, SimpleValue, Symbol, SymbolRef},
+use super::super::{
+    handles::{LabelSymbol, LocalSymbol, SimpleValue, Symbol},
     types::{FloatType, IntType, Type},
     // MutHandle,
-}, Value};
+};
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum BranchOp {
@@ -120,7 +120,7 @@ pub enum Instruction {
 }
 
 #[derive(Debug, Clone)]
-pub struct Ret(pub Option<Value>);
+pub struct Ret(pub Option<SymbolRef>);
 
 #[derive(Debug, Clone)]
 pub struct Branch(

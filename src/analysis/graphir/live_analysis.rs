@@ -1,9 +1,12 @@
 use std::collections::{HashMap, VecDeque, HashSet};
 
+use tracing::instrument;
+
 use crate::cfir::{
-    graphir::{BasicBlockDef, FunctionDef, instruction::{Instruction, Operator, BindOperator, Store, Terminator, Conds, Branch, Switch, Ret}, Value},
+    graphir::{BasicBlockDef, FunctionDef},
     handles::{LocalSymbol, LabelSymbol, SymbolRef}
 };
+use crate::cfir::graphir::instruction::{Instruction, Operator, BindOperator, Store, Terminator, Conds, Branch, Switch, Ret};
 
 use super::untils::get_all_veriable;
 
@@ -20,7 +23,9 @@ pub trait LiveAnalysis {
 }
 
 impl RootLiveAnalysis for FunctionDef {
+    #[instrument(level = "debug")]
     fn live_analysis(&self) -> FunLiveVar {
+        // debug!("call FunctionDef::live_analysis");
         let vars: BBSLiveVar =
             get_all_veriable(self)
                 .into_iter()
@@ -42,12 +47,13 @@ impl RootLiveAnalysis for FunctionDef {
 
 }
 
+#[instrument(level = "debug")]
 pub fn once_pass(fun_def: &FunctionDef, mut inp: FunLiveVar) -> FunLiveVar {
-    dbg!("once_pass");
+    // debug!("call once_pass");
     let mapping = fun_def.bbs.borrow().iter().enumerate()
         .map(|(offset, x)| (x.borrow().label.clone(), offset)).collect::<HashMap<_, _>>();
-    let mut next_set: VecDeque<LabelSymbol> = VecDeque::new();
     let mut used_bb: HashSet<LabelSymbol> = HashSet::new();
+    let mut next_set: VecDeque<LabelSymbol> = VecDeque::new();
     next_set.push_back(fun_def.bbs.borrow()[0].borrow().label.clone());
     while !next_set.is_empty() {
         let task = next_set.pop_front().unwrap();
@@ -72,8 +78,9 @@ pub fn once_pass(fun_def: &FunctionDef, mut inp: FunLiveVar) -> FunLiveVar {
 }
 
 impl LiveAnalysis for BasicBlockDef {
+    #[instrument(level = "debug")]
     fn live_analysis(&self, mut record: BBSLiveVar) -> BBSLiveVar {
-        dbg!("live_analysis");
+        // debug!("call BasicBlockDef::live_analysis");
         for i in self.instructions.borrow().iter() {
             use_variable_for_insts(&i.borrow().to_owned(), &mut record);
         }
@@ -84,12 +91,15 @@ impl LiveAnalysis for BasicBlockDef {
     }
 }
 
+#[instrument(level = "debug")]
 pub fn use_variable_for_terminator(ter: &Terminator, record: &mut BBSLiveVar) {
+    // debug!("call use_variable_for_terminator");
     match ter {
         Terminator::Branch(Branch(_, v, _, _)) |
         Terminator::Switch(Switch(v, _)) => use_variable_for_symbolref(&v, record),
         Terminator::Ret(Ret(v)) => {
-            if let Some(Value::Var(v)) = v {
+            // if let Some(Value::Var(v)) = v {
+        if let Some(v) = v {
                 use_variable_for_symbolref(&v, record);
             }
         },
@@ -102,7 +112,9 @@ pub fn use_variable_for_terminator(ter: &Terminator, record: &mut BBSLiveVar) {
     }
 }
 
+#[instrument(level = "debug")]
 pub fn use_variable_for_insts(inst: &Instruction, record: &mut BBSLiveVar) {
+    // debug!("call use_variable_for_insts");
     match inst {
         Instruction::Store(Store(v, v1, _ty)) => {
             record.insert(v.clone(), true);
@@ -115,7 +127,9 @@ pub fn use_variable_for_insts(inst: &Instruction, record: &mut BBSLiveVar) {
     }
 }
 
+#[instrument(level = "debug")]
 pub fn use_variable_for_opers(oper: &Operator, record: &mut BBSLiveVar) {
+    // debug!("call use_variable_for_opers");
     match oper {
         Operator::Alloca(_, _v) => {},
         Operator::GetPtr(v, _)  |
@@ -170,7 +184,9 @@ pub fn use_variable_for_opers(oper: &Operator, record: &mut BBSLiveVar) {
     }
 }
 
+#[instrument(level = "debug")]
 pub fn use_variable_for_symbolref(v: &SymbolRef, record: &mut BBSLiveVar) {
+    // debug!("call use_variable_for_symbolref");
     if let SymbolRef::Local(v) = v {
         record.insert(v.clone(), true);
     }

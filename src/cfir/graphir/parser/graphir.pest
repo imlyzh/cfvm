@@ -316,8 +316,8 @@ sext = { "sext" ~ int_type ~ value }
 ftrunc = { "ftrunc" ~ float_type ~ value }
 fext = { "fext" ~ float_type ~ value }
 
-icmp = { "icmp" ~ icmp_op ~ value ~ "," ~ value }
-fcmp = { "fcmp" ~ fcmp_op ~ value ~ "," ~ value }
+icmp = { "icmp" ~ icmp_op ~ symbol_ref ~ "," ~ symbol_ref }
+fcmp = { "fcmp" ~ fcmp_op ~ symbol_ref ~ "," ~ symbol_ref }
 
 icmp_op =
     { "eq"
@@ -381,11 +381,11 @@ terminator =
     }
 
 ret = {
-    "ret" ~ value?
+    "ret" ~ symbol_ref?
 }
 
 branch = {
-    "br" ~ branch_op ~ value ~ "?" ~ label_symbol ~ "," ~ label_symbol
+    "br" ~ branch_op ~ symbol_ref ~ "?" ~ label_symbol ~ "," ~ label_symbol
 }
 
 branch_op = {
@@ -406,7 +406,7 @@ conds_else_pair = { UNDERLINE ~ ":" ~ label_symbol }
 */
 
 switch = {
-    "switch" ~ value ~ "[" ~ switch_pair ~ ("," ~ switch_pair)* ~ "]"
+    "switch" ~ symbol_ref ~ "[" ~ switch_pair ~ ("," ~ switch_pair)* ~ "]"
 }
 
 switch_pair = { simple_value ~ ":" ~ label_symbol }

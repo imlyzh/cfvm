@@ -11,6 +11,7 @@ use pest::error::Error;
 use pest::iterators::Pair;
 use pest::iterators::Pairs;
 use pest_derive::*;
+use tracing::debug;
 
 use crate::cfir::types::*;
 use crate::cfir::handles::*;
@@ -686,7 +687,7 @@ impl ParseFrom<Rule> for FunctionDef {
 impl ParseFrom<Rule> for Ret {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::ret);
-        let value = pair.into_inner().next().map(Value::parse_from);
+        let value = pair.into_inner().next().map(SymbolRef::parse_from);
         Ret(value)
     }
 }
@@ -1094,7 +1095,7 @@ impl ParseFrom<Rule> for Module<FunctionDef> {
         let mut function_decls: HashMap<DefineSymbol, FunDecl> = Default::default();
 
         for pair in bodys {
-            match dbg!(pair.as_rule()) {
+            match pair.as_rule() {
                 Rule::type_def => {
                     let type_def = TypeDef::parse_from(pair);
                     let name = type_def.name.clone();

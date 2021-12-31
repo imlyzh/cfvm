@@ -11,15 +11,13 @@ use crate::cfir::{
 #[derive(Debug, Clone, Default)]
 pub struct Context<'a> {
     pub local: LocalContext<'a>,
-    pub module: ModuleContext,
-    pub global: GlobalContext,
+    pub global: ModuleContext,
 }
 
 impl<'a, 'b: 'a> Context<'a> {
     pub fn new_level(&'a self) -> Self {
         Self {
             local: self.local.new_level(),
-            module: self.module.clone(),
             global: self.global.clone(),
         }
     }
@@ -51,19 +49,14 @@ impl<'a> Context<'a> {
         self.local.local_vars.as_ref().borrow().get(name).cloned()
     }
     pub fn get_global(&self, name: &GlobalSymbol) -> Option<Literal> {
-        let record = self.global.modules.as_ref().read().unwrap();
-        let module = if let Some(module) = &name.0 {
-            record.get(module)?
-        } else {
-            &self.module
-        };
-        if let Some(x) = module.functions.as_ref().borrow().read().unwrap().get(&name.1).cloned() {
+        let global = &self.global;
+        if let Some(x) = global.functions.as_ref().borrow().read().unwrap().get(&name.0).cloned() {
             return Some(Literal::Fun(x));
         }
-        if let Some(x) = module.constant.as_ref().borrow().read().unwrap().get(&name.1).cloned() {
+        if let Some(x) = global.constant.as_ref().borrow().read().unwrap().get(&name.0).cloned() {
             return Some(x);
         }
-        if let Some((_ty, value)) = module.vars.as_ref().borrow().read().unwrap().get(&name.1).cloned() {
+        if let Some((_ty, value)) = global.vars.as_ref().borrow().read().unwrap().get(&name.0).cloned() {
             return value;
         }
         None

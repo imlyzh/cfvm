@@ -85,12 +85,7 @@ impl ParseFrom<Rule> for TypeSymbol {
         debug_assert_eq!(pair.as_rule(), Rule::type_symbol);
         let mut pairs = pair.into_inner();
         let sym = TypeDefineSymbol::parse_from(pairs.next().unwrap());
-        if let Some(x) = pairs.next() {
-            let namespace = x.as_str().to_string();
-            TypeSymbol(Some(Symbol(Handle::new(namespace))), sym)
-        } else {
-            TypeSymbol(None, sym)
-        }
+        TypeSymbol(sym)
         // fixme: register in global intern string pool
     }
 }
@@ -117,12 +112,7 @@ impl ParseFrom<Rule> for GlobalSymbol {
         debug_assert_eq!(pair.as_rule(), Rule::global_symbol);
         let mut pairs = pair.into_inner();
         let sym = DefineSymbol::parse_from(pairs.next().unwrap());
-        if let Some(x) = pairs.next() {
-            let namespace = x.as_str().to_string();
-            GlobalSymbol(Some(Symbol(Handle::new(namespace))), sym)
-        } else {
-            GlobalSymbol(None, sym)
-        }
+        GlobalSymbol(sym)
         // fixme: register in global intern string pool
     }
 }

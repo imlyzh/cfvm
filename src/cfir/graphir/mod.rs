@@ -23,41 +23,31 @@ use super::{
 pub type GraphModule = Env<FunctionDef>;
 
 impl GraphModule {
-    pub fn make_call_graph(&self) -> Vec<(DefineSymbol, SymbolRef)> {
+    /// make_call_graph
+    /// Low accuracy call graph(Does not include indirect calls).
+    pub fn make_call_graph(&self) -> Vec<(GlobalSymbol, SymbolRef)> {
         let root = self.function_defs
             .iter()
             .filter(|(_, f)| f.function_attr.is_extern.0)
-            .map(|(k, _)| k.clone());
-        let mut used_bbs: HashSet<DefineSymbol> = HashSet::new();
-        let mut next_set: VecDeque<DefineSymbol> = VecDeque::new();
-        // let mut _r = Vec::new();
+            .map(|(k, _)| GlobalSymbol(k.clone()));
+        let mut used_fns: HashSet<GlobalSymbol> = HashSet::new();
+        let mut next_set: VecDeque<GlobalSymbol> = VecDeque::new();
+        let mut r = Vec::new();
         next_set.extend(root);
         while !next_set.is_empty() {
             let task = next_set.pop_front().unwrap();
-            if !used_bbs.contains(&task) {
-                // let bb = self.function_defs.task;
-                /*
-                if let Some(x) = bb.borrow().get_next() {
-                    if x.is_empty() && bb_offset + 1 < bbs.len() {
-                        let target = bbs[bb_offset + 1].borrow().label.clone();
-                        next_set.push_back(target.clone());
-                        r.push((task.clone(), target));
-                    } else {
-                        for i in x {
-                            next_set.push_back(i.clone());
-                            r.push((task.clone(), i));
-                        }
+            if !used_fns.contains(&task) {
+                let fun = self.function_defs.get(&task.0).unwrap();
+                for i in fun.get_call_targets() {
+                    r.push((task.clone(), i.clone()));
+                    if let SymbolRef::Global(x) = i {
+                        next_set.push_back(x);
                     }
-                } else {
-                    return r;
                 }
-                used_bbs.insert(task);
-                 */
-                todo!()
+                used_fns.insert(task);
             }
         }
-        todo!();
-        // return r;
+        return r;
     }
 }
 
@@ -104,7 +94,7 @@ impl FunctionDef {
         return r;
     }
 
-    pub fn make_call_target(&self) -> HashSet<SymbolRef> {
+    pub fn get_call_targets(&self) -> HashSet<SymbolRef> {
         let bbs: &Vec<_> = &self.bbs.borrow();
         bbs.iter()
             .flat_map(|x| x.borrow().get_call_targets())

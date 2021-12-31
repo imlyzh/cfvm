@@ -9,28 +9,21 @@ pub type MutHandle<T> = Arc<RwLock<T>>;
 pub type LTMHand<T> = RefCell<T>;
 
 #[derive(Debug, Hash, Clone, Eq, PartialEq, PartialOrd)]
-pub struct GlobalSymbol(pub Option<Symbol>, pub DefineSymbol);
+pub struct GlobalSymbol(pub DefineSymbol);
 
 impl Display for GlobalSymbol {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if let Some(x) = &self.0 {
-            write!(f, "{}.{}", x, self.1)
-        } else {
-            write!(f, "{}", self.1)
-        }
+        write!(f, "{}", self.0)
     }
 }
 
+
 #[derive(Debug, Hash, Clone, Eq, PartialEq, PartialOrd)]
-pub struct TypeSymbol(pub Option<Symbol>, pub TypeDefineSymbol);
+pub struct TypeSymbol(pub TypeDefineSymbol);
 
 impl Display for TypeSymbol {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if let Some(x) = &self.0 {
-            write!(f, "{}.{}", x, self.1)
-        } else {
-            write!(f, "{}", self.1)
-        }
+        write!(f, "{}", self.0)
     }
 }
 

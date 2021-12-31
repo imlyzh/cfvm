@@ -421,7 +421,10 @@ switch_pair = { simple_value ~ ":" ~ label_symbol }
 
 unrechable = { "unrechable" }
 
-global_symbol = ${ (symbol ~ ".")? ~ global_define_symbol }
+global_symbol = ${
+    // (symbol ~ ".")? ~
+    global_define_symbol
+    }
 
 global_define_symbol = ${ "@" ~ symbol }
 
@@ -442,7 +445,8 @@ symbol = $
 }
 
 type_symbol = ${
-    (symbol ~ ".")? ~ type_define_symbol
+    // (symbol ~ ".")? ~
+    type_define_symbol
 }
 
 type_define_symbol = $

@@ -1,5 +1,4 @@
 use std::collections::BTreeSet;
-use std::collections::HashMap;
 
 use pest::Parser;
 use pest::error::Error;
@@ -35,6 +34,7 @@ impl ParseFrom<Rule> for IsExtern {
     }
 }
 
+/*
 impl ParseFrom<Rule> for IsPublic {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::is_pub);
@@ -45,6 +45,7 @@ impl ParseFrom<Rule> for IsPublic {
         }
     }
 }
+ */
 
 #[inline]
 fn option_inline_type_parse_from(pair: Pair<Rule>) -> Option<InlineType> {
@@ -526,11 +527,11 @@ impl ParseFrom<Rule> for TypeDef {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::type_def);
         let mut pairs = pair.into_inner();
-        let is_pub = IsPublic::parse_from(pairs.next().unwrap());
+        // let is_pub = IsPublic::parse_from(pairs.next().unwrap());
         let name = TypeDefineSymbol::parse_from(pairs.next().unwrap());
         let type_ = Type::parse_from(pairs.next().unwrap());
         TypeDef {
-            is_pub,
+            // is_pub,
             name,
             type_,
         }
@@ -541,12 +542,12 @@ impl ParseFrom<Rule> for ConstantDef {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::constant_def);
         let mut pairs = pair.into_inner();
-        let is_pub = IsPublic::parse_from(pairs.next().unwrap());
+        // let is_pub = IsPublic::parse_from(pairs.next().unwrap());
         let name = DefineSymbol::parse_from(pairs.next().unwrap());
         let type_ = TypeSymbol::parse_from(pairs.next().unwrap());
         let value = ConstantValue::parse_from(pairs.next().unwrap());
         ConstantDef {
-            is_pub,
+            // is_pub,
             name,
             type_,
             value,
@@ -558,12 +559,12 @@ impl ParseFrom<Rule> for VariableDef {
     fn parse_from(pair: Pair<Rule>) -> Self {
         debug_assert_eq!(pair.as_rule(), Rule::variable_def);
         let mut pairs = pair.into_inner();
-        let is_pub = IsPublic::parse_from(pairs.next().unwrap());
+        // let is_pub = IsPublic::parse_from(pairs.next().unwrap());
         let name = DefineSymbol::parse_from(pairs.next().unwrap());
         let type_ = TypeSymbol::parse_from(pairs.next().unwrap());
         let value = pairs.next().map(ConstantValue::parse_from);
         VariableDef {
-            is_pub,
+            // is_pub,
             name,
             type_,
             value,
@@ -589,11 +590,11 @@ impl ParseFrom<Rule> for FunctionAttr {
         debug_assert_eq!(pair.as_rule(), Rule::function_attr);
         let mut pairs = pair.into_inner();
         let is_extern = IsExtern::parse_from(pairs.next().unwrap());
-        let is_public = IsPublic::parse_from(pairs.next().unwrap());
+        // let is_public = IsPublic::parse_from(pairs.next().unwrap());
         let is_inline = option_inline_type_parse_from(pairs.next().unwrap());
         FunctionAttr {
             is_extern,
-            is_public,
+            // is_public,
             is_inline,
         }
     }
@@ -785,66 +786,67 @@ impl ParseFrom<Rule> for Call {
 
 // module pars
 
-impl ParseFrom<Rule> for Module<NamedFun> {
-    fn parse_from(pair: Pair<Rule>) -> Self {
-        debug_assert_eq!(pair.as_rule(), Rule::module);
-        let mut pairs = pair.into_inner();
-        let name = Symbol::parse_from(pairs.next().unwrap());
-        let bodys = pairs.next().unwrap().into_inner();
+fn env_parse_from(pair: Pair<Rule>, record: &mut Env<NamedFun>) {
+    debug_assert_eq!(pair.as_rule(), Rule::top_level);
+    let pair = pair.into_inner().next().unwrap();
 
-        let mut type_defs: HashMap<TypeDefineSymbol, TypeDef> = Default::default();
-        let mut constant_defs: HashMap<DefineSymbol, ConstantDef> = Default::default();
-        let mut variable_defs: HashMap<DefineSymbol, VariableDef> = Default::default();
-        let mut function_defs: HashMap<DefineSymbol, NamedFun> = Default::default();
-        let mut function_decls: HashMap<DefineSymbol, FunDecl> = Default::default();
+    let type_defs = &mut record.type_defs;
+    let constant_defs = &mut record.constant_defs;
+    let variable_defs = &mut record.variable_defs;
+    let function_defs = &mut record.function_defs;
+    let function_decls = &mut record.function_decls;
 
-        for pair in bodys {
-            match dbg!(pair.as_rule()) {
-                Rule::type_def => {
-                    let type_def = TypeDef::parse_from(pair);
-                    let name = type_def.name.clone();
-                    type_defs.insert(name, type_def);
-                }
-                Rule::constant_def => {
-                    let constant_def = ConstantDef::parse_from(pair);
-                    let name = constant_def.name.clone();
-                    constant_defs.insert(name, constant_def);
-                }
-                Rule::variable_def => {
-                    let variable_def = VariableDef::parse_from(pair);
-                    let name = variable_def.name.clone();
-                    variable_defs.insert(name, variable_def);
-                }
-                Rule::function_def => {
-                    let function_def = NamedFun::parse_from(pair);
-                    let name = function_def.name.clone();
-                    function_defs.insert(name, function_def);
-                }
-                Rule::function_decl => {
-                    let function_decl = FunDecl::parse_from(pair);
-                    let name = function_decl.name.clone();
-                    function_decls.insert(name, function_decl);
-                }
-                _ => unreachable!(),
+    match dbg!(pair.as_rule()) {
+        Rule::type_def => {
+            let type_def = TypeDef::parse_from(pair);
+            let name = type_def.name.clone();
+            if type_defs.contains_key(&name) {
+                panic!("duplicate type def: {}", name);
             }
+            type_defs.insert(name, type_def);
         }
-        Module {
-            name,
-            type_defs,
-            constant_defs,
-            variable_defs,
-            function_defs,
-            function_decls,
+        Rule::constant_def => {
+            let constant_def = ConstantDef::parse_from(pair);
+            let name = constant_def.name.clone();
+            if constant_defs.contains_key(&name) {
+                panic!("duplicate constant def: {}", name);
+            }
+            constant_defs.insert(name, constant_def);
         }
+        Rule::variable_def => {
+            let variable_def = VariableDef::parse_from(pair);
+            let name = variable_def.name.clone();
+            if variable_defs.contains_key(&name) {
+                panic!("duplicate variable def: {}", name);
+            }
+            variable_defs.insert(name, variable_def);
+        }
+        Rule::function_def => {
+            let function_def = NamedFun::parse_from(pair);
+            let name = function_def.name.clone();
+            if function_defs.contains_key(&name) {
+                panic!("duplicate function def: {}", name);
+            }
+            function_defs.insert(name, function_def);
+        }
+        Rule::function_decl => {
+            let function_decl = FunDecl::parse_from(pair);
+            let name = function_decl.name.clone();
+            if function_decls.contains_key(&name) {
+                panic!("duplicate function decl: {}", name);
+            }
+            function_decls.insert(name, function_decl);
+        }
+        _ => unreachable!(),
     }
 }
 
-pub fn file_parse(input: &str) -> Result<Vec<Module<NamedFun>>, Error<Rule>> {
+pub fn file_parse(input: &str, record: &mut Env<NamedFun>) -> Result<(), Error<Rule>> {
     let mut p = RICHIR::parse(Rule::file, input)?;
-    let r = p.next().unwrap()
+    for i in p.next().unwrap()
         .into_inner()
-        .filter(|x| x.as_rule() == Rule::module)
-        .map(Module::parse_from)
-        .collect();
-    Ok(r)
+        .filter(|x| x.as_rule() == Rule::top_level) {
+        env_parse_from(i, record);
+    }
+    Ok(())
 }

@@ -302,6 +302,6 @@ pub enum InlineType {
 #[derive(Debug, Clone, PartialEq)]
 pub struct FunctionAttr {
     pub is_extern: IsExtern,
-    pub is_public: IsPublic,
+    // pub is_public: IsPublic,
     pub is_inline: Option<InlineType>,
 }

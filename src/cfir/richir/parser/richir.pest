@@ -1,8 +1,6 @@
-file = { (!EOI ~ module)* ~ EOI }
+file = { (!EOI ~ top_level)* ~ EOI }
 
-module = { "mod" ~ symbol ~ "{" ~ module_body* ~ "}" }
-
-module_body =
+top_level =
     { function_def
     | function_decl
     | type_def
@@ -11,15 +9,18 @@ module_body =
     }
 
 type_def = {
-    is_pub ~ type_define_symbol ~ "=" ~ type_value ~ ";"
+    // is_pub ~
+    type_define_symbol ~ "=" ~ type_value ~ ";"
 }
 
 constant_def = {
-    is_pub ~ "const" ~ global_define_symbol ~ ":" ~ type_value ~ "=" ~ constant_value ~ ";"
+    // is_pub ~
+    "const" ~ global_define_symbol ~ ":" ~ type_value ~ "=" ~ constant_value ~ ";"
 }
 
 variable_def = {
-    is_pub ~ "var" ~ global_define_symbol ~ ":" ~ type_value ~ ("=" ~ constant_value)? ~ ";"
+    // is_pub ~
+    "var" ~ global_define_symbol ~ ":" ~ type_value ~ ("=" ~ constant_value)? ~ ";"
 }
 
 constant_value =
@@ -57,11 +58,15 @@ function_decl = {
     "import" ~ "fn" ~ global_define_symbol ~ function_type ~ ";"
 }
 
-function_attr = { is_extern ~ is_pub ~ is_inline }
+function_attr = {
+    is_extern ~
+    // is_pub ~
+    is_inline
+    }
 
 is_extern = { "extern"? }
 
-is_pub = { "pub"? }
+// is_pub = { "pub"? }
 
 is_inline = { ("inline" | "const")? }
 

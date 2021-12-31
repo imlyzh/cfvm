@@ -2,10 +2,10 @@ pub mod parser;
 
 use std::sync::Arc;
 
-use super::{handles::{ConstantValue, LocalSymbol, SymbolRef, DefineSymbol}, types::{TypeBindAttr, FunctionAttr, FunctionType, StoreType}, base::Module};
+use super::{handles::{ConstantValue, LocalSymbol, SymbolRef, DefineSymbol}, types::{TypeBindAttr, FunctionAttr, FunctionType, StoreType}, base::Env};
 
 
-pub type RichModule = Module<NamedFun>;
+pub type RichModule = Env<NamedFun>;
 
 
 #[derive(Debug, Clone, PartialEq)]

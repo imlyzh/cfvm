@@ -11,16 +11,16 @@ use self::instruction::{Instruction, Terminator, Branch, Conds, Switch};
 use super::{
     base::{
         // ConstantDef, VariableDef, TypeDef,
-        Module
+        Env
     },
     types::{
         Type, FunctionType, PointerType, FirstClassType, SimpleType, GetType,
         FunctionAttr
     },
-    handles::{DefineSymbol, LabelSymbol, ConstantValue, SymbolRef, LTMHand, GlobalSymbol}
+    handles::{DefineSymbol, LabelSymbol, ConstantValue, SymbolRef, LTMHand}
 };
 
-pub type GraphModule = Module<FunctionDef>;
+pub type GraphModule = Env<FunctionDef>;
 
 impl GraphModule {
     pub fn make_call_graph(&self) -> Vec<(DefineSymbol, SymbolRef)> {
@@ -30,7 +30,7 @@ impl GraphModule {
             .map(|(k, _)| k.clone());
         let mut used_bbs: HashSet<DefineSymbol> = HashSet::new();
         let mut next_set: VecDeque<DefineSymbol> = VecDeque::new();
-        let mut r = Vec::new();
+        // let mut _r = Vec::new();
         next_set.extend(root);
         while !next_set.is_empty() {
             let task = next_set.pop_front().unwrap();
@@ -56,8 +56,8 @@ impl GraphModule {
                 todo!()
             }
         }
-        return r;
-        todo!()
+        todo!();
+        // return r;
     }
 }
 

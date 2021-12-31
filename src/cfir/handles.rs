@@ -1,4 +1,4 @@
-use std::{sync::{Arc, RwLock}, cell::RefCell};
+use std::{sync::{Arc, RwLock}, cell::RefCell, fmt::Display};
 
 use super::types::Type;
 
@@ -11,11 +11,37 @@ pub type LTMHand<T> = RefCell<T>;
 #[derive(Debug, Hash, Clone, Eq, PartialEq, PartialOrd)]
 pub struct GlobalSymbol(pub Option<Symbol>, pub DefineSymbol);
 
+impl Display for GlobalSymbol {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if let Some(x) = &self.0 {
+            write!(f, "{}.{}", x, self.1)
+        } else {
+            write!(f, "{}", self.1)
+        }
+    }
+}
+
 #[derive(Debug, Hash, Clone, Eq, PartialEq, PartialOrd)]
 pub struct TypeSymbol(pub Option<Symbol>, pub TypeDefineSymbol);
 
+impl Display for TypeSymbol {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if let Some(x) = &self.0 {
+            write!(f, "{}.{}", x, self.1)
+        } else {
+            write!(f, "{}", self.1)
+        }
+    }
+}
+
 #[derive(Debug, Hash, Clone, Eq, PartialEq, PartialOrd)]
 pub struct Symbol(pub Handle<String>); // record line key, type name, etc.
+
+impl Display for Symbol {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
 
 impl Symbol {
     pub fn new(s: String) -> Self {
@@ -28,14 +54,38 @@ impl Symbol {
 #[derive(Debug, Hash, Clone, Eq, PartialEq, PartialOrd)]
 pub struct DefineSymbol(pub Symbol);
 
+impl Display for DefineSymbol {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "@{}", self.0)
+    }
+}
+
 #[derive(Debug, Hash, Clone, Eq, PartialEq, PartialOrd)]
 pub struct LocalSymbol(pub Symbol);
+
+impl Display for LocalSymbol {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "%{}", self.0)
+    }
+}
 
 #[derive(Debug, Hash, Clone, Eq, PartialEq, PartialOrd)]
 pub struct LabelSymbol(pub Symbol);
 
+impl Display for LabelSymbol {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
 #[derive(Debug, Hash, Clone, Eq, PartialEq, PartialOrd)]
 pub struct TypeDefineSymbol(pub Handle<String>);
+
+impl Display for TypeDefineSymbol {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "type {}", self.0)
+    }
+}
 
 #[derive(Debug, Hash, Clone, Eq, PartialEq, PartialOrd)]
 pub enum SymbolRef {

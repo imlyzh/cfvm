@@ -2,6 +2,7 @@ mod cfir;
 mod pass;
 mod analysis;
 mod codegen;
+use cfir::base::Env;
 use tracing::Level;
 use tracing_subscriber::FmtSubscriber;
 
@@ -29,36 +30,36 @@ fn log_init(l: Level) {
 }
 
 fn control_flow_graph() {
-    let r = gparse(include_str!("./demo.g.cfir")).unwrap();
-    for r in r {
-        for (_, fun) in &r.function_defs {
-            for (source, target) in fun.make_control_flow_graph() {
-                println!("{} -> {}", (source.0).0.as_str(), (target.0).0.as_str());
-            }
+    let mut env = Env::new();
+    gparse(include_str!("./demo.g.cfir"), &mut env).unwrap();
+    for (_, fun) in &env.function_defs {
+        for (source, target) in fun.make_control_flow_graph() {
+            println!("{} -> {}", (source.0).0.as_str(), (target.0).0.as_str());
         }
     }
 }
 
 fn test_live_ana() {
-    let r = gparse(include_str!("./demo.g.cfir")).unwrap();
-    for r in r {
-        for (_, fun) in &r.function_defs {
-            for (label, used) in fun.live_analysis() {
-                println!("{}:\n", (label.0).0.as_str());
-                for (v, used) in used {
-                    println!("\t{}: {}", (v.0).0.as_str(), used);
-                }
+    let mut env = Env::new();
+    gparse(include_str!("./demo.g.cfir"), &mut env).unwrap();
+    for (_, fun) in &env.function_defs {
+        for (label, used) in fun.live_analysis() {
+            println!("{}:\n", (label.0).0.as_str());
+            for (v, used) in used {
+                println!("\t{}: {}", (v.0).0.as_str(), used);
             }
         }
     }
 }
 
 fn test_parse_richir() {
-    let r = rparse(include_str!("./demo.r.cfir"));
-    println!("{:?}", r);
+    let mut env = Env::new();
+    rparse(include_str!("./demo.r.cfir"), &mut env);
+    println!("{:?}", env);
 }
 
 fn test_parse_graphir() {
-    let r = gparse(include_str!("./demo.g.cfir"));
-    println!("{:?}", r);
+    let mut env = Env::new();
+    gparse(include_str!("./demo.g.cfir"), &mut env).unwrap();
+    println!("{:?}", env);
 }

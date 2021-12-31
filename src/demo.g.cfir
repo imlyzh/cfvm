@@ -4,10 +4,9 @@ mod demo114 {
         %x = alloca i32, stack
         %y = alloca i32 <- %x
         %c = icmp eq %x, %y
-        br if-nil %c? r:, r1:
+    back:
+        br if-nil %c? r:, back:
     r:
         ret %x
-    r1:
-        ret %y
     }
 }

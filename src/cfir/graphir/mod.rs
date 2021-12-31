@@ -47,11 +47,14 @@ impl FunctionDef {
                 let bb = &bbs[*bb_offset];
                 if let Some(x) = bb.borrow().get_next() {
                     if x.is_empty() && bb_offset + 1 < bbs.len() {
-                        next_set.push_back(bbs[bb_offset + 1].borrow().label.clone());
-                    }
-                    for i in x {
-                        next_set.push_back(i.clone());
-                        r.push((task.clone(), i));
+                        let target = bbs[bb_offset + 1].borrow().label.clone();
+                        next_set.push_back(target.clone());
+                        r.push((task.clone(), target));
+                    } else {
+                        for i in x {
+                            next_set.push_back(i.clone());
+                            r.push((task.clone(), i));
+                        }
                     }
                 } else {
                     return r;

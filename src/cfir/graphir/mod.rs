@@ -47,7 +47,7 @@ impl GraphModule {
                 used_fns.insert(task);
             }
         }
-        return r;
+        r
     }
 }
 
@@ -91,7 +91,7 @@ impl FunctionDef {
                 used_bbs.insert(task);
             }
         }
-        return r;
+        r
     }
 
     pub fn get_call_targets(&self) -> HashSet<SymbolRef> {

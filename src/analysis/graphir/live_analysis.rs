@@ -96,16 +96,16 @@ pub fn use_variable_for_terminator(ter: &Terminator, record: &mut BBSLiveVar) {
     // debug!("call use_variable_for_terminator");
     match ter {
         Terminator::Branch(Branch(_, v, _, _)) |
-        Terminator::Switch(Switch(v, _)) => use_variable_for_symbolref(&v, record),
+        Terminator::Switch(Switch(v, _)) => use_variable_for_symbolref(v, record),
         Terminator::Ret(Ret(v)) => {
             // if let Some(Value::Var(v)) = v {
         if let Some(v) = v {
-                use_variable_for_symbolref(&v, record);
+                use_variable_for_symbolref(v, record);
             }
         },
         Terminator::Conds(Conds(cs, _)) => {
             for (v, _) in cs {
-                use_variable_for_symbolref(&v, record);
+                use_variable_for_symbolref(v, record);
             }
         },
         Terminator::Unrechable => {},

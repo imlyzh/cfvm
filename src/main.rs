@@ -32,7 +32,7 @@ fn log_init(l: Level) {
 fn control_flow_graph() {
     let mut env = Env::new();
     gparse(include_str!("./demo.g.cfir"), &mut env).unwrap();
-    for (_, fun) in &env.function_defs {
+    for fun in env.function_defs.values() {
         for (source, target) in fun.make_control_flow_graph() {
             println!("{} -> {}", (source.0).0.as_str(), (target.0).0.as_str());
         }
@@ -42,7 +42,7 @@ fn control_flow_graph() {
 fn test_live_ana() {
     let mut env = Env::new();
     gparse(include_str!("./demo.g.cfir"), &mut env).unwrap();
-    for (_, fun) in &env.function_defs {
+    for fun in env.function_defs.values() {
         for (label, used) in fun.live_analysis() {
             println!("{}:\n", (label.0).0.as_str());
             for (v, used) in used {

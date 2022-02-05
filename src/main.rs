@@ -52,9 +52,10 @@ fn test_live_ana() {
     }
 }
 
+/*
 fn test_parse_richir() {
     let mut env = Env::new();
-    rparse(include_str!("./demo.r.cfir"), &mut env);
+    rparse(include_str!("./demo.r.cfir"), &mut env).unwrap();
     println!("{:?}", env);
 }
 
@@ -63,3 +64,4 @@ fn test_parse_graphir() {
     gparse(include_str!("./demo.g.cfir"), &mut env).unwrap();
     println!("{:?}", env);
 }
+ */

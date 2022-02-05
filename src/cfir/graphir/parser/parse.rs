@@ -11,6 +11,9 @@ use pest::iterators::Pair;
 use pest::iterators::Pairs;
 use pest_derive::*;
 
+use crate::cfir::linearir::BranchOp;
+use crate::cfir::linearir::FCmpOp;
+use crate::cfir::linearir::ICmpOp;
 use crate::cfir::types::*;
 use crate::cfir::handles::*;
 use crate::cfir::base::*;
@@ -857,11 +860,13 @@ fn phi_pair_parse_from(pair: Pair<Rule>) -> (LabelSymbol, SymbolRef) {
     (label, value)
 }
 
+/*
 #[inline]
 fn alloca_type_opt_parse_from(pair: Pair<Rule>) -> Option<AllocaType> {
     debug_assert_eq!(pair.as_rule(), Rule::alloca_type_opt);
     pair.into_inner().next().map(AllocaType::parse_from)
 }
+ */
 
 impl ParseFrom<Rule> for Operator {
     fn parse_from(pair: Pair<Rule>) -> Self {

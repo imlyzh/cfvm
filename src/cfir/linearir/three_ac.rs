@@ -1,28 +1,16 @@
-// use std::collections::BTreeSet;
 
-use crate::cfir::{types::TypeBindAttr, handles::{LTMHand, SymbolRef}, linearir::{ICmpOp, FCmpOp, BranchOp}};
 
-use super::super::{
-    handles::{LabelSymbol, LocalSymbol, SimpleValue, Symbol},
+use crate::cfir::{types::TypeBindAttr, handles::{SymbolRef, LTMHand, SimpleValue}, linearir::{IndexList, ICmpOp, FCmpOp}};
+
+use super::{super::{
+    handles::{LabelSymbol},
     types::{FloatType, IntType, Type},
     // MutHandle,
-};
-
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub enum Index {
-    Index(u64),
-    Symbol(Symbol),
-}
-
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub struct IndexList(pub Vec<Index>);
+}, BranchOp};
 
 #[derive(Debug, Clone)]
 pub enum Operator {
-    Alloca(
-        // TypeSymbol, Option<AllocaType>,
-        TypeBindAttr,
-        Option<SymbolRef>),
+    Const(TypeBindAttr, SimpleValue),
     GetPtr(SymbolRef, Option<IndexList>),
     Load(Type, SymbolRef),
     Cast(Type, SymbolRef),
@@ -45,8 +33,6 @@ pub enum Operator {
     Xor(SymbolRef, SymbolRef),
     GetValue(SymbolRef, IndexList),
     GetItem(SymbolRef, SymbolRef),
-    SetValue(SymbolRef, IndexList, SymbolRef),
-    SetItem(SymbolRef, SymbolRef, SymbolRef),
     Trunc(SymbolRef, IntType),
     ZExt(SymbolRef, IntType),
     SExt(SymbolRef, IntType),
@@ -54,20 +40,19 @@ pub enum Operator {
     FExt(SymbolRef, FloatType),
     ICmp(ICmpOp, SymbolRef, SymbolRef),
     FCmp(FCmpOp, SymbolRef, SymbolRef),
-    Phi(Vec<(LabelSymbol, SymbolRef)>),
     Call(SymbolRef, Vec<SymbolRef>),
 }
 
 #[derive(Debug, Clone)]
-pub struct Store(
-    pub LocalSymbol,
-    pub SymbolRef,
-    pub TypeBindAttr,
-);
+pub enum Store {
+    Store(LabelSymbol, SymbolRef, TypeBindAttr),
+    SetValue(SymbolRef, IndexList, SymbolRef),
+    SetItem(SymbolRef, SymbolRef, SymbolRef),
+}
 
 #[derive(Debug, Clone)]
 pub struct BindOperator(
-    pub LocalSymbol,
+    pub LabelSymbol,
     pub LTMHand<Operator>,
     // pub TypeBindAttr,
 );
@@ -91,16 +76,11 @@ pub struct Branch(
 );
 
 #[derive(Debug, Clone)]
-pub struct Conds(pub Vec<(SymbolRef, LabelSymbol)>, pub Option<LabelSymbol>);
-
-#[derive(Debug, Clone)]
-pub struct Switch(pub SymbolRef, pub Vec<(SimpleValue, LabelSymbol)>);
-
-#[derive(Debug, Clone)]
 pub enum Terminator {
     Ret(Ret),
     Branch(Branch),
-    Conds(Conds),
-    Switch(Switch),
+    Jump(LabelSymbol),
+    Jump2value(SymbolRef),
     Unrechable,
 }
+

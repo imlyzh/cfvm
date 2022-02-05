@@ -85,8 +85,6 @@ impl FunctionDef {
                             r.push((task.clone(), i));
                         }
                     }
-                } else {
-                    return r;
                 }
                 used_bbs.insert(task);
             }

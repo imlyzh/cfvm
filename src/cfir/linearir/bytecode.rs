@@ -1,17 +1,21 @@
 
-use crate::cfir::{types::TypeBindAttr, handles::{SymbolRef, SimpleValue}, linearir::{IndexList, ICmpOp, FCmpOp}};
+use crate::cfir::{types::TypeBindAttr, handles::{SymbolRef, SimpleValue, GlobalSymbol, LocalSymbol}, linearir::{IndexList, ICmpOp, FCmpOp}};
 
 use super::{super::{
     types::{FloatType, IntType, Type},
     // MutHandle,
-}};
+}, Index};
 
-
-enum Bytecode {
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Bytecode {
     Const(TypeBindAttr, SimpleValue),
-    GetPtr(Option<IndexList>),
-    Load(Type, SymbolRef),
-    Cast(Type, SymbolRef),
+    GetPtr(Option<Index>),
+    Load(Type, usize),
+    LoadStructRef(Type, usize),
+    LoadGlobal(Type, usize),
+    Cast(Type),
+    // StackAlloc(Type),
+    // HeapAlloc(Type),
     Add,
     FAdd,
     Sub,
@@ -29,9 +33,9 @@ enum Bytecode {
     And,
     Or,
     Xor,
-    GetValue(IndexList),
+    GetValue(Index),
     GetItem,
-    SetValue(IndexList),
+    SetValue(Index),
     SetItem,
     Trunc(IntType),
     ZExt(IntType),

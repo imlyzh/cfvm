@@ -1,15 +1,18 @@
-mod cfir;
-mod pass;
-mod analysis;
-mod codegen;
-use cfir::base::Env;
+// mod mc;
+// mod isa;
+// mod cfir;
+// mod pass;
+// mod analysis;
+// mod codegen;
+use libcfvm::cfir::base::Env;
+
+// use libcfvm::cfir::richir::parser::parse::file_parse as rparse;
+use libcfvm::cfir::graphir::parser::parse::file_parse as gparse;
+
+use libcfvm::analysis::graphir::live_analysis::RootLiveAnalysis;
+
 use tracing::Level;
 use tracing_subscriber::FmtSubscriber;
-
-use cfir::richir::parser::parse::file_parse as rparse;
-use cfir::graphir::parser::parse::file_parse as gparse;
-
-use crate::analysis::graphir::live_analysis::RootLiveAnalysis;
 
 fn main() {
     log_init(Level::DEBUG);

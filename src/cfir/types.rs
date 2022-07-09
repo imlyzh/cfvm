@@ -26,6 +26,7 @@ pub enum SimpleType {
     Int(IntType),
     Float(FloatType),
     Pointer(PointerType),
+    Reference(PointerType),
     Vector(VectorType),
 }
 
@@ -227,7 +228,7 @@ impl GetSize for SimpleType {
         match self {
             SimpleType::Int(t) => t.get_size(platform_size),
             SimpleType::Float(t) => t.get_size(platform_size),
-            SimpleType::Pointer(_) => Some(size_align(
+            SimpleType::Pointer(_) | SimpleType::Reference(_) => Some(size_align(
                 platform_size.ptr_size,
                 platform_size.aligned_size
             ) as u64),

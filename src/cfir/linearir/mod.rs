@@ -1,8 +1,46 @@
-use super::handles::Symbol;
+use self::bytecode::Bytecode;
+
+use super::{handles::{Symbol, LocalSymbol, GlobalSymbol}, types::{Type, TypeBindAttr}};
 
 pub mod three_ac;
 pub mod two_ac;
 pub mod bytecode;
+
+
+#[derive(Debug, Clone)]
+pub struct FunctionHeader {
+    pub name: GlobalSymbol,
+    pub arguments: Vec<(LocalSymbol, TypeBindAttr)>,
+}
+
+#[derive(Debug, Clone)]
+pub struct FunctionInfo {
+    pub header: FunctionHeader,
+    pub local_variable: Vec<(LocalSymbol, TypeBindAttr)>,
+    pub local_structs: Vec<(LocalSymbol, Type)>,
+    // pub bodys: Vec<Bytecode>,
+    pub basicblocks: Vec<BasicBlock>,
+}
+
+/*
+impl FunctionInfo {
+    pub fn gen_layout(&self) -> FunctionDataLayout {
+
+    }
+}
+ */
+
+#[derive(Debug, Clone)]
+pub struct FunctionDataLayout {
+
+}
+
+
+#[derive(Debug, Clone)]
+pub struct BasicBlock {
+    pub label: Option<Symbol>,
+    pub bodys: Vec<Bytecode>,
+}
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum BranchOp {
@@ -46,7 +84,7 @@ pub enum FCmpOp {
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Index {
-    Index(u64),
+    Index(usize),
     Symbol(Symbol),
 }
 

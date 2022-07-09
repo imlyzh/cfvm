@@ -598,11 +598,11 @@ impl ParseFrom<Rule> for LabelSymbol {
 /// function def
 
 #[inline]
-fn insts_parse_from(pair: Pair<Rule>) -> Vec<LTMHand<Instruction>> {
+fn insts_parse_from(pair: Pair<Rule>) -> Vec<Instruction> {
     debug_assert_eq!(pair.as_rule(), Rule::insts);
     pair
         .into_inner()
-        .map(|x| LTMHand::new(Instruction::parse_from(x)))
+        .map(Instruction::parse_from)
         .collect()
 }
 
@@ -632,8 +632,8 @@ impl ParseFrom<Rule> for BasicBlockDef {
         } else {
             gen_label()
         };
-        let instructions = LTMHand::new(insts_parse_from(pairs.next().unwrap()));
-        let terminator = pairs.next().map(|x| LTMHand::new(Terminator::parse_from(x)));
+        let instructions = insts_parse_from(pairs.next().unwrap());
+        let terminator = pairs.next().map(Terminator::parse_from);
         BasicBlockDef {
             label,
             instructions,
@@ -643,9 +643,8 @@ impl ParseFrom<Rule> for BasicBlockDef {
 }
 
 #[inline]
-fn blocks_parse_from(pair: Pairs<Rule>) -> Vec<LTMHand<BasicBlockDef>> {
-    pair.map(|x| LTMHand::new(BasicBlockDef::parse_from(x)))
-        .collect()
+fn blocks_parse_from(pair: Pairs<Rule>) -> Vec<BasicBlockDef> {
+    pair.map(BasicBlockDef::parse_from).collect()
 }
 
 impl ParseFrom<Rule> for FunctionDef {
@@ -669,7 +668,7 @@ impl ParseFrom<Rule> for FunctionDef {
             name,
             header,
             function_attr: attr,
-            bbs: RefCell::new(blocks),
+            bbs: blocks,
             // block_map,
         }
     }

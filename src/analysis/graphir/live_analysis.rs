@@ -31,8 +31,8 @@ impl RootLiveAnalysis for FunctionDef {
                 .into_iter()
                 .map(|x| (x, false))
                 .collect();
-        let mut old: FunLiveVar = self.bbs.borrow().iter()
-            .map(|x| (x.borrow().label.clone(), vars.clone()))
+        let mut old: FunLiveVar = self.bbs.iter()
+            .map(|x| (x.label.clone(), vars.clone()))
             .collect();
         loop {
             let new = once_pass(self, old.clone());
@@ -50,23 +50,23 @@ impl RootLiveAnalysis for FunctionDef {
 #[instrument(level = "debug")]
 pub fn once_pass(fun_def: &FunctionDef, mut inp: FunLiveVar) -> FunLiveVar {
     // debug!("call once_pass");
-    let mapping = fun_def.bbs.borrow().iter().enumerate()
-        .map(|(offset, x)| (x.borrow().label.clone(), offset)).collect::<HashMap<_, _>>();
+    let mapping = fun_def.bbs.iter().enumerate()
+        .map(|(offset, x)| (x.label.clone(), offset)).collect::<HashMap<_, _>>();
     let mut used_bb: HashSet<LabelSymbol> = HashSet::new();
     let mut next_set: VecDeque<LabelSymbol> = VecDeque::new();
-    next_set.push_back(fun_def.bbs.borrow()[0].borrow().label.clone());
+    next_set.push_back(fun_def.bbs[0].label.clone());
     while !next_set.is_empty() {
         let task = next_set.pop_front().unwrap();
         if !used_bb.contains(&task) {
             let bb_offset = mapping.get(&task).unwrap();
-            let bb = &fun_def.bbs.borrow()[*bb_offset];
-            inp.insert(task.clone(), bb.borrow().live_analysis(inp.get(&task).unwrap().clone()));
-            if let Some(x) = bb.borrow().get_next() {
+            let bb = &fun_def.bbs[*bb_offset];
+            inp.insert(task.clone(), bb.live_analysis(inp.get(&task).unwrap().clone()));
+            if let Some(x) = bb.get_next() {
                 for next in x.iter() {
                     next_set.push_back(next.clone().clone());
                 }
-                if x.is_empty() && bb_offset + 1 < fun_def.bbs.borrow().len() {
-                    next_set.push_back(fun_def.bbs.borrow()[bb_offset + 1].borrow().label.clone());
+                if x.is_empty() && bb_offset + 1 < fun_def.bbs.len() {
+                    next_set.push_back(fun_def.bbs[bb_offset + 1].label.clone());
                 }
             } else {
                 return inp;
@@ -81,11 +81,11 @@ impl LiveAnalysis for BasicBlockDef {
     #[instrument(level = "debug")]
     fn live_analysis(&self, mut record: BBSLiveVar) -> BBSLiveVar {
         // debug!("call BasicBlockDef::live_analysis");
-        for i in self.instructions.borrow().iter() {
-            use_variable_for_insts(&i.borrow().to_owned(), &mut record);
+        for i in self.instructions.iter() {
+            use_variable_for_insts(i, &mut record);
         }
         if let Some(x) = &self.terminator {
-            use_variable_for_terminator(&x.borrow(), &mut record);
+            use_variable_for_terminator(x, &mut record);
         }
         record
     }

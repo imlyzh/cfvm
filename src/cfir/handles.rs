@@ -40,6 +40,10 @@ impl Symbol {
     pub fn new(s: String) -> Self {
         Symbol(Arc::new(s))
     }
+
+    pub fn from(s: &str) -> Self {
+        Symbol(Arc::new(s.to_string()))
+    }
 }
 
 // text type
@@ -92,10 +96,10 @@ pub enum SymbolRef {
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub struct RecordValue(pub Vec<(Option<Symbol>, ConstantValue)>);
 
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct VectorValue(pub Vec<SimpleValue>);
 
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum SimpleValue {
     FloatNumber(String),
     Number(String),

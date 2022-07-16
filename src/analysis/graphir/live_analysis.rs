@@ -129,9 +129,9 @@ pub fn use_variable_for_insts(inst: &Instruction, record: &mut BBSLiveVar) {
       use_variable_for_symbolref(v1, record);
     },
     Instruction::BindOperator(BindOperator(_, oper)) => {
-      use_variable_for_opers(&oper.borrow(), record)
+      use_variable_for_opers(oper, record)
     },
-    Instruction::Operator(oper) => use_variable_for_opers(&oper.borrow(), record),
+    Instruction::Operator(oper) => use_variable_for_opers(oper, record),
   }
 }
 
@@ -168,14 +168,15 @@ pub fn use_variable_for_opers(oper: &Operator, record: &mut BBSLiveVar) {
     | Operator::Xor(v0, v1)
     | Operator::ICmp(_, v0, v1)
     | Operator::FCmp(_, v0, v1)
-    | Operator::GetItem(v0, v1)
     | Operator::SetValue(v0, _, v1) => {
       use_variable_for_symbolref(v0, record);
       use_variable_for_symbolref(v1, record);
     },
-    Operator::SetItem(v0, v1, v2) => {
+    | Operator::GetItem(v0, _) => {
       use_variable_for_symbolref(v0, record);
-      use_variable_for_symbolref(v1, record);
+    }
+    Operator::SetItem(v0, _, v2) => {
+      use_variable_for_symbolref(v0, record);
       use_variable_for_symbolref(v2, record);
     },
     Operator::Phi(vn) => {

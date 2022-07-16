@@ -780,7 +780,7 @@ impl ParseFrom<Rule> for BindOperator {
     let operator = Operator::parse_from(pairs.next().unwrap());
     BindOperator(
       symbol,
-      LTMHand::new(operator),
+      operator,
       // ty,
     )
   }
@@ -793,7 +793,7 @@ impl ParseFrom<Rule> for Instruction {
     match pair.as_rule() {
       Rule::store => Instruction::Store(Store::parse_from(pair)),
       Rule::bind => Instruction::BindOperator(BindOperator::parse_from(pair)),
-      Rule::operator => Instruction::Operator(LTMHand::new(Operator::parse_from(pair))),
+      Rule::operator => Instruction::Operator(Operator::parse_from(pair)),
       _ => unreachable!(),
     }
   }
@@ -982,7 +982,7 @@ impl ParseFrom<Rule> for Operator {
       },
       Rule::get_item => {
         let value1 = SymbolRef::parse_from(pairs.next().unwrap());
-        let index = SymbolRef::parse_from(pairs.next().unwrap());
+        let index = Symbol::parse_from(pairs.next().unwrap());
         Operator::GetItem(value1, index)
       },
       Rule::set_value => {
@@ -993,7 +993,7 @@ impl ParseFrom<Rule> for Operator {
       },
       Rule::set_item => {
         let value1 = SymbolRef::parse_from(pairs.next().unwrap());
-        let index = SymbolRef::parse_from(pairs.next().unwrap());
+        let index = Symbol::parse_from(pairs.next().unwrap());
         let value2 = SymbolRef::parse_from(pairs.next().unwrap());
         Operator::SetItem(value1, index, value2)
       },

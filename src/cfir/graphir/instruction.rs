@@ -6,7 +6,7 @@ use super::super::{
   // MutHandle,
 };
 use crate::cfir::{
-  handles::{LTMHand, SymbolRef},
+  handles::SymbolRef,
   linearir::{BranchOp, FCmpOp, ICmpOp},
   types::TypeBindAttr,
 };
@@ -48,9 +48,9 @@ pub enum Operator {
   Or(SymbolRef, SymbolRef),
   Xor(SymbolRef, SymbolRef),
   GetValue(SymbolRef, IndexList),
-  GetItem(SymbolRef, SymbolRef),
+  GetItem(SymbolRef, Symbol),
   SetValue(SymbolRef, IndexList, SymbolRef),
-  SetItem(SymbolRef, SymbolRef, SymbolRef),
+  SetItem(SymbolRef, Symbol, SymbolRef),
   Trunc(SymbolRef, IntType),
   ZExt(SymbolRef, IntType),
   SExt(SymbolRef, IntType),
@@ -68,7 +68,7 @@ pub struct Store(pub LocalSymbol, pub SymbolRef, pub TypeBindAttr);
 #[derive(Debug, Clone)]
 pub struct BindOperator(
   pub LocalSymbol,
-  pub LTMHand<Operator>,
+  pub Operator,
   // pub TypeBindAttr,
 );
 
@@ -76,7 +76,7 @@ pub struct BindOperator(
 pub enum Instruction {
   Store(Store),
   BindOperator(BindOperator),
-  Operator(LTMHand<Operator>),
+  Operator(Operator),
 }
 
 #[derive(Debug, Clone)]

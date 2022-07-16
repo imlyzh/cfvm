@@ -155,7 +155,6 @@ impl BasicBlockDef {
     for i in is {
       match i {
         Instruction::BindOperator(BindOperator(_, op)) | Instruction::Operator(op) => {
-          let op: &Operator = &op.borrow();
           if let Operator::Call(f, _) = op {
             r.insert(f.clone());
           }

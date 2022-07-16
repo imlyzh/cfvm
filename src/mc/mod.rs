@@ -1,4 +1,4 @@
-use std::{collections::HashMap, convert::identity};
+use std::collections::HashMap;
 
 use crate::cfir::handles::{Symbol, SymbolRef};
 
@@ -38,71 +38,11 @@ pub struct Instr {
   // pub prefix: Vec<Symbol>,
   pub op:     Symbol,
   pub input:  Vec<Input>,
-  pub output: Reg,
+  pub output: Option<Reg>,
 }
 
 impl Instr {
-  fn get_output(&self) -> Reg {
+  fn get_output(&self) -> Option<Reg> {
     self.output.clone()
   }
 }
-
-/// DAG Tree structs
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum DAGTree {
-  Op(Symbol, Vec<DAGTree>),
-  Input(Input),
-}
-
-///
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct OpNodeList(pub Vec<Instr>);
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ParellelTree(pub Vec<ParellelTree>, OpNodeList);
-
-/// parellel tree:
-/// - a
-///   - b
-///   - c
-/// - d
-///   - e
-///   - f
-/// parellel list:
-/// [[b, c, e, f], [a, d]]
-///
-impl ParellelTree {
-  fn expand(self) -> Vec<Vec<OpNodeList>> {
-    let ParellelTree(parent, oplist) = self;
-    parent
-      .into_iter()
-      .map(|x| x.expand())
-      .reduce(parellel_list_merge)
-      .map_or_else(|| vec![], identity)
-  }
-}
-
-/// parellel_list_merge
-/// merge [[b, c], [a]] [[e, f], [a]]
-/// to [[b, c, e, f], [a, d]]
-///
-fn parellel_list_merge(
-  mut x: Vec<Vec<OpNodeList>>,
-  mut y: Vec<Vec<OpNodeList>>,
-) -> Vec<Vec<OpNodeList>> {
-  let max_len = x.len().max(y.len());
-  x.extend(vec![vec![]; max_len - x.len()]);
-  y.extend(vec![vec![]; max_len - y.len()]);
-  x.into_iter()
-    .zip(y.into_iter())
-    .map(|(mut x, y)| {
-      x.extend(y);
-      x
-    })
-    .collect()
-}
-
-// #[derive(Debug, Clone, PartialEq, Eq)]
-// pub struct OpNode(pub Symbol, pub Vec<Input>);

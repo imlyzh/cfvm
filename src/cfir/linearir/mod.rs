@@ -1,25 +1,26 @@
 use self::bytecode::Bytecode;
+use super::{
+  handles::{GlobalSymbol, LocalSymbol, Symbol},
+  types::{Type, TypeBindAttr},
+};
 
-use super::{handles::{Symbol, LocalSymbol, GlobalSymbol}, types::{Type, TypeBindAttr}};
-
+pub mod bytecode;
 pub mod three_ac;
 pub mod two_ac;
-pub mod bytecode;
-
 
 #[derive(Debug, Clone)]
 pub struct FunctionHeader {
-    pub name: GlobalSymbol,
-    pub arguments: Vec<(LocalSymbol, TypeBindAttr)>,
+  pub name:      GlobalSymbol,
+  pub arguments: Vec<(LocalSymbol, TypeBindAttr)>,
 }
 
 #[derive(Debug, Clone)]
 pub struct FunctionInfo {
-    pub header: FunctionHeader,
-    pub local_variable: Vec<(LocalSymbol, TypeBindAttr)>,
-    pub local_structs: Vec<(LocalSymbol, Type)>,
-    // pub bodys: Vec<Bytecode>,
-    pub basicblocks: Vec<BasicBlock>,
+  pub header:         FunctionHeader,
+  pub local_variable: Vec<(LocalSymbol, TypeBindAttr)>,
+  pub local_structs:  Vec<(LocalSymbol, Type)>,
+  // pub bodys: Vec<Bytecode>,
+  pub basicblocks:    Vec<BasicBlock>,
 }
 
 /*
@@ -31,61 +32,58 @@ impl FunctionInfo {
  */
 
 #[derive(Debug, Clone)]
-pub struct FunctionDataLayout {
-
-}
-
+pub struct FunctionDataLayout {}
 
 #[derive(Debug, Clone)]
 pub struct BasicBlock {
-    pub label: Option<Symbol>,
-    pub bodys: Vec<Bytecode>,
+  pub label: Option<Symbol>,
+  pub bodys: Vec<Bytecode>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum BranchOp {
-    IfNil,
-    IfNonNil,
+  IfNil,
+  IfNonNil,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum ICmpOp {
-    Eq,
-    Ne,
-    Sge,
-    Sgt,
-    Sle,
-    Slt,
-    Uge,
-    Ugt,
-    Ule,
-    Ult,
+  Eq,
+  Ne,
+  Sge,
+  Sgt,
+  Sle,
+  Slt,
+  Uge,
+  Ugt,
+  Ule,
+  Ult,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum FCmpOp {
-    False,
-    Oeq,
-    Oge,
-    Ogt,
-    Ole,
-    Olt,
-    One,
-    Ord,
-    True,
-    Ueq,
-    Uge,
-    Ugt,
-    Ule,
-    Ult,
-    Une,
-    Uno,
+  False,
+  Oeq,
+  Oge,
+  Ogt,
+  Ole,
+  Olt,
+  One,
+  Ord,
+  True,
+  Ueq,
+  Uge,
+  Ugt,
+  Ule,
+  Ult,
+  Une,
+  Uno,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Index {
-    Index(usize),
-    Symbol(Symbol),
+  Index(usize),
+  Symbol(Symbol),
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]

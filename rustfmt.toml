@@ -1,0 +1,11 @@
+tab_spaces = 2
+struct_field_align_threshold = 8
+enum_discrim_align_threshold = 100
+
+group_imports = "StdExternalCrate"
+
+newline_style = "Unix"
+
+merge_derives = false
+
+match_block_trailing_comma = true

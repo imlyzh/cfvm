@@ -1,10 +1,12 @@
+
+
 // mod mc;
 // mod isa;
 // mod cfir;
 // mod pass;
 // mod analysis;
 // mod codegen;
-use libcfvm::analysis::graphir::live_analysis::RootLiveAnalysis;
+// use libcfvm::analysis::graphir::live_analysis::RootLiveAnalysis;
 use libcfvm::cfir::base::Env;
 // use libcfvm::cfir::richir::parser::parse::file_parse as rparse;
 use libcfvm::cfir::graphir::parser::parse::file_parse as gparse;
@@ -36,6 +38,7 @@ fn control_flow_graph() {
   }
 }
 
+/*
 fn test_live_ana() {
   let mut env = Env::new();
   gparse(include_str!("./demo.g.cfir"), &mut env).unwrap();
@@ -49,7 +52,6 @@ fn test_live_ana() {
   }
 }
 
-/*
 fn test_parse_richir() {
     let mut env = Env::new();
     rparse(include_str!("./demo.r.cfir"), &mut env).unwrap();

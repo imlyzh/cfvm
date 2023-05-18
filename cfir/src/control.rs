@@ -2,23 +2,28 @@ use crate::data::Data;
 
 
 #[repr(C)]
-pub struct Region (pub Vec<JumpOrBranch>);
+pub struct Region (pub Vec<ControlOrigin>);
 
 #[repr(C)]
-pub enum Control {
-  Jump(*const Region),
+pub struct Control {
+  pub region_source: *const Region,
+  pub control: ControlInst,
+}
+#[repr(C)]
+pub enum ControlInst {
+  Jump,
   If(*const If),
-  Return(*const Region, Data),
+  Return(Data),
 }
 
 #[repr(C)]
-pub enum JumpOrBranch {
+pub enum ControlOrigin {
   Jump(*const Region),
   Branch(*const Branch),
 }
 
 #[repr(C)]
-pub struct If (pub *const Region, pub Data);
+pub struct If (pub Data);
 
 #[repr(C)]
 pub enum Branch {

@@ -1,7 +1,13 @@
 use crate::control::Region;
 
 #[repr(C)]
-pub enum Data {
+pub struct Data {
+  pub region_source: *const Region,
+  pub data: DataInst,
+}
+
+#[repr(C)]
+pub enum DataInst {
   Const(),
   BinOp(*const BinOp),
   TypeCast(*const TypeCast),
@@ -10,7 +16,6 @@ pub enum Data {
 
 #[repr(C)]
 pub struct BinOp {
-  pub control: *const Region,
   pub data0: Data,
   pub data1: Data,
   pub opcode: Opcode,
@@ -26,13 +31,11 @@ pub enum Opcode {
 
 #[repr(C)]
 pub struct TypeCast {
-  pub control: *const Region,
   pub data: Data,
   //pub astype: Type,
 }
 
 #[repr(C)]
 pub struct Phi {
-  pub control: *const Region,
   pub data: Vec<Data>,
 }

@@ -1,13 +1,14 @@
 use control::{Region, Control, Branch};
 use data::Data;
+use effect::Effect;
 
 pub mod data;
 pub mod control;
 pub mod effect;
 
 
-pub trait GetControl {
-  fn get_control(&self);
+pub trait GetRegion {
+  fn get_region(&self);
 }
 
 
@@ -17,6 +18,7 @@ pub enum Node {
   Region(*const Region),
   Control(*const Control),
   Branch(*const Branch),
+  Effect(*const Effect),
 }
 
 

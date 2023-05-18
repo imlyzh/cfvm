@@ -9,6 +9,7 @@ pub struct Control {
   pub region_source: *const Region,
   pub control: ControlInst,
 }
+
 #[repr(C)]
 pub enum ControlInst {
   Jump,

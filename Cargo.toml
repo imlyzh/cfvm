@@ -17,7 +17,9 @@ path = "./src/main.rs"
 [workspace]
 resolver = '2'
 members = [
-  "cfir"
+  "cfir",
+  "cfir_frontend",
+  "selection_dag",
   ]
 
 [workspace.package]
@@ -28,6 +30,8 @@ edition = "2021"
 [workspace.dependencies]
 cfvm = { path="crates/cfvm" }
 cfvm-cfir = { path="cfir" }
+cfvm-cfir-frontend = { path="cfir_frontend" }
+cfvm-selection-dag = { path="selection_dag" }
 
 
 [dependencies]

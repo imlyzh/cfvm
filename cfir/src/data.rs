@@ -1,4 +1,4 @@
-use crate::control::Region;
+use crate::{control::Region, effect::Effect};
 
 #[repr(C)]
 pub struct Data {
@@ -9,6 +9,7 @@ pub struct Data {
 #[repr(C)]
 pub enum DataInst {
   Const(),
+  Effect(*const Effect),
   BinOp(*const BinOp),
   TypeCast(*const TypeCast),
   Phi(*const Phi),

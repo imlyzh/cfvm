@@ -11,6 +11,24 @@ pub struct Effect {
 
 #[repr(C)]
 pub enum EffectInst {
+  // Barrier,
+  // MachineCode(*const MachineCode),
+  Read{
+    ptr: Data,
+  },
+  Write{
+    ptr: Data,
+    value: Data,
+  },
+  Call{
+    // pub func: Func,
+    args: Vec<Data>,
+  },
+}
+
+/*
+#[repr(C)]
+pub enum EffectInst {
   Read(Read),
   Write(Write),
   Call(Call),
@@ -31,3 +49,4 @@ pub struct Call {
   // pub function: Func,
   pub args: Vec<Data>,
 }
+//  */

@@ -1,4 +1,4 @@
-use control::{Region, Control, Branch};
+use control::{Region, Control};
 use data::Data;
 use effect::Effect;
 
@@ -17,7 +17,6 @@ pub enum Node {
   Data(*const Data),
   Region(*const Region),
   Control(*const Control),
-  Branch(*const Branch),
   Effect(*const Effect),
 }
 

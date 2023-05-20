@@ -13,6 +13,7 @@ pub enum DataInst {
   TypeCast(*const TypeCast),
   PriOp(*const PriOp),
   BinOp(*const BinOp),
+  AddrOp(*const AddrOp),
   // Cmp(*const Cmp),
   Phi(*const Phi),
   Effect(*const Effect),
@@ -20,16 +21,12 @@ pub enum DataInst {
 
 #[repr(C)]
 pub enum PriOp {
+  Unimplmention,
   // Trunc(Data, IntType),
   // ZExt(Data, IntType),
   // SExt(Data, IntType),
   // FTrunc(Data, FloatType),
   // FExt(Data, FloatType),
-
-  GetValue(Data, usize),
-  GetItem(Data, usize),
-  SetValue(Data, usize, Data),
-  SetItem(Data, usize, Data),
 }
 
 
@@ -59,6 +56,12 @@ pub enum Opcode {
   And,
   Or,
   Xor,
+}
+
+#[repr(C)]
+pub enum AddrOp {
+  FetchArray(Data, usize),
+  // FetchStruct(Data, Symbol),
 }
 
 #[repr(C)]

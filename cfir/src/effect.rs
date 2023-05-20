@@ -13,14 +13,14 @@ pub struct Effect {
 pub enum EffectInst {
   // Barrier,
   // MachineCode(*const MachineCode),
-  Read{
+  Read {
     ptr: Data,
   },
-  Write{
+  Write {
     ptr: Data,
     value: Data,
   },
-  Call{
+  Call {
     // pub func: Func,
     args: Vec<Data>,
   },

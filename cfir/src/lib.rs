@@ -5,6 +5,7 @@ use effect::Effect;
 pub mod data;
 pub mod control;
 pub mod effect;
+pub mod function;
 
 
 pub trait GetRegion {

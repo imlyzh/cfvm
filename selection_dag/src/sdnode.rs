@@ -1,23 +1,32 @@
 use crate::basic_block::BasicBlock;
 
 
-#[repr(C)]
-pub enum SDNode {
-  Const(),
-  Inst(*const Inst),
-  // InstBundle(*const InstBundle),
-}
-
-#[repr(C)]
-pub struct Inst {
+pub struct SDNode {
   pub inst: *const str,
-  pub cond: *const BasicBlock,
-  pub output: Vec<SDNode>,
-  pub input: Vec<SDNode>,
-  pub control: Vec<*const BasicBlock>,
+  // pub cond: *const BasicBlock,
+  pub ops: Vec<SDValue>,
 }
 
-/*
 #[repr(C)]
-pub struct InstBundle(pub Vec<Inst>);
-//  */
+pub enum SDValue {
+  Const(),
+  Reg(Reg),
+  Control(*const BasicBlock),
+  Node(*const SDNode),
+}
+
+#[repr(C)]
+pub struct Reg {
+  pub reg_type: RegType,
+  pub index: usize,
+}
+
+#[repr(C)]
+pub enum RegType {
+  Virtual {
+
+  },
+  Physics {
+
+  }
+}

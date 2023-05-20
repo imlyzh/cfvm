@@ -9,11 +9,29 @@ pub struct Data {
 #[repr(C)]
 pub enum DataInst {
   Const(),
-  Effect(*const Effect),
-  BinOp(*const BinOp),
+  // Alloc(),
   TypeCast(*const TypeCast),
+  PriOp(*const PriOp),
+  BinOp(*const BinOp),
+  // Cmp(*const Cmp),
   Phi(*const Phi),
+  Effect(*const Effect),
 }
+
+#[repr(C)]
+pub enum PriOp {
+  // Trunc(Data, IntType),
+  // ZExt(Data, IntType),
+  // SExt(Data, IntType),
+  // FTrunc(Data, FloatType),
+  // FExt(Data, FloatType),
+
+  GetValue(Data, usize),
+  GetItem(Data, usize),
+  SetValue(Data, usize, Data),
+  SetItem(Data, usize, Data),
+}
+
 
 #[repr(C)]
 pub struct BinOp {
@@ -25,9 +43,22 @@ pub struct BinOp {
 #[repr(C)]
 pub enum Opcode {
   Add,
+  FAdd,
   Sub,
+  FSub,
   Mul,
-  Div,
+  FMul,
+  UDiv,
+  SDiv,
+  URem,
+  SRem,
+  FRem,
+  Shl,
+  LShr,
+  AShr,
+  And,
+  Or,
+  Xor,
 }
 
 #[repr(C)]

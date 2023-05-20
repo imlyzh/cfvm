@@ -68,6 +68,53 @@ pub enum AddrOp {
 }
 
 #[repr(C)]
+pub struct Cmp {
+  pub data0: Data,
+  pub data1: Data,
+  pub opcode: CmpOp,
+}
+
+#[repr(C)]
+pub enum CmpOp {
+  ICmp(ICmpOp),
+  FCmp(FCmpOp),
+}
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub enum ICmpOp {
+  Eq,
+  Ne,
+  Sge,
+  Sgt,
+  Sle,
+  Slt,
+  Uge,
+  Ugt,
+  Ule,
+  Ult,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub enum FCmpOp {
+  Oeq,
+  Oge,
+  Ogt,
+  Ole,
+  Olt,
+  One,
+  // Ord,
+  // Ueq,
+  // Uge,
+  // Ugt,
+  // Ule,
+  // Ult,
+  // Une,
+  // Uno,
+  // False,
+  // True,
+}
+
+#[repr(C)]
 pub struct TypeCast {
   pub data: Data,
   //pub astype: Type,

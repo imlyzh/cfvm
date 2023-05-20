@@ -5,6 +5,12 @@ use crate::data::Data;
 pub struct Region (pub Vec<ControlOrigin>);
 
 #[repr(C)]
+pub enum ControlOrigin {
+  Jump(*const Region),
+  Branch(*const Region, If, bool),
+}
+
+#[repr(C)]
 pub struct Control {
   pub region_source: *const Region,
   pub control: ControlInst,
@@ -17,12 +23,6 @@ pub enum ControlInst {
   If(If),
   Return(Data),
   Unreachable,
-}
-
-#[repr(C)]
-pub enum ControlOrigin {
-  Jump(*const Region),
-  Branch(*const Region, If, bool),
 }
 
 #[repr(C)]

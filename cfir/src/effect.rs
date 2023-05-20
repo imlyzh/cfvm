@@ -24,6 +24,10 @@ pub enum EffectInst {
     // pub func: Func,
     args: Vec<Data>,
   },
+  IndirectCall {
+    func: Data,
+    args: Vec<Data>,
+  },
 }
 
 /*

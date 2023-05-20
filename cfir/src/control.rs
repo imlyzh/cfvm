@@ -13,21 +13,17 @@ pub struct Control {
 #[repr(C)]
 pub enum ControlInst {
   Jump,
-  If(*const If),
+  // Jump(Option<Data>),
+  If(If),
   Return(Data),
+  Unreachable,
 }
 
 #[repr(C)]
 pub enum ControlOrigin {
   Jump(*const Region),
-  Branch(*const Branch),
+  Branch(*const Region, If, bool),
 }
 
 #[repr(C)]
 pub struct If (pub Data);
-
-#[repr(C)]
-pub enum Branch {
-  IfT(*const If),
-  IfF(*const If),
-}

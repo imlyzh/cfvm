@@ -10,6 +10,7 @@ pub struct Data {
 pub enum DataInst {
   Const(),
   // Alloc(),
+  // Input(),
   TypeCast(*const TypeCast),
   PriOp(*const PriOp),
   BinOp(*const BinOp),
@@ -60,8 +61,10 @@ pub enum Opcode {
 
 #[repr(C)]
 pub enum AddrOp {
-  FetchArray(Data, usize),
-  // FetchStruct(Data, Symbol),
+  RuntimeArrayItem(Data, Data),
+  ArrayItem(Data, usize),
+  TupleItem(Data, usize),
+  // StructItem(Data, Symbol),
 }
 
 #[repr(C)]

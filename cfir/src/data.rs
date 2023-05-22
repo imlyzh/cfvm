@@ -57,6 +57,37 @@ pub enum Opcode {
   And,
   Or,
   Xor,
+  // icmp
+  Eq,
+  Ne,
+  Sge,
+  Sgt,
+  Sle,
+  Slt,
+  Uge,
+  Ugt,
+  Ule,
+  Ult,
+  // fcmp
+  Oeq,
+  Oge,
+  Ogt,
+  Ole,
+  Olt,
+  One,
+  // unsupported fcmp
+  /*
+  Ord,
+  Ueq,
+  Uge,
+  Ugt,
+  Ule,
+  Ult,
+  Une,
+  Uno,
+  False,
+  True,
+  // */
 }
 
 #[repr(C)]
@@ -67,6 +98,18 @@ pub enum AddrOp {
   // StructItem(Data, Symbol),
 }
 
+#[repr(C)]
+pub struct TypeCast {
+  pub data: Data,
+  //pub astype: Type,
+}
+
+#[repr(C)]
+pub struct Phi {
+  pub data: Vec<Data>,
+}
+
+/*
 #[repr(C)]
 pub struct Cmp {
   pub data0: Data,
@@ -102,25 +145,18 @@ pub enum FCmpOp {
   Ole,
   Olt,
   One,
-  // Ord,
-  // Ueq,
-  // Uge,
-  // Ugt,
-  // Ule,
-  // Ult,
-  // Une,
-  // Uno,
-  // False,
-  // True,
+  // unsupported fcmp
+  /*
+  Ord,
+  Ueq,
+  Uge,
+  Ugt,
+  Ule,
+  Ult,
+  Une,
+  Uno,
+  False,
+  True,
+  // */
 }
-
-#[repr(C)]
-pub struct TypeCast {
-  pub data: Data,
-  //pub astype: Type,
-}
-
-#[repr(C)]
-pub struct Phi {
-  pub data: Vec<Data>,
-}
+// */

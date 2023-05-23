@@ -2,12 +2,10 @@ use control::{Control, Region};
 use data::Data;
 use effect::Effect;
 
-pub mod constant;
 pub mod control;
 pub mod data;
 pub mod effect;
 pub mod function;
-pub mod types;
 
 pub trait GetRegion {
   fn get_region(&self);

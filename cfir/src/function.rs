@@ -1,10 +1,11 @@
 use std::ptr::NonNull;
 
+use cfvm_common::types::FunctionType;
+
 use crate::{
   control::Region,
   data::{Data, StackAlloc},
   effect::Effect,
-  types::FunctionType,
 };
 
 #[repr(C)]

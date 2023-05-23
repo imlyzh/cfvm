@@ -1,10 +1,14 @@
 use std::ptr::NonNull;
 
+use cfvm_common::{
+  constant::ConstantValue,
+  types::{FloatType, IntType, Type},
+};
+
 use crate::{
   control::Region,
   effect::Effect,
   function::{Func, Input},
-  types::{FloatType, IntType, Type}, constant::ConstantValue,
 };
 
 #[repr(C)]
@@ -112,7 +116,7 @@ pub enum AddrOp {
 
 #[repr(C)]
 pub struct TypeCast {
-  pub data: Data,
+  pub data:   Data,
   pub astype: Type,
 }
 

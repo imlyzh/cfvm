@@ -9,12 +9,21 @@ use crate::{
   control::Region,
   effect::Effect,
   function::{Func, Input},
+  GetRegions,
 };
 
 #[repr(C)]
 pub struct Data {
   pub region_source: NonNull<Region>,
   pub data: DataInst,
+}
+
+impl GetRegions for Data {
+  fn get_regions(&self) -> Vec<NonNull<Region>> {
+    let mut r = self.data.get_regions();
+    r.push(self.region_source);
+    r
+  }
 }
 
 #[repr(C)]
@@ -29,6 +38,20 @@ pub enum DataInst {
   // Cmp(NonNull<Cmp>),
   Phi(NonNull<Phi>),
   Effect(NonNull<Effect>),
+}
+
+impl GetRegions for DataInst {
+  fn get_regions(&self) -> Vec<NonNull<Region>> {
+    match self {
+      DataInst::Const(_, _) | DataInst::Alloc(_) | DataInst::Input(_) => vec![],
+      DataInst::TypeCast(d) => unsafe { d.as_ref() }.get_regions(),
+      DataInst::PriOp(d) => unsafe { d.as_ref() }.get_regions(),
+      DataInst::BinOp(d) => unsafe { d.as_ref() }.get_regions(),
+      DataInst::AddrOp(d) => unsafe { d.as_ref() }.get_regions(),
+      DataInst::Phi(d) => unsafe { d.as_ref() }.get_regions(),
+      DataInst::Effect(d) => todo!(),
+    }
+  }
 }
 
 #[repr(C)]
@@ -47,11 +70,31 @@ pub enum PriOp {
   FExt(Data, FloatType),
 }
 
+impl GetRegions for PriOp {
+  fn get_regions(&self) -> Vec<NonNull<Region>> {
+    match self {
+      PriOp::Trunc(d, _)
+      | PriOp::ZExt(d, _)
+      | PriOp::SExt(d, _)
+      | PriOp::FTrunc(d, _)
+      | PriOp::FExt(d, _) => d.get_regions(),
+    }
+  }
+}
+
 #[repr(C)]
 pub struct BinOp {
   pub data0:  Data,
   pub data1:  Data,
   pub opcode: Opcode,
+}
+
+impl GetRegions for BinOp {
+  fn get_regions(&self) -> Vec<NonNull<Region>> {
+    let mut r = self.data0.get_regions();
+    r.append(&mut self.data1.get_regions());
+    r
+  }
 }
 
 #[repr(C)]
@@ -114,15 +157,40 @@ pub enum AddrOp {
   // StructItem(Data, Symbol),
 }
 
+impl GetRegions for AddrOp {
+  fn get_regions(&self) -> Vec<NonNull<Region>> {
+    match self {
+      AddrOp::RuntimeArrayItem(data0, data1) => {
+        let mut r = data0.get_regions();
+        r.append(&mut data1.get_regions());
+        r
+      },
+      AddrOp::ArrayItem(data, _) | AddrOp::TupleItem(data, _) => data.get_regions(),
+    }
+  }
+}
+
 #[repr(C)]
 pub struct TypeCast {
   pub data:   Data,
   pub astype: Type,
 }
 
+impl GetRegions for TypeCast {
+  fn get_regions(&self) -> Vec<NonNull<Region>> {
+    self.data.get_regions()
+  }
+}
+
 #[repr(C)]
 pub struct Phi {
   pub data: Vec<Data>,
+}
+
+impl GetRegions for Phi {
+  fn get_regions(&self) -> Vec<NonNull<Region>> {
+    self.data.iter().flat_map(Data::get_regions).collect()
+  }
 }
 
 /*

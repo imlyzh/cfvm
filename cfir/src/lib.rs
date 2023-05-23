@@ -1,23 +1,12 @@
-use control::{Control, Region};
-use data::Data;
-use effect::Effect;
+use std::ptr::NonNull;
+
+use control::Region;
 
 pub mod control;
 pub mod data;
 pub mod effect;
 pub mod function;
 
-pub trait GetRegion {
-  fn get_region(&self);
+pub trait GetRegions {
+  fn get_regions(&self) -> Vec<NonNull<Region>>;
 }
-
-#[repr(C)]
-pub enum Node {
-  Data(*const Data),
-  Region(*const Region),
-  Control(*const Control),
-  Effect(*const Effect),
-}
-
-#[cfg(test)]
-mod tests {}

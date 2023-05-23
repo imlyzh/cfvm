@@ -1,17 +1,21 @@
+use std::ptr::NonNull;
+
+use cfvm_common::constant::ConstantValue;
+
 use crate::basic_block::BasicBlock;
 
 pub struct SDNode {
-  pub inst: *const str,
-  // pub cond: *const BasicBlock,
+  pub inst: NonNull<str>,
+  // pub cond: NonNUll<BasicBlock>,
   pub ops:  Vec<SDValue>,
 }
 
 #[repr(C)]
 pub enum SDValue {
-  Const(),
+  Const(ConstantValue),
   Reg(Reg),
-  Control(*const BasicBlock),
-  Node(*const SDNode),
+  Control(NonNull<BasicBlock>),
+  Node(NonNull<SDNode>),
 }
 
 #[repr(C)]

@@ -20,7 +20,7 @@ pub struct Control {
 #[repr(C)]
 pub enum ControlInst {
   Jump,
-  // Jump(Option<Data>),
+  // IndirectJump(Data),
   If(If),
   Return(Data),
   Unreachable,

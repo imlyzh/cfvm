@@ -2,6 +2,7 @@ use control::{Control, Region};
 use data::Data;
 use effect::Effect;
 
+pub mod constant;
 pub mod control;
 pub mod data;
 pub mod effect;

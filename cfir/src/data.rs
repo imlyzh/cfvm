@@ -4,7 +4,7 @@ use crate::{
   control::Region,
   effect::Effect,
   function::{Func, Input},
-  types::{FloatType, IntType, Type},
+  types::{FloatType, IntType, Type}, constant::ConstantValue,
 };
 
 #[repr(C)]
@@ -15,7 +15,7 @@ pub struct Data {
 
 #[repr(C)]
 pub enum DataInst {
-  Const(),
+  Const(Box<Type>, ConstantValue),
   Alloc(NonNull<StackAlloc>),
   Input(NonNull<Input>),
   TypeCast(NonNull<TypeCast>),
@@ -113,7 +113,7 @@ pub enum AddrOp {
 #[repr(C)]
 pub struct TypeCast {
   pub data: Data,
-  //pub astype: Type,
+  pub astype: Type,
 }
 
 #[repr(C)]

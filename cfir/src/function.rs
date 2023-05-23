@@ -1,4 +1,4 @@
-use std::{collections::HashMap, ptr::NonNull};
+use std::ptr::NonNull;
 
 use crate::{
   control::Region,

@@ -1,34 +1,26 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, ptr::NonNull};
 
-use crate::{data::{Data, StackAlloc}, control::Region, effect::Effect};
+use crate::{data::{Data, StackAlloc}, control::Region, effect::Effect, types::FunctionType};
 
 
 
 #[repr(C)]
 pub struct Func {
-  pub name: *const str,
-  // pub return_type: Type,
-  pub inputs: *const Inputs,
-  pub frameinfo: *const FrameInfo,
+  pub name: NonNull<str>,
+  pub type_info: FunctionType,
+  pub frameinfo: FrameInfo,
   // bodys
-  pub regions: Vec<*const Region>,
-  pub datas: Vec<*const Data>,
-  pub effects: Vec<*const Effect>,
-}
-
-
-#[repr(C)]
-pub struct Inputs {
-  pub login_offset_map: HashMap<*const str, usize>,
-  pub inputs: Vec<*const Input>,
+  pub regions: Vec<NonNull<Region>>,
+  pub datas: Vec<NonNull<Data>>,
+  pub effects: Vec<NonNull<Effect>>,
 }
 
 #[repr(C)]
 pub struct Input {
-  pub inputs: *const Inputs,
-  pub name: *const str,
-  // pub type_: Type,
+  pub func: NonNull<Func>,
+  pub name: NonNull<str>,
+  pub offset: usize,
 }
 
 #[repr(C)]
-pub struct FrameInfo(Vec<*const StackAlloc>);
+pub struct FrameInfo(pub Vec<NonNull<StackAlloc>>);

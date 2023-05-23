@@ -1,3 +1,5 @@
+use std::ptr::NonNull;
+
 use crate::data::Data;
 
 
@@ -6,13 +8,13 @@ pub struct Region (pub Vec<ControlOrigin>);
 
 #[repr(C)]
 pub enum ControlOrigin {
-  Jump(*const Region),
-  Branch(*const Region, If, bool),
+  Jump(NonNull<Region>),
+  Branch(NonNull<Region>, If, bool),
 }
 
 #[repr(C)]
 pub struct Control {
-  pub region_source: *const Region,
+  pub region_source: NonNull<Region>,
   pub control: ControlInst,
 }
 

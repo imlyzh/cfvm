@@ -1,40 +1,41 @@
-use crate::{control::Region, effect::Effect, function::FrameInfo};
+use std::ptr::NonNull;
+
+use crate::{control::Region, effect::Effect, function::{Func, Input}, types::{Type, IntType, FloatType}};
 
 #[repr(C)]
 pub struct Data {
-  pub region_source: *const Region,
+  pub region_source: NonNull<Region>,
   pub data: DataInst,
 }
 
 #[repr(C)]
 pub enum DataInst {
   Const(),
-  Alloc(),
-  Input(),
-  TypeCast(*const TypeCast),
-  PriOp(*const PriOp),
-  BinOp(*const BinOp),
-  AddrOp(*const AddrOp),
-  // Cmp(*const Cmp),
-  Phi(*const Phi),
-  Effect(*const Effect),
+  Alloc(NonNull<StackAlloc>),
+  Input(NonNull<Input>),
+  TypeCast(NonNull<TypeCast>),
+  PriOp(NonNull<PriOp>),
+  BinOp(NonNull<BinOp>),
+  AddrOp(NonNull<AddrOp>),
+  // Cmp(NonNull<Cmp>),
+  Phi(NonNull<Phi>),
+  Effect(NonNull<Effect>),
 }
 
 #[repr(C)]
 pub struct StackAlloc {
-  // pub type_: *Type,
-  pub logic_offset: Option<usize>,
-  pub frame: *const FrameInfo,
+  pub func: NonNull<Func>,
+  pub name: NonNull<str>,
+  pub type_: NonNull<Type>,
 }
 
 #[repr(C)]
 pub enum PriOp {
-  Unimplmention,
-  // Trunc(Data, IntType),
-  // ZExt(Data, IntType),
-  // SExt(Data, IntType),
-  // FTrunc(Data, FloatType),
-  // FExt(Data, FloatType),
+  Trunc(Data, IntType),
+  ZExt(Data, IntType),
+  SExt(Data, IntType),
+  FTrunc(Data, FloatType),
+  FExt(Data, FloatType),
 }
 
 

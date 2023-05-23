@@ -2,13 +2,11 @@ use std::ptr::NonNull;
 
 use crate::{control::Region, data::Data};
 
-
-
 #[repr(C)]
 pub struct Effect {
   pub region_source: NonNull<Region>,
   pub effect_source: NonNull<Effect>,
-  pub effect: EffectInst,
+  pub effect:        EffectInst,
 }
 
 #[repr(C)]
@@ -19,7 +17,7 @@ pub enum EffectInst {
     ptr: Data,
   },
   Write {
-    ptr: Data,
+    ptr:   Data,
     value: Data,
   },
   Call {

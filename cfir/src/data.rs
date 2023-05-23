@@ -1,6 +1,11 @@
 use std::ptr::NonNull;
 
-use crate::{control::Region, effect::Effect, function::{Func, Input}, types::{Type, IntType, FloatType}};
+use crate::{
+  control::Region,
+  effect::Effect,
+  function::{Func, Input},
+  types::{FloatType, IntType, Type},
+};
 
 #[repr(C)]
 pub struct Data {
@@ -24,8 +29,8 @@ pub enum DataInst {
 
 #[repr(C)]
 pub struct StackAlloc {
-  pub func: NonNull<Func>,
-  pub name: NonNull<str>,
+  pub func:  NonNull<Func>,
+  pub name:  NonNull<str>,
   pub type_: NonNull<Type>,
 }
 
@@ -38,11 +43,10 @@ pub enum PriOp {
   FExt(Data, FloatType),
 }
 
-
 #[repr(C)]
 pub struct BinOp {
-  pub data0: Data,
-  pub data1: Data,
+  pub data0:  Data,
+  pub data1:  Data,
   pub opcode: Opcode,
 }
 

@@ -2,9 +2,8 @@ use std::ptr::NonNull;
 
 use crate::data::Data;
 
-
 #[repr(C)]
-pub struct Region (pub Vec<ControlOrigin>);
+pub struct Region(pub Vec<ControlOrigin>);
 
 #[repr(C)]
 pub enum ControlOrigin {
@@ -15,7 +14,7 @@ pub enum ControlOrigin {
 #[repr(C)]
 pub struct Control {
   pub region_source: NonNull<Region>,
-  pub control: ControlInst,
+  pub control:       ControlInst,
 }
 
 #[repr(C)]
@@ -28,4 +27,4 @@ pub enum ControlInst {
 }
 
 #[repr(C)]
-pub struct If (pub Data);
+pub struct If(pub Data);

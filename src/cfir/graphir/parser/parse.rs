@@ -779,8 +779,7 @@ impl ParseFrom<Rule> for BindOperator {
     let symbol = LocalSymbol::parse_from(pairs.next().unwrap());
     let operator = Operator::parse_from(pairs.next().unwrap());
     BindOperator(
-      symbol,
-      operator,
+      symbol, operator,
       // ty,
     )
   }

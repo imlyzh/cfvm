@@ -1,6 +1,5 @@
 use std::ptr::NonNull;
 
-
 pub trait GetType {
   fn get_type(&self) -> Type;
 }
@@ -13,7 +12,6 @@ pub enum Type {
   Array(ArrayType),
   Record(RecordType),
   FunType(FunctionType),
-
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -38,7 +36,6 @@ pub type IsNotAligned = bool;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct RecordType(pub IsNotAligned, pub Vec<(Option<NonNull<str>>, Type)>);
-
 
 /*
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
@@ -90,8 +87,8 @@ pub struct IntType(pub u64);
 pub enum FloatType {
   // F8      = 0,
   // F16     = 1,
-  F32     = 2,
-  F64     = 3,
+  F32 = 2,
+  F64 = 3,
   // F128    = 4,
   // PpcF128 = 5,
 }
@@ -119,7 +116,6 @@ impl GetSize for Type {
     }
   }
 }
-
 
 impl GetSize for SimpleType {
   fn get_size(&self, platform_size: PlarformWidth) -> Option<u64> {

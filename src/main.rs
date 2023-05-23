@@ -5,12 +5,13 @@
 // mod analysis;
 // mod codegen;
 // use libcfvm::analysis::graphir::live_analysis::RootLiveAnalysis;
-use libcfvm::cfir::base::Env;
+// use libcfvm::cfir::base::Env;
 // use libcfvm::cfir::richir::parser::parse::file_parse as rparse;
-use libcfvm::cfir::graphir::parser::parse::file_parse as gparse;
-use tracing::Level;
-use tracing_subscriber::FmtSubscriber;
+// use libcfvm::cfir::graphir::parser::parse::file_parse as gparse;
+// use tracing::Level;
+// use tracing_subscriber::FmtSubscriber;
 
+/*
 fn main() {
   log_init(Level::DEBUG);
   control_flow_graph();
@@ -35,6 +36,7 @@ fn control_flow_graph() {
     }
   }
 }
+//  */
 
 /*
 fn test_live_ana() {

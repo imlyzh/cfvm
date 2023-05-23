@@ -1,4 +1,4 @@
-use crate::{control::Region, effect::Effect};
+use crate::{control::Region, effect::Effect, function::FrameInfo};
 
 #[repr(C)]
 pub struct Data {
@@ -9,8 +9,8 @@ pub struct Data {
 #[repr(C)]
 pub enum DataInst {
   Const(),
-  // Alloc(),
-  // Input(),
+  Alloc(),
+  Input(),
   TypeCast(*const TypeCast),
   PriOp(*const PriOp),
   BinOp(*const BinOp),
@@ -18,6 +18,13 @@ pub enum DataInst {
   // Cmp(*const Cmp),
   Phi(*const Phi),
   Effect(*const Effect),
+}
+
+#[repr(C)]
+pub struct StackAlloc {
+  // pub type_: *Type,
+  pub logic_offset: Option<usize>,
+  pub frame: *const FrameInfo,
 }
 
 #[repr(C)]

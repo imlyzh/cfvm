@@ -14,12 +14,13 @@ impl Builder<cfir::function::Func> for Func {
     let type_info = i.type_info;
     let frameinfo = i.frameinfo;
 
+/*
     let mut bbs: HashMap<NonNull<Region>, BasicBlock> = i
       .regions
       .iter()
       .map(|x| (*x, BasicBlock::default()))
       .collect();
-
+     */
     todo!()
   }
 }

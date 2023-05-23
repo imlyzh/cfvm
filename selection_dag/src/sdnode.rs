@@ -4,6 +4,8 @@ use cfvm_common::constant::ConstantValue;
 
 use crate::basic_block::BasicBlock;
 
+#[repr(C)]
+#[derive(Debug, Clone)]
 pub struct SDNode {
   pub inst: NonNull<str>,
   // pub cond: NonNUll<BasicBlock>,
@@ -11,6 +13,7 @@ pub struct SDNode {
 }
 
 #[repr(C)]
+#[derive(Debug, Clone)]
 pub enum SDValue {
   Const(ConstantValue),
   Reg(Reg),
@@ -19,12 +22,14 @@ pub enum SDValue {
 }
 
 #[repr(C)]
+#[derive(Debug, Clone)]
 pub struct Reg {
   pub reg_type: RegType,
   pub index:    usize,
 }
 
 #[repr(C)]
+#[derive(Debug, Clone)]
 pub enum RegType {
   Virtual {},
   Physics {},

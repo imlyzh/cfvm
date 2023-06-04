@@ -2,11 +2,7 @@ use std::ptr::NonNull;
 
 use cfvm_common::types::FunctionType;
 
-use crate::{
-  control::Control,
-  data::StackAlloc,
-  effect::Effect,
-};
+use crate::{control::Control, data::StackAlloc, effect::Effect};
 
 #[repr(C)]
 pub struct Func {

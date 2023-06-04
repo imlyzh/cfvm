@@ -1,6 +1,11 @@
-use std::ptr::NonNull;
+use std::{ptr::NonNull, vec};
 
-use crate::{control::Region, data::*, effect::*, function::*};
+use crate::{
+  control::{Control, ControlInst, If, Region},
+  data::*,
+  effect::*,
+  function::*,
+};
 
 pub trait GetRegions {
   fn get_regions(&self) -> Vec<NonNull<Region>>;
@@ -101,9 +106,44 @@ impl GetRegions for EffectInst {
   }
 }
 
+impl GetRegions for Control {
+  fn get_regions(&self) -> Vec<NonNull<Region>> {
+    let mut r = vec![self.region_source];
+    r.append(&mut self.control.get_regions());
+    r
+  }
+}
+
+impl GetRegions for ControlInst {
+  fn get_regions(&self) -> Vec<NonNull<Region>> {
+    match self {
+      ControlInst::If(i) => i.get_regions(),
+      ControlInst::Return(d) => d.get_regions(),
+      ControlInst::Jump | ControlInst::Unreachable => vec![],
+    }
+  }
+}
+
+impl GetRegions for If {
+  fn get_regions(&self) -> Vec<NonNull<Region>> {
+    self.0.get_regions()
+  }
+}
+
 impl GetRegions for Func {
   fn get_regions(&self) -> Vec<NonNull<Region>> {
-    // self.controls.iter().map(|x| unsafe {x.as_ref()}.get_regions())
-    todo!()
+    let mut r: Vec<_> = self
+      .controls
+      .iter()
+      .flat_map(|x| unsafe { x.as_ref() }.get_regions())
+      .collect();
+    r.append(
+      &mut self
+        .effects
+        .iter()
+        .flat_map(|x| unsafe { x.as_ref() }.get_regions())
+        .collect(),
+    );
+    r
   }
 }

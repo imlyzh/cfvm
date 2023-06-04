@@ -5,7 +5,7 @@ use crate::{control::Region, data::Data};
 #[repr(C)]
 pub struct Effect {
   pub region_source: NonNull<Region>,
-  pub effect_source: NonNull<Effect>,
+  pub effect_source: Vec<NonNull<Effect>>,
   pub effect:        EffectInst,
 }
 

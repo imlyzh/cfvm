@@ -3,10 +3,9 @@ use std::ptr::NonNull;
 use cfvm_common::types::FunctionType;
 
 use crate::{
-  control::{Control, Region},
-  data::{Data, StackAlloc},
+  control::Control,
+  data::StackAlloc,
   effect::Effect,
-  GetRegions,
 };
 
 #[repr(C)]
@@ -20,13 +19,6 @@ pub struct Func {
   // pub datas:     Vec<NonNull<Data>>,
   pub controls:  Vec<NonNull<Control>>,
   pub effects:   Vec<NonNull<Effect>>,
-}
-
-impl GetRegions for Func {
-  fn get_regions(&self) -> Vec<NonNull<Region>> {
-    // self.controls.iter().map(|x| unsafe {x.as_ref()}.get_regions())
-    todo!()
-  }
 }
 
 /*

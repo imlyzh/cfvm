@@ -1,15 +1,13 @@
-use std::{ptr::NonNull, vec};
+use std::{collections::HashSet, ptr::NonNull, vec};
 
 use crate::{
-  control::{Control, ControlInst, If, Region},
+  control::{Control, Region},
   data::*,
   effect::*,
   function::*,
 };
 
-pub fn get_regions(_func: NonNull<Func>) -> Vec<NonNull<Region>> {
-  todo!("require impl get data sub graph")
-}
+use super::get_data_dep::GetDataDep;
 
 pub trait GetRegions {
   fn get_regions(&self) -> Vec<NonNull<Region>>;
@@ -17,20 +15,24 @@ pub trait GetRegions {
 
 impl GetRegions for Func {
   fn get_regions(&self) -> Vec<NonNull<Region>> {
-    let mut r: Vec<_> = self
+    let mut regions: Vec<_> = self
       .controls
       .iter()
       .flat_map(|x| unsafe { x.as_ref() }.get_regions())
       .collect();
-    r.append(
-      &mut self
+    regions.extend(
+      self
         .effects
         .iter()
-        .flat_map(|x| unsafe { x.as_ref() }.get_regions())
-        .collect(),
+        .flat_map(|x| unsafe { x.as_ref() }.get_regions()),
     );
-    todo!();
-    r
+
+    let datas = self.get_data_dep();
+    regions.extend(datas.iter().flat_map(Data::get_regions));
+
+    HashSet::<NonNull<Region>>::from_iter(regions.into_iter())
+      .into_iter()
+      .collect()
   }
 }
 

@@ -1,13 +1,12 @@
 use std::{collections::HashSet, ptr::NonNull, vec};
 
+use super::get_data_dep::GetDataDep;
 use crate::{
   control::{Control, Region},
   data::*,
   effect::*,
   function::*,
 };
-
-use super::get_data_dep::GetDataDep;
 
 pub trait GetRegions {
   fn get_regions(&self) -> Vec<NonNull<Region>>;

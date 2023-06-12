@@ -8,7 +8,6 @@ use crate::{
   function::*,
 };
 
-
 pub trait GetDataDep {
   fn get_data_dep(&self) -> Vec<Data>;
 }

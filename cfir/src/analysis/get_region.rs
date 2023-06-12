@@ -50,8 +50,8 @@ impl GetRegions for Effect {
 }
 
 impl GetRegions for Control {
+  #[inline(always)]
   fn get_regions(&self) -> Vec<NonNull<Region>> {
-    #[inline(always)]
     vec![self.region_source]
   }
 }

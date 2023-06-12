@@ -1,7 +1,6 @@
 ///# Get Data dependence
 use std::collections::HashSet;
 
-use super::get_effects::GetEffects;
 use crate::{
   control::{Control, ControlInst, If},
   data::*,
@@ -15,17 +14,16 @@ pub trait GetDataDep {
 
 impl GetDataDep for Func {
   fn get_data_dep(&self) -> Vec<Data> {
-    let mut datas: Vec<_> = self
-      .get_effects()
+    let mut datas: Vec<Data> = self
+      .effects
       .iter()
       .flat_map(|x| unsafe { x.as_ref() }.get_data_dep())
       .collect();
-    datas.append(
-      &mut self
+    datas.extend(
+      self
         .controls
         .iter()
-        .flat_map(|x| unsafe { x.as_ref() }.get_data_dep())
-        .collect(),
+        .flat_map(|x| unsafe { x.as_ref() }.get_data_dep()),
     );
 
     // Graph Propagation Process

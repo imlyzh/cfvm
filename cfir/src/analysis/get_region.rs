@@ -1,8 +1,8 @@
 use std::{collections::HashSet, ptr::NonNull, vec};
 
-use super::{get_controls::GetControls, get_data_dep::GetDataDep, get_effects::GetEffects};
+use super::get_data_dep::GetDataDep;
 use crate::{
-  control::{Control, Region},
+  control::{Control, ControlInst, If, Region},
   data::*,
   effect::*,
   function::*,
@@ -14,25 +14,33 @@ pub trait GetRegions {
 
 impl GetRegions for Func {
   fn get_regions(&self) -> Vec<NonNull<Region>> {
-    let mut regions: Vec<_> = self
-      .get_controls()
-      .iter()
-      .flat_map(|x| unsafe { x.as_ref() }.get_regions())
-      .collect();
-    regions.extend(
-      self
-        .get_effects()
-        .iter()
-        .flat_map(|x| unsafe { x.as_ref() }.get_regions()),
-    );
+    let controls: &Vec<NonNull<Control>> = &self.controls;
+    let effects: &Vec<NonNull<Effect>> = &self.effects;
+    let datas: &Vec<Data> = &self.get_data_dep();
 
-    let datas = self.get_data_dep();
-    regions.extend(datas.iter().flat_map(Data::get_regions));
-
-    HashSet::<NonNull<Region>>::from_iter(regions.into_iter())
-      .into_iter()
-      .collect()
+    body2regions(controls, effects, datas)
   }
+}
+
+pub fn body2regions(
+  controls: &Vec<NonNull<Control>>,
+  effects: &Vec<NonNull<Effect>>,
+  datas: &Vec<Data>,
+) -> Vec<NonNull<Region>> {
+  let mut regions: Vec<NonNull<Region>> = controls
+    .iter()
+    .flat_map(|x| unsafe { x.as_ref() }.get_regions())
+    .collect();
+  regions.extend(
+    effects
+      .iter()
+      .flat_map(|x| unsafe { x.as_ref() }.get_regions()),
+  );
+  regions.extend(datas.iter().flat_map(Data::get_regions));
+
+  HashSet::<NonNull<Region>>::from_iter(regions.into_iter())
+    .into_iter()
+    .collect()
 }
 
 impl GetRegions for Data {
@@ -56,7 +64,6 @@ impl GetRegions for Control {
   }
 }
 
-/*
 impl GetRegions for DataInst {
   fn get_regions(&self) -> Vec<NonNull<Region>> {
     match self {
@@ -151,4 +158,3 @@ impl GetRegions for If {
     self.0.get_regions()
   }
 }
-//  */

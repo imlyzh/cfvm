@@ -8,16 +8,22 @@ use crate::{
   function::*,
 };
 
-
 /// use it
 pub fn get_data_nodes(func: &Func) -> Vec<Data> {
   let mut old_datas: Option<HashSet<Data>> = None;
-  let mut new_datas: Option<HashSet<Data>> = Some(HashSet::from_iter(func.get_data_dep().into_iter()));
+  let mut new_datas: Option<HashSet<Data>> =
+    Some(HashSet::from_iter(func.get_data_dep().into_iter()));
   loop {
     if new_datas == old_datas {
       return new_datas.unwrap().into_iter().collect();
     }
-    let tmp_datas = Some(HashSet::from_iter(new_datas.as_ref().unwrap().iter().flat_map(Data::get_data_dep)));
+    let tmp_datas = Some(HashSet::from_iter(
+      new_datas
+        .as_ref()
+        .unwrap()
+        .iter()
+        .flat_map(Data::get_data_dep),
+    ));
     old_datas = new_datas;
     new_datas = tmp_datas;
   }
@@ -29,8 +35,18 @@ pub trait GetDataDep {
 
 impl GetDataDep for Func {
   fn get_data_dep(&self) -> Vec<Data> {
-    let mut datas: Vec<_> = self.effects.iter().flat_map(|x| unsafe { x.as_ref() }.get_data_dep()).collect();
-    datas.append(&mut self.controls.iter().flat_map(|x| unsafe { x.as_ref() }.get_data_dep()).collect());
+    let mut datas: Vec<_> = self
+      .effects
+      .iter()
+      .flat_map(|x| unsafe { x.as_ref() }.get_data_dep())
+      .collect();
+    datas.append(
+      &mut self
+        .controls
+        .iter()
+        .flat_map(|x| unsafe { x.as_ref() }.get_data_dep())
+        .collect(),
+    );
     datas
   }
 }

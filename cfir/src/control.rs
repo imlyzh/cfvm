@@ -5,9 +5,11 @@ use crate::data::Data;
 ///# Region
 
 #[repr(C)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Region(pub Vec<ControlOrigin>);
 
 #[repr(C)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ControlOrigin {
   Jump(NonNull<Region>),
   Branch(NonNull<Region>, If, bool),
@@ -16,12 +18,14 @@ pub enum ControlOrigin {
 ///# Control
 
 #[repr(C)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Control {
   pub region_source: NonNull<Region>,
   pub control:       ControlInst,
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ControlInst {
   Jump,
   // IndirectJump(Data),
@@ -31,4 +35,5 @@ pub enum ControlInst {
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct If(pub Data);

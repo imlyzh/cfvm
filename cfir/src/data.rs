@@ -12,12 +12,14 @@ use crate::{
 };
 
 #[repr(C)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Data {
   pub region_source: NonNull<Region>,
   pub data: DataInst,
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum DataInst {
   Const(Box<Type>, ConstantValue),
   Alloc(NonNull<StackAlloc>),

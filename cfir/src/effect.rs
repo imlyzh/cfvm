@@ -10,6 +10,7 @@ pub struct Effect {
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum EffectInst {
   // Barrier,
   // MachineCode(NonNull< MachineCode),

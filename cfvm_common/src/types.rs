@@ -4,7 +4,7 @@ pub trait GetType {
   fn get_type(&self) -> Type;
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Type {
   Void,
   OpaqueType,
@@ -14,7 +14,7 @@ pub enum Type {
   FunType(FunctionType),
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum SimpleType {
   Int(IntType),
   Float(FloatType),
@@ -23,18 +23,18 @@ pub enum SimpleType {
   Vector(VectorType),
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct PointerType(pub Box<Type>);
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct VectorType(pub Box<SimpleType>, pub u64);
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ArrayType(pub Box<Type>, pub u64);
 
 pub type IsNotAligned = bool;
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct RecordType(pub IsNotAligned, pub Vec<(Option<NonNull<str>>, Type)>);
 
 /*
@@ -47,20 +47,20 @@ pub enum RegType {
 }
 // */
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum StoreType {
   Volatile,
   Atomic,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum AllocaType {
   Register,
   // Register(RegType),
   Stack(Option<StoreType>),
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ParamsType(pub Vec<SimpleType>);
 
 impl ParamsType {
@@ -72,17 +72,17 @@ impl ParamsType {
   }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct FunctionType {
   pub return_type: SimpleType,
   pub params:      ParamsType,
 }
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 // #[repr(u8)]
 pub struct IntType(pub u64);
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(u8)]
 pub enum FloatType {
   // F8      = 0,
@@ -178,7 +178,7 @@ impl GetSize for FloatType {
   fn get_size(&self, platform_size: PlarformWidth) -> Option<u64> {
     let map_array = [8, 16, 32, 64, 128, 128];
     Some(size_align(
-      map_array[*self as usize],
+      map_array[self.clone() as usize],
       platform_size.aligned_size,
     ))
   }

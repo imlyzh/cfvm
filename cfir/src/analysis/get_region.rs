@@ -7,18 +7,55 @@ use crate::{
   function::*,
 };
 
+pub fn get_regions(_func: NonNull<Func>) -> Vec<NonNull<Region>> {
+  todo!("require impl get data sub graph")
+}
+
 pub trait GetRegions {
   fn get_regions(&self) -> Vec<NonNull<Region>>;
 }
 
-impl GetRegions for Data {
+impl GetRegions for Func {
   fn get_regions(&self) -> Vec<NonNull<Region>> {
-    let mut r = self.data.get_regions();
-    r.push(self.region_source);
+    let mut r: Vec<_> = self
+      .controls
+      .iter()
+      .flat_map(|x| unsafe { x.as_ref() }.get_regions())
+      .collect();
+    r.append(
+      &mut self
+        .effects
+        .iter()
+        .flat_map(|x| unsafe { x.as_ref() }.get_regions())
+        .collect(),
+    );
+    todo!();
     r
   }
 }
 
+impl GetRegions for Data {
+  #[inline(always)]
+  fn get_regions(&self) -> Vec<NonNull<Region>> {
+    vec![self.region_source]
+  }
+}
+
+impl GetRegions for Effect {
+  #[inline(always)]
+  fn get_regions(&self) -> Vec<NonNull<Region>> {
+    vec![self.region_source]
+  }
+}
+
+impl GetRegions for Control {
+  fn get_regions(&self) -> Vec<NonNull<Region>> {
+    #[inline(always)]
+    vec![self.region_source]
+  }
+}
+
+/*
 impl GetRegions for DataInst {
   fn get_regions(&self) -> Vec<NonNull<Region>> {
     match self {
@@ -79,14 +116,6 @@ impl GetRegions for Phi {
   }
 }
 
-impl GetRegions for Effect {
-  fn get_regions(&self) -> Vec<NonNull<Region>> {
-    let mut r = vec![self.region_source];
-    r.append(&mut self.effect.get_regions());
-    todo!()
-  }
-}
-
 impl GetRegions for EffectInst {
   fn get_regions(&self) -> Vec<NonNull<Region>> {
     match self {
@@ -106,14 +135,6 @@ impl GetRegions for EffectInst {
   }
 }
 
-impl GetRegions for Control {
-  fn get_regions(&self) -> Vec<NonNull<Region>> {
-    let mut r = vec![self.region_source];
-    r.append(&mut self.control.get_regions());
-    r
-  }
-}
-
 impl GetRegions for ControlInst {
   fn get_regions(&self) -> Vec<NonNull<Region>> {
     match self {
@@ -129,21 +150,4 @@ impl GetRegions for If {
     self.0.get_regions()
   }
 }
-
-impl GetRegions for Func {
-  fn get_regions(&self) -> Vec<NonNull<Region>> {
-    let mut r: Vec<_> = self
-      .controls
-      .iter()
-      .flat_map(|x| unsafe { x.as_ref() }.get_regions())
-      .collect();
-    r.append(
-      &mut self
-        .effects
-        .iter()
-        .flat_map(|x| unsafe { x.as_ref() }.get_regions())
-        .collect(),
-    );
-    r
-  }
-}
+//  */

@@ -8,6 +8,8 @@ use crate::{
   function::*,
 };
 
+use super::get_effects::GetEffects;
+
 pub trait GetDataDep {
   fn get_data_dep(&self) -> Vec<Data>;
 }
@@ -15,7 +17,7 @@ pub trait GetDataDep {
 impl GetDataDep for Func {
   fn get_data_dep(&self) -> Vec<Data> {
     let mut datas: Vec<_> = self
-      .effects
+      .get_effects()
       .iter()
       .flat_map(|x| unsafe { x.as_ref() }.get_data_dep())
       .collect();

@@ -1,6 +1,6 @@
 use std::{collections::HashSet, ptr::NonNull, vec};
 
-use super::{get_data_dep::GetDataDep, get_controls::GetControls};
+use super::{get_data_dep::GetDataDep, get_controls::GetControls, get_effects::GetEffects};
 use crate::{
   control::{Control, Region},
   data::*,
@@ -21,7 +21,7 @@ impl GetRegions for Func {
       .collect();
     regions.extend(
       self
-        .effects
+        .get_effects()
         .iter()
         .flat_map(|x| unsafe { x.as_ref() }.get_regions()),
     );

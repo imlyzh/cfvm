@@ -1,8 +1,6 @@
 use std::ptr::NonNull;
 
-use crate::{
-  function::*, control::Control,
-};
+use crate::{control::Control, function::*};
 
 pub trait GetControls {
   fn get_controls(&self) -> Vec<NonNull<Control>>;

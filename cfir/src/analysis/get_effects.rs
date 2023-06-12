@@ -1,9 +1,6 @@
 use std::ptr::NonNull;
 
-use crate::{
-  effect::*,
-  function::*,
-};
+use crate::{effect::*, function::*};
 
 pub trait GetEffects {
   fn get_effects(&self) -> Vec<NonNull<Effect>>;

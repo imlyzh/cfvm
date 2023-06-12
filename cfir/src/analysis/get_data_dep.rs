@@ -1,14 +1,13 @@
 ///# Get Data dependence
 use std::collections::HashSet;
 
+use super::get_effects::GetEffects;
 use crate::{
   control::{Control, ControlInst, If},
   data::*,
   effect::*,
   function::*,
 };
-
-use super::get_effects::GetEffects;
 
 pub trait GetDataDep {
   fn get_data_dep(&self) -> Vec<Data>;

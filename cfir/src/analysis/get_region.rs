@@ -1,6 +1,6 @@
 use std::{collections::HashSet, ptr::NonNull, vec};
 
-use super::{get_data_dep::GetDataDep, get_controls::GetControls, get_effects::GetEffects};
+use super::{get_controls::GetControls, get_data_dep::GetDataDep, get_effects::GetEffects};
 use crate::{
   control::{Control, Region},
   data::*,

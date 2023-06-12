@@ -1,6 +1,9 @@
 use std::{collections::HashMap, ptr::NonNull};
 
-use cfir::{analysis::{get_region::GetRegions, get_data_dep::GetDataDep, get_effects::GetEffects}, control::Region};
+use cfir::{
+  analysis::{get_data_dep::GetDataDep, get_effects::GetEffects, get_region::GetRegions},
+  control::Region,
+};
 
 use crate::{basic_block::BasicBlock, function::Func};
 
@@ -22,8 +25,6 @@ impl Builder<cfir::function::Func> for Func {
       .into_iter()
       .map(|x| (x, BasicBlock::default()))
       .collect();
-
-
 
     todo!()
   }

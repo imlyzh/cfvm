@@ -1,6 +1,6 @@
 use std::{collections::HashSet, ptr::NonNull, vec};
 
-use super::get_data_dep::GetDataDep;
+use super::{get_data_dep::GetDataDep, get_controls::GetControls};
 use crate::{
   control::{Control, Region},
   data::*,
@@ -15,7 +15,7 @@ pub trait GetRegions {
 impl GetRegions for Func {
   fn get_regions(&self) -> Vec<NonNull<Region>> {
     let mut regions: Vec<_> = self
-      .controls
+      .get_controls()
       .iter()
       .flat_map(|x| unsafe { x.as_ref() }.get_regions())
       .collect();

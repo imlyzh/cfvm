@@ -2,15 +2,14 @@ use crate::{symbol::Name, value::Constant};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Type {
-  Name(Name),
-  Template(TypeTemplate),
-  Func(Box<FuncType>),
+  TypeFunc(TypeFunc),
+  FuncType(FuncType),
   // Tuple(TupleType),
   // Union(UnionType),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct TypeTemplate {
+pub struct TypeFunc {
   pub name: Name,
   pub args: Vec<TypeOrConst>,
 }

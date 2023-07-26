@@ -1,4 +1,4 @@
-use crate::{op::Op, symbol::Symbol};
+use crate::symbol::Symbol;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Value {

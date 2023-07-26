@@ -16,3 +16,5 @@ pub struct Op {
   pub ragion: Region,
   pub sign: FuncType,
 }
+
+pub type Space = Vec<Op>;

@@ -22,7 +22,7 @@ impl Builder<cfir::function::Func> for Func {
     let datas = i.get_data_dep();
     let regions = body2regions(controls, effects, &datas);
 
-    let bbs: HashMap<NonNull<Region>, BasicBlock> = regions
+    let _bbs: HashMap<NonNull<Region>, BasicBlock> = regions
       .into_iter()
       .map(|x| (x, BasicBlock::default()))
       .collect();

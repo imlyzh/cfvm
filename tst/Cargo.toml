@@ -1,5 +1,5 @@
 [package]
-name = "fcir"
+name = "tst"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true

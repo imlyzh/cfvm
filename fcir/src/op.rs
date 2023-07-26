@@ -1,13 +1,18 @@
-use std::{collections::HashMap, ptr::NonNull};
+use std::collections::HashMap;
 
-use crate::{block::Region, types::FuncType, value::{Value, Constant}, name::Name};
+use crate::{
+  block::Region,
+  symbol::{Name, Symbol},
+  types::FuncType,
+  value::{Constant, Value},
+};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Op {
   pub opcode: Name,
-  pub output: Vec<NonNull<str>>,
-  pub input:  Vec<Value>,
-  pub attr:   HashMap<NonNull<str>, Constant>,
+  pub defs: Vec<Symbol>,
+  pub uses: Vec<Value>,
+  pub attr: HashMap<Symbol, Constant>,
   pub ragion: Region,
-  pub sign:   FuncType,
+  pub sign: FuncType,
 }

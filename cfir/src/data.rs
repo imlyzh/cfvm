@@ -35,8 +35,8 @@ pub enum DataInst {
 
 #[repr(C)]
 pub struct StackAlloc {
-  pub func:  NonNull<Func>,
-  pub name:  NonNull<str>,
+  pub func: NonNull<Func>,
+  pub name: NonNull<str>,
   pub type_: NonNull<Type>,
 }
 
@@ -51,8 +51,8 @@ pub enum PriOp {
 
 #[repr(C)]
 pub struct BinOp {
-  pub data0:  Data,
-  pub data1:  Data,
+  pub data0: Data,
+  pub data1: Data,
   pub opcode: Opcode,
 }
 
@@ -118,7 +118,7 @@ pub enum AddrOp {
 
 #[repr(C)]
 pub struct TypeCast {
-  pub data:   Data,
+  pub data: Data,
   pub astype: Type,
 }
 

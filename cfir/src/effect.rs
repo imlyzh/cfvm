@@ -6,7 +6,7 @@ use crate::{control::Region, data::Data};
 pub struct Effect {
   pub region_source: NonNull<Region>,
   pub effect_source: Vec<NonNull<Effect>>,
-  pub effect:        EffectInst,
+  pub effect: EffectInst,
 }
 
 #[repr(C)]
@@ -18,7 +18,7 @@ pub enum EffectInst {
     ptr: Data,
   },
   Write {
-    ptr:   Data,
+    ptr: Data,
     value: Data,
   },
   Call {

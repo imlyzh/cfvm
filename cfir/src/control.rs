@@ -21,7 +21,7 @@ pub enum ControlOrigin {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Control {
   pub region_source: NonNull<Region>,
-  pub control:       ControlInst,
+  pub control: ControlInst,
 }
 
 #[repr(C)]

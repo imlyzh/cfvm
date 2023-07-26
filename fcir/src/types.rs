@@ -1,4 +1,4 @@
-use crate::{name::Name, value::Constant};
+use crate::{symbol::Name, value::Constant};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Type {

@@ -7,9 +7,9 @@ use crate::basic_block::BasicBlock;
 
 #[repr(C)]
 pub struct Func {
-  pub name:      NonNull<str>,
+  pub name: NonNull<str>,
   pub type_info: FunctionType,
   pub frameinfo: FrameInfo,
-  pub bbs:       Vec<BasicBlock>,
-  pub start:     usize,
+  pub bbs: Vec<BasicBlock>,
+  pub start: usize,
 }

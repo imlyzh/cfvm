@@ -1,17 +1,12 @@
-use std::ptr::NonNull;
-
-use crate::op::Op;
+use crate::{op::Op, symbol::Symbol};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Value {
   Const(Constant),
-  Node(DefRef),
-  Argument(NonNull<str>),
-  Label(NonNull<str>),
+  Use(Symbol),
+  Argument(Symbol),
+  Label(Symbol),
 }
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct DefRef(pub NonNull<Op>, pub usize);
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Constant {

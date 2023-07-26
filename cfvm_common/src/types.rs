@@ -75,7 +75,7 @@ impl ParamsType {
 #[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct FunctionType {
   pub return_type: SimpleType,
-  pub params:      ParamsType,
+  pub params: ParamsType,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
@@ -95,8 +95,8 @@ pub enum FloatType {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PlarformWidth {
-  pub data_size:    u64,
-  pub ptr_size:     u64,
+  pub data_size: u64,
+  pub ptr_size: u64,
   pub aligned_size: u64,
 }
 

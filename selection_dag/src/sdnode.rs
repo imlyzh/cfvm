@@ -9,7 +9,7 @@ use crate::basic_block::BasicBlock;
 pub struct SDNode {
   pub inst: NonNull<str>,
   // pub cond: NonNUll<BasicBlock>,
-  pub ops:  Vec<SDValue>,
+  pub ops: Vec<SDValue>,
 }
 
 #[repr(C)]
@@ -25,7 +25,7 @@ pub enum SDValue {
 #[derive(Debug, Clone)]
 pub struct Reg {
   pub reg_type: RegType,
-  pub index:    usize,
+  pub index: usize,
 }
 
 #[repr(C)]

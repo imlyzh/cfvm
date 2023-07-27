@@ -1,8 +1,8 @@
 tab_spaces = 2
-struct_field_align_threshold = 8
-enum_discrim_align_threshold = 100
+# struct_field_align_threshold = 8
+# enum_discrim_align_threshold = 100
 
-group_imports = "StdExternalCrate"
+# group_imports = "StdExternalCrate"
 
 newline_style = "Unix"
 

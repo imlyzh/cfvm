@@ -4,4 +4,4 @@ use std::ptr::NonNull;
 pub struct Symbol(pub NonNull<str>);
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct Name(Option<Symbol>, Symbol);
+pub struct Name(pub Option<Symbol>, pub Symbol);

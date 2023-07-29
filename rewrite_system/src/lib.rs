@@ -100,13 +100,19 @@ pub fn rewrite<Pat, Tem, I: Clone + Matching<Pat, T1>, T1: Unify + Rewrite<Tem, 
         r = r.as_ref().unwrap().unify(&x)
       }
     });
-    let (multi_index, match_result) = r?;
-    let rewrite_result = tem.iter().map(|tem| match_result.rewrite(tem)).collect::<Option<Vec<_>>>()?.into_iter().flatten().collect::<Vec<_>>();
-    let mut input = input.iter().cloned().map(Some).collect::<Vec<_>>();
-    for i in multi_index {
-      input[i] = None;
-    }
-    let mut input = input.into_iter().flatten().collect::<Vec<_>>();
-    input.extend(rewrite_result);
-    Some(input)
+  let (multi_index, match_result) = r?;
+  let rewrite_result = tem
+    .iter()
+    .map(|tem| match_result.rewrite(tem))
+    .collect::<Option<Vec<_>>>()?
+    .into_iter()
+    .flatten()
+    .collect::<Vec<_>>();
+  let mut input = input.iter().cloned().map(Some).collect::<Vec<_>>();
+  for i in multi_index {
+    input[i] = None;
+  }
+  let mut input = input.into_iter().flatten().collect::<Vec<_>>();
+  input.extend(rewrite_result);
+  Some(input)
 }

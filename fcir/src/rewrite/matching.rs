@@ -1,3 +1,5 @@
+use rewrite_system::Matching;
+
 use crate::{
   op::Op,
   symbol::{Name, Symbol},
@@ -7,31 +9,31 @@ use crate::{
 
 use super::pattern::{CatchExpr, ItemPat, NamePat, OpPat};
 
+/*
 pub trait Matching<T> {
   type Output;
   fn matching(&self, src: &T) -> Option<Self::Output>;
 }
+ */
 
-impl Matching<Op> for OpPat {
-  type Output = Vec<(Symbol, Value)>;
-
-  fn matching(&self, src: &Op) -> Option<Self::Output> {
-    self.opcode.matching(&src.opcode)?;
-    self.sign.matching(&src.sign)?;
-    let mut r = self
+impl Matching<OpPat, Vec<(Symbol, Value)>> for Op {
+  fn matching(&self, pat: &OpPat) -> Option<Vec<(Symbol, Value)>> {
+    self.opcode.matching(&pat.opcode)?;
+    self.sign.matching(&pat.sign)?;
+    let mut r = pat
       .uses
       .iter()
-      .zip(src.uses.iter())
-      .map(|(pat, src)| pat.matching(src))
+      .zip(self.uses.iter())
+      .map(|(pat, src)| item_pat_matching(src, pat))
       .collect::<Option<Vec<_>>>()?
       .into_iter()
       .flatten()
       .collect::<Vec<_>>();
-    let mut r1 = self
+    let mut r1 = pat
       .defs
       .iter()
-      .zip(src.defs.iter())
-      .map(|(pat, src)| pat.matching(src))
+      .zip(self.defs.iter())
+      .map(|(pat, src)| item_pat_matching(src, pat))
       .collect::<Option<Vec<_>>>()?
       .into_iter()
       .flatten()
@@ -42,54 +44,54 @@ impl Matching<Op> for OpPat {
   }
 }
 
-impl<T: Clone + Eq> Matching<T> for ItemPat<T> {
-  type Output = Option<(Symbol, T)>;
-
-  fn matching(&self, src: &T) -> Option<Self::Output> {
-    match self {
-      ItemPat::Catch(sym) => sym.matching(src),
-      ItemPat::Literal(lit) if lit == src => Some(None),
-      _ => None,
-    }
+fn item_pat_matching<T: Clone + Eq>(this: &T, pat: &ItemPat<T>) -> Option<Option<(Symbol, T)>> {
+  match pat {
+    ItemPat::Catch(sym) => catch_expr_matching_anything(this, sym),
+    ItemPat::Literal(lit) if lit == this => Some(None),
+    _ => None,
   }
 }
 
-impl<T: Clone> Matching<T> for CatchExpr {
-  type Output = Option<(Symbol, T)>;
-
-  fn matching(&self, src: &T) -> Option<Self::Output> {
-    if let Some(_t) = &self.1 {
-      unimplemented!()
-    }
-    if let Some(s) = &self.0 {
-      return Some(Some((s.clone(), src.clone())));
-    }
-    Some(None)
+pub fn catch_expr_matching_anything<T: Clone>(
+  this: &T,
+  pat: &CatchExpr,
+) -> Option<Option<(Symbol, T)>> {
+  if let Some(_t) = &pat.1 {
+    unimplemented!()
   }
+  if let Some(s) = &pat.0 {
+    return Some(Some((s.clone(), this.clone())));
+  }
+  Some(None)
 }
 
-impl Matching<Name> for NamePat {
-  type Output = ();
-
-  fn matching(&self, src: &Name) -> Option<Self::Output> {
-    if self.0 != src.0 {
+impl Matching<NamePat, ()> for Name {
+  fn matching(&self, pat: &NamePat) -> Option<()> {
+    if self.0 != pat.0 {
       return None;
     }
-    if let Some(pat) = &self.1 {
-      if pat != &src.1 {
-        return None;
-      }
+    if let Some(pat) = &pat.1 {
+      self.1.matching(pat)
+    } else {
+      Some(())
     }
-    Some(())
   }
 }
 
-impl Matching<FuncType> for Option<FuncType> {
-  type Output = ();
+impl Matching<Symbol, ()> for Symbol {
+  fn matching(&self, pat: &Symbol) -> Option<()> {
+    if self != pat {
+      None
+    } else {
+      Some(())
+    }
+  }
+}
 
-  fn matching(&self, src: &FuncType) -> Option<Self::Output> {
-    if let Some(pat) = self {
-      if pat != src {
+impl Matching<Option<FuncType>, ()> for FuncType {
+  fn matching(&self, pat: &Option<FuncType>) -> Option<()> {
+    if let Some(pat) = pat {
+      if pat != self {
         return None;
       }
     }

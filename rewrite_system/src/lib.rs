@@ -10,8 +10,8 @@ pub enum Error {
   RewriteError,
 }
 
-pub trait Rewrite<Pat, Output, Err=()> {
-  fn rewrite(&self, pat: &Pat) -> Result<Vec<Output>, Err>;
+pub trait Rewrite<Pat, Output, Err = ()> {
+  fn rewrite(&self, pat: &Pat) -> Result<Output, Err>;
 }
 
 pub trait Unify: Sized {
@@ -81,8 +81,9 @@ pub fn rewrite_template<Pat, Output, O: Rewrite<Pat, Output>>(
   match_result
     .iter()
     .map(|o| o.rewrite(pat))
-    .collect::<Result<Vec<_>, _>>().map_err(|_| Error::RewriteError)
-    .map(|x| x.into_iter().flatten().collect())
+    .collect::<Result<Vec<_>, _>>()
+    .map_err(|_| Error::RewriteError)
+  // .map(|x| x.into_iter().flatten().collect())
 }
 
 pub fn rewrite<Pat, Tem, I: Clone + Matching<Pat, T1>, T1: Unify + Rewrite<Tem, I>>(
@@ -112,9 +113,10 @@ pub fn rewrite<Pat, Tem, I: Clone + Matching<Pat, T1>, T1: Unify + Rewrite<Tem, 
   let rewrite_result = tem
     .iter()
     .map(|tem| match_result.rewrite(tem))
-    .collect::<Result<Vec<_>, _>>().map_err(|_| Error::RewriteError)?
+    .collect::<Result<Vec<_>, _>>()
+    .map_err(|_| Error::RewriteError)?
     .into_iter()
-    .flatten()
+    // .flatten()
     .collect::<Vec<_>>();
   let mut input = input.iter().cloned().map(Some).collect::<Vec<_>>();
   for i in multi_index {

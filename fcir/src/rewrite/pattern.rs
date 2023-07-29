@@ -1,5 +1,13 @@
 use crate::{symbol::Symbol, types::FuncType, value::Value};
 
+pub struct CombinePat {
+  pub opcode: NamePat,
+  pub defs: Vec<ItemPat<Symbol>>,
+  pub uses: Vec<ItemPat<Value>>,
+  // pub ragion: Option<Catch>,
+  pub sign: Option<FuncType>,
+}
+
 pub struct OpPat {
   pub opcode: NamePat,
   pub defs: Vec<ItemPat<Symbol>>,

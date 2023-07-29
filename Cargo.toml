@@ -21,7 +21,9 @@ members = [
   "cfir",
   "cfir_frontend",
   "selection_dag",
+
   "fcir",
+  "rewrite_system",
   ]
 
 [workspace.package]
@@ -35,7 +37,9 @@ cfvm-common = { path="cfvm_common" }
 cfvm-cfir = { path="cfir" }
 cfvm-cfir-frontend = { path="cfir_frontend" }
 cfvm-selection-dag = { path="selection_dag" }
+
 cfvm-fcvm = { path="fcvm" }
+cfvm-rewrite_system = { path="rewrite_system" }
 
 
 [dependencies]

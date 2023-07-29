@@ -7,7 +7,7 @@ use crate::{
   value::Value,
 };
 
-use super::pattern::{CatchExpr, ItemPat, NamePat, OpPat};
+use super::pattern::{CatchExpr, ItemPat, MatchResult, NamePat, OpPat};
 
 /*
 pub trait Matching<T> {
@@ -16,8 +16,8 @@ pub trait Matching<T> {
 }
  */
 
-impl Matching<OpPat, Vec<(Symbol, Value)>> for Op {
-  fn matching(&self, pat: &OpPat) -> Option<Vec<(Symbol, Value)>> {
+impl Matching<OpPat, MatchResult> for Op {
+  fn matching(&self, pat: &OpPat) -> Option<MatchResult> {
     self.opcode.matching(&pat.opcode)?;
     self.sign.matching(&pat.sign)?;
     let mut r = pat

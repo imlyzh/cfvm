@@ -1,5 +1,7 @@
 use crate::{symbol::Symbol, types::FuncType, value::Value};
 
+pub type MatchResult = Vec<(Symbol, Value)>;
+/*
 pub struct CombinePat {
   pub opcode: NamePat,
   pub defs: Vec<ItemPat<Symbol>>,
@@ -7,6 +9,7 @@ pub struct CombinePat {
   // pub ragion: Option<Catch>,
   pub sign: Option<FuncType>,
 }
+// */
 
 pub struct OpPat {
   pub opcode: NamePat,

@@ -12,22 +12,28 @@ pub trait Unify: Sized {
   fn unify(&self, other: &Self) -> Option<Self>;
 }
 
+impl<T: Unify> Unify for (Vec<usize>, T) {
+  fn unify(&self, other: &Self) -> Option<Self> {
+    self.1.unify(&other.1).map(|t| {
+      let mut i: Vec<usize> = vec![];
+      i.extend(&self.0);
+      i.extend(&other.0);
+      (i, t)
+    })
+  }
+}
+
+/*
 impl<T: Unify> Unify for Vec<(Vec<usize>, T)> {
   fn unify(&self, other: &Self) -> Option<Self> {
     self
       .iter()
       .flat_map(|a| other.iter().map(move |b| (a, b)))
-      .map(|(a, b)| {
-        a.1.unify(&b.1).map(|t| {
-          let mut i: Vec<usize> = vec![];
-          i.extend(&a.0);
-          i.extend(&b.0);
-          (i, t)
-        })
-      })
+      .map(|(a, b)| a.unify(b))
       .collect::<Option<Vec<_>>>()
   }
 }
+// */
 
 pub fn matching_all<Pat, Output, T: Matching<Pat, Output>>(
   match_source: Records<T>,
@@ -71,12 +77,13 @@ pub fn rewrite_template<Pat, Output, O: Rewrite<Pat, Output>>(
     .map(|x| x.into_iter().flatten().collect())
 }
 
-pub fn rewrite<Pat, Tem, Output, I: Matching<Pat, T1>, T1: Unify + Rewrite<Tem, Output>>(
+pub fn rewrite<Pat, Tem, I: Clone + Matching<Pat, T1>, T1: Unify + Rewrite<Tem, I>>(
   pat: Records<(Pat, bool)>, // pat, is matching one
-  tem: Records<Pat>,
+  tem: Records<Tem>,
   input: Records<I>,
-) -> Option<Vec<Output>> {
-  let r = pat
+) -> Option<Vec<I>> {
+  let mut r = None;
+  pat
     .iter()
     .flat_map(|(pat, is_matching_one)| {
       if *is_matching_one {
@@ -85,8 +92,21 @@ pub fn rewrite<Pat, Tem, Output, I: Matching<Pat, T1>, T1: Unify + Rewrite<Tem, 
         matching_all(input, pat)
       }
     })
-    .map(|x| (vec![x.0], x.1));
-  // .fold(|a, b| a.unify(b)).collect::<Vec<_>>();
-  // (&a).unify(&b).into_iter().flatten().collect()
-  todo!()
+    .map(|x| (vec![x.0], x.1))
+    .for_each(|x| {
+      if r.is_none() {
+        r = Some(x)
+      } else {
+        r = r.as_ref().unwrap().unify(&x)
+      }
+    });
+    let (multi_index, match_result) = r?;
+    let rewrite_result = tem.iter().map(|tem| match_result.rewrite(tem)).collect::<Option<Vec<_>>>()?.into_iter().flatten().collect::<Vec<_>>();
+    let mut input = input.iter().cloned().map(Some).collect::<Vec<_>>();
+    for i in multi_index {
+      input[i] = None;
+    }
+    let mut input = input.into_iter().flatten().collect::<Vec<_>>();
+    input.extend(rewrite_result);
+    Some(input)
 }

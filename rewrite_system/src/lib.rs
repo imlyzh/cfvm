@@ -86,7 +86,33 @@ pub fn rewrite_template<Pat, Output, O: Rewrite<Pat, Output>>(
   // .map(|x| x.into_iter().flatten().collect())
 }
 
-pub fn tem2rewrite<'a, Tem: 'a, I, T1: Rewrite<Tem, I>>(
+pub fn pat2matcher<'a, Pat: 'a, I: Clone + Matching<Pat, T1>, T1: Unify>(
+  pat: Records<'a, (Pat, bool)>,
+) -> impl 'a + Fn(Records<I>) -> Option<(Vec<usize>, T1)> {
+  |input: Records<I>| {
+    let mut r = None;
+    pat
+      .iter()
+      .flat_map(|(pat, is_matching_one)| {
+        if *is_matching_one {
+          matching_one(input, pat)
+        } else {
+          matching_all(input, pat)
+        }
+      })
+      .map(|x| (vec![x.0], x.1))
+      .for_each(|x| {
+        if r.is_none() {
+          r = Some(x)
+        } else {
+          r = r.as_ref().unwrap().unify(&x)
+        }
+      });
+    r
+  }
+}
+
+pub fn tem2rewriter<'a, Tem: 'a, I, T1: Rewrite<Tem, I>>(
   tem: Records<'a, Tem>,
 ) -> impl 'a + Fn(&T1) -> Result<Vec<I>, Error> {
   |match_result: &T1| {
@@ -98,7 +124,7 @@ pub fn tem2rewrite<'a, Tem: 'a, I, T1: Rewrite<Tem, I>>(
   }
 }
 
-pub fn matching_and_produce<
+pub fn matching_and_rewrite_produce<
   'a,
   Pat,
   Tem,
@@ -106,29 +132,11 @@ pub fn matching_and_produce<
   T1: Unify + Into<T2>,
   T2: Rewrite<Tem, I>,
 >(
-  pat: Records<(Pat, bool)>, // pat, is matching one
+  match_produce: impl 'a + Fn(Records<I>) -> Option<(Vec<usize>, T1)>,
   rewrite_produce: impl 'a + Fn(&T2) -> Result<Vec<I>, Error>,
   input: Records<I>,
 ) -> Result<Vec<I>, Error> {
-  let mut r = None;
-  pat
-    .iter()
-    .flat_map(|(pat, is_matching_one)| {
-      if *is_matching_one {
-        matching_one(input, pat)
-      } else {
-        matching_all(input, pat)
-      }
-    })
-    .map(|x| (vec![x.0], x.1))
-    .for_each(|x| {
-      if r.is_none() {
-        r = Some(x)
-      } else {
-        r = r.as_ref().unwrap().unify(&x)
-      }
-    });
-  let (multi_index, match_result) = r.ok_or(Error::MatchError)?;
+  let (multi_index, match_result) = match_produce(input).ok_or(Error::MatchError)?;
   let rewrite_result = rewrite_produce(&match_result.into())?;
   let mut input = input.iter().cloned().map(Some).collect::<Vec<_>>();
   for i in multi_index {
@@ -140,7 +148,6 @@ pub fn matching_and_produce<
 }
 
 pub fn matching_and_rewrite<
-  'a,
   Pat,
   Tem,
   I: Clone + Matching<Pat, T1>,
@@ -151,5 +158,5 @@ pub fn matching_and_rewrite<
   tem: Records<Tem>,
   input: Records<I>,
 ) -> Result<Vec<I>, Error> {
-  matching_and_produce(pat, tem2rewrite(tem), input)
+  matching_and_rewrite_produce(pat2matcher(pat), tem2rewriter(tem), input)
 }

@@ -1,6 +1,11 @@
 use rewrite_system::Rewrite;
 
-use crate::{op::Op, symbol::Name, types::FuncType, value::Value};
+use crate::{
+  op::Op,
+  symbol::{Name, Symbol},
+  types::FuncType,
+  value::Value,
+};
 
 use super::pattern::{ItemPat, MatchResult2, NamePat, OpPat};
 
@@ -30,8 +35,8 @@ impl Rewrite<OpPat, Op> for MatchResult2 {
   }
 }
 
-impl<T: Clone> Rewrite<ItemPat<T>, T> for MatchResult2 {
-  fn rewrite(&self, pat: &ItemPat<T>) -> Result<T, ()> {
+impl Rewrite<ItemPat<Symbol>, Symbol> for MatchResult2 {
+  fn rewrite(&self, pat: &ItemPat<Symbol>) -> Result<Symbol, ()> {
     match pat {
       ItemPat::Catch(sym) => {
         let s = sym.as_ref().0.as_ref().ok_or(())?;
@@ -39,12 +44,23 @@ impl<T: Clone> Rewrite<ItemPat<T>, T> for MatchResult2 {
         let v = self.get(s).ok_or(())?;
         // todo: impl type check
         match v {
-          Value::Const(_) => todo!(),
-          Value::Use(_) => todo!(),
-          Value::Argument(_) => todo!(),
-          Value::Label(_) => todo!(),
+          // Value::Label(v) |
+          Value::Argument(v) | Value::Use(v) => Ok(v.clone()),
+          _ => Err(()),
         }
-        Ok(todo!())
+      },
+      ItemPat::Literal(lit) => Ok(lit.clone()),
+    }
+  }
+}
+
+impl Rewrite<ItemPat<Value>, Value> for MatchResult2 {
+  fn rewrite(&self, pat: &ItemPat<Value>) -> Result<Value, ()> {
+    match pat {
+      ItemPat::Catch(sym) => {
+        let s = sym.as_ref().0.as_ref().ok_or(())?;
+        let _t = sym.as_ref().1.as_ref().ok_or(())?;
+        self.get(s).cloned().ok_or(())
       },
       ItemPat::Literal(lit) => Ok(lit.clone()),
     }

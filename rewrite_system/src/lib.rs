@@ -86,9 +86,9 @@ pub fn rewrite_template<Pat, Output, O: Rewrite<Pat, Output>>(
   // .map(|x| x.into_iter().flatten().collect())
 }
 
-pub fn tem2rewrite<'a, Tem: 'a, I, T1: Unify + Rewrite<Tem, I>>(
+pub fn tem2rewrite<'a, Tem: 'a, I, T1: Rewrite<Tem, I>>(
   tem: Records<'a, Tem>,
-) -> impl 'a + FnOnce(&T1) -> Result<Vec<I>, Error> {
+) -> impl 'a + Fn(&T1) -> Result<Vec<I>, Error> {
   |match_result: &T1| {
     tem
       .iter()
@@ -103,10 +103,11 @@ pub fn matching_and_produce<
   Pat,
   Tem,
   I: Clone + Matching<Pat, T1>,
-  T1: Unify + Rewrite<Tem, I>,
+  T1: Unify + Into<T2>,
+  T2: Rewrite<Tem, I>,
 >(
   pat: Records<(Pat, bool)>, // pat, is matching one
-  rewrite_produce: impl 'a + FnOnce(&T1) -> Result<Vec<I>, Error>,
+  rewrite_produce: impl 'a + Fn(&T2) -> Result<Vec<I>, Error>,
   input: Records<I>,
 ) -> Result<Vec<I>, Error> {
   let mut r = None;
@@ -128,7 +129,7 @@ pub fn matching_and_produce<
       }
     });
   let (multi_index, match_result) = r.ok_or(Error::MatchError)?;
-  let rewrite_result = rewrite_produce(&match_result)?;
+  let rewrite_result = rewrite_produce(&match_result.into())?;
   let mut input = input.iter().cloned().map(Some).collect::<Vec<_>>();
   for i in multi_index {
     input[i] = None;
@@ -143,7 +144,8 @@ pub fn matching_and_rewrite<
   Pat,
   Tem,
   I: Clone + Matching<Pat, T1>,
-  T1: Unify + Rewrite<Tem, I>,
+  T1: Unify + Into<T2>,
+  T2: Rewrite<Tem, I>,
 >(
   pat: Records<(Pat, bool)>, // pat, is matching one
   tem: Records<Tem>,

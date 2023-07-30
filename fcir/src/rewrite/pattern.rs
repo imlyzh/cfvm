@@ -1,6 +1,9 @@
+use std::collections::HashMap;
+
 use crate::{symbol::Symbol, types::FuncType, value::Value};
 
-pub type MatchResult = Vec<(Symbol, Value)>;
+pub type MatchResult1 = Vec<(Symbol, Value)>;
+pub type MatchResult2 = HashMap<Symbol, Value>;
 /*
 pub struct CombinePat {
   pub opcode: NamePat,

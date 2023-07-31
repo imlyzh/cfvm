@@ -1,4 +1,3 @@
-pub mod matching;
+pub mod matcher;
 pub mod pattern;
-pub mod rewrite;
-pub mod template;
+pub mod rewriter;

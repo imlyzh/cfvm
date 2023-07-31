@@ -1,5 +1,5 @@
 [package]
-name = "cfir_frontend"
+name = "fcir_rewrite"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true

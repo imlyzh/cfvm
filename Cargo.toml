@@ -3,6 +3,7 @@ name = "cfvm"
 version = "0.1.0"
 authors = ["Lyzh <enterindex@gmail.com>"]
 edition = "2021"
+description = "A rewrite-driven, multi-target optimizing compiler with multi-level IR support."
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

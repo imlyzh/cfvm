@@ -1,4 +1,4 @@
-use rewrite_system::Matching;
+use rewrite_system::matcher::Matching;
 
 use crate::{
   op::Op,

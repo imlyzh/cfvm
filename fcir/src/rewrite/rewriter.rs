@@ -1,4 +1,4 @@
-use rewrite_system::Rewrite;
+use rewrite_system::rewriter::Rewrite;
 
 use crate::{
   op::Op,

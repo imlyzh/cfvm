@@ -1,17 +1,15 @@
-pub type Records<'a, Tup> = &'a [Tup];
+use matcher::{pat2matcher, Matching};
+use rewriter::{tem2rewriter, Rewrite};
 
-pub trait Matching<Pat, Output> {
-  fn matching(&self, pat: &Pat) -> Option<Output>;
-}
+pub mod matcher;
+pub mod rewriter;
+
+pub type Records<'a, Tup> = &'a [Tup];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Error {
   MatchError,
   RewriteError,
-}
-
-pub trait Rewrite<Pat, Output, Err = ()> {
-  fn rewrite(&self, pat: &Pat) -> Result<Output, Err>;
 }
 
 pub trait Unify: Sized {
@@ -26,101 +24,6 @@ impl<T: Unify> Unify for (Vec<usize>, T) {
       i.extend(&other.0);
       (i, t)
     })
-  }
-}
-
-/*
-impl<T: Unify> Unify for Vec<(Vec<usize>, T)> {
-  fn unify(&self, other: &Self) -> Option<Self> {
-    self
-      .iter()
-      .flat_map(|a| other.iter().map(move |b| (a, b)))
-      .map(|(a, b)| a.unify(b))
-      .collect::<Option<Vec<_>>>()
-  }
-}
-// */
-
-pub fn matching_all<Pat, Output, T: Matching<Pat, Output>>(
-  match_source: Records<T>,
-  pat: &Pat,
-) -> Vec<(usize, Output)> {
-  match_source
-    .iter()
-    .enumerate()
-    .flat_map(|(index, src)| src.matching(pat).map(|out| (index, out)))
-    .collect::<Vec<_>>()
-}
-
-pub fn matching_one<Pat, Output, T: Matching<Pat, Output>>(
-  match_source: Records<T>,
-  pat: &Pat,
-) -> Vec<(usize, Output)> {
-  let r = matching_all(match_source, pat);
-  if r.len() == 1 {
-    r
-  } else {
-    vec![]
-  }
-}
-
-/*
-pub fn and<O: Unify>(a: Records<O>, b: Records<O>) -> Vec<O> {
-  // cartesian product
-  a.iter()
-    .flat_map(|a| b.iter().map(move |b| (a, b)))
-    .flat_map(|(a, b)| a.unify(b))
-    .collect::<Vec<_>>()
-}
- */
-
-pub fn rewrite_template<Pat, Output, O: Rewrite<Pat, Output>>(
-  match_result: Records<O>,
-  pat: &Pat,
-) -> Result<Vec<Output>, Error> {
-  match_result
-    .iter()
-    .map(|o| o.rewrite(pat))
-    .collect::<Result<Vec<_>, _>>()
-    .map_err(|_| Error::RewriteError)
-  // .map(|x| x.into_iter().flatten().collect())
-}
-
-pub fn pat2matcher<'a, Pat: 'a, I: Clone + Matching<Pat, T1>, T1: Unify>(
-  pat: Records<'a, (Pat, bool)>,
-) -> impl 'a + Fn(Records<I>) -> Option<(Vec<usize>, T1)> {
-  |input: Records<I>| {
-    let mut r = None;
-    pat
-      .iter()
-      .flat_map(|(pat, is_matching_one)| {
-        if *is_matching_one {
-          matching_one(input, pat)
-        } else {
-          matching_all(input, pat)
-        }
-      })
-      .map(|x| (vec![x.0], x.1))
-      .for_each(|x| {
-        if r.is_none() {
-          r = Some(x)
-        } else {
-          r = r.as_ref().unwrap().unify(&x)
-        }
-      });
-    r
-  }
-}
-
-pub fn tem2rewriter<'a, Tem: 'a, I, T1: Rewrite<Tem, I>>(
-  tem: Records<'a, Tem>,
-) -> impl 'a + Fn(&T1) -> Result<Vec<I>, Error> {
-  |match_result: &T1| {
-    tem
-      .iter()
-      .map(|tem| match_result.rewrite(tem))
-      .collect::<Result<Vec<_>, _>>()
-      .map_err(|_| Error::RewriteError)
   }
 }
 

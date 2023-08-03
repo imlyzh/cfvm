@@ -3,6 +3,7 @@ use rewriter::{tem2rewriter, Rewrite};
 
 pub mod matcher;
 pub mod rewriter;
+pub mod scheduler;
 
 pub type Records<'a, Tup> = &'a [Tup];
 

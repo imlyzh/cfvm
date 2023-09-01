@@ -39,7 +39,7 @@ impl<D: Default> EGraph<D> {
       opcode: o.opcode.clone(),
       uses,
       attr: o.attr.clone(),
-      ragion: o.ragion.clone(),
+      region: o.region.clone(),
       sign: o.sign.clone(),
     };
     let eop = EOpHand::new(eop);

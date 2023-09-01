@@ -13,7 +13,7 @@ pub struct Op {
   // pub defs: Vec<Symbol>,
   pub uses: Vec<Value>,
   pub attr: Attr,
-  pub ragion: Region,
+  pub region: Region,
   pub sign: FuncType,
 }
 

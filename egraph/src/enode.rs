@@ -16,7 +16,7 @@ pub struct EOp<D> {
   pub opcode: Name,
   pub uses: Vec<Id<D>>,
   pub attr: Attr,
-  pub ragion: Region,
+  pub region: Region,
   pub sign: FuncType,
 }
 
@@ -25,7 +25,7 @@ impl<D> PartialEq for EOp<D> {
     self.opcode == other.opcode
       && self.uses == other.uses
       && self.attr == other.attr
-      && self.ragion == other.ragion
+      && self.region == other.region
       && self.sign == other.sign
   }
 }

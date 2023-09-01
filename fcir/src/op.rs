@@ -23,9 +23,9 @@ pub type Attr = HashMap<Symbol, Constant>;
 pub struct OpHand(pub *const Op);
 
 impl AsRef<Op> for OpHand {
-    fn as_ref(&self) -> &Op {
-      unsafe { self.0.as_ref().unwrap() }
-    }
+  fn as_ref(&self) -> &Op {
+    unsafe { self.0.as_ref().unwrap() }
+  }
 }
 
 pub type Space = Vec<OpHand>;

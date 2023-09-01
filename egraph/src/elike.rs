@@ -1,10 +1,9 @@
 use std::collections::HashMap;
 
-use fcir::form::Form;
-
 use crate::{
   eclass::{EClass, Id},
   enode::ENode,
+  form::Form,
 };
 
 #[derive(Debug, Clone)]

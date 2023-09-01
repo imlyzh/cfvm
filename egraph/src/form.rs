@@ -1,5 +1,4 @@
-use crate::symbol::Name;
-
+use fcir::symbol::Name;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum Form {
@@ -7,10 +6,9 @@ pub enum Form {
   /// TODO: Form(opcode, args, metadata, region)
   // Form(Symbol, Vec<Form>, Vec<(Symbol, Constant)>)
   /// Form(opcode, args)
-  Form(Name, Vec<Form>)
+  Form(Name, Vec<Form>),
 }
 
 pub trait GetForm {
   fn get_form(&self) -> Form;
 }
-

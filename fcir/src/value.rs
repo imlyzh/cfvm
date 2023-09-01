@@ -1,14 +1,24 @@
-use crate::symbol::Symbol;
+use crate::{symbol::Symbol, op::{Op, OpHand}};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Value {
   Const(Constant),
-  Use(Symbol),
-  Argument(Symbol),
+  Use(OpHand),
+  Argument(Argument),
   Label(Symbol),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Argument(pub Symbol, pub Option<Order>);
+
+#[repr(C)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Order {
+  Def = 0,
+  Use = 1,
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum Constant {
   Bool(bool),
   Int(i64),

@@ -20,6 +20,7 @@ resolver = '2'
 members = [
   # "common",
   "rewrite_system",
+  "egraph",
   "fcir",
   ]
 
@@ -30,11 +31,10 @@ edition = "2021"
 
 [workspace.dependencies]
 cfvm = { path="cfvm" }
-cfvm-common = { path="common" }
-
+# cfvm-common = { path="common" }
+egraph = { path="egraph" }
 rewrite_system = { path="rewrite_system" }
 fcir = { path="fcir" }
-
 
 [dependencies]
 # emei = "^0.5.0"

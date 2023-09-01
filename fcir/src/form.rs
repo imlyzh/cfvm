@@ -1,11 +1,13 @@
-use crate::{symbol::Symbol, op::Attr, value::Constant};
+use crate::{symbol::{Symbol, Name}, op::Attr, value::Constant};
 
 
-#[derive(Debug, Clone, Hash, PartialEq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum Form {
   Atom,
-  /// Form(opname, args, metadata, region)
-  Form(Symbol, Vec<Form>, Vec<(Symbol, Constant)>)
+  /// TODO: Form(opcode, args, metadata, region)
+  // Form(Symbol, Vec<Form>, Vec<(Symbol, Constant)>)
+  /// Form(opcode, args)
+  Form(Name, Vec<Form>)
 }
 
 pub trait GetForm {

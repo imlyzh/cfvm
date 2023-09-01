@@ -8,4 +8,3 @@ edition.workspace = true
 
 [dependencies]
 fcir.workspace = true
-tap = "1.0.1"

@@ -31,7 +31,7 @@ impl<D> PartialEq for EOp<D> {
 }
 
 #[derive(Debug)]
-pub struct EOpHand<D>(pub Rc<RefCell<EOp<D>>>);
+pub struct EOpHand<D>(Rc<RefCell<EOp<D>>>);
 
 impl<D> Clone for EOpHand<D> {
   fn clone(&self) -> Self {
@@ -48,6 +48,12 @@ impl<D> PartialEq for EOpHand<D> {
 impl<D> EOpHand<D> {
   pub fn new(value: EOp<D>) -> Self {
     Self(Rc::new(RefCell::new(value)))
+  }
+}
+
+impl<D> AsRef<RefCell<EOp<D>>> for EOpHand<D> {
+  fn as_ref(&self) -> &RefCell<EOp<D>> {
+    self.0.as_ref()
   }
 }
 

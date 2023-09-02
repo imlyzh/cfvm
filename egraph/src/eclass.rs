@@ -45,7 +45,7 @@ impl<D> Id<D> {
 
 #[derive(Debug)]
 pub struct EClass<D> {
-  nodes: Vec<ENode<D>>,
+  pub nodes: Vec<ENode<D>>,
   data: D,
 }
 

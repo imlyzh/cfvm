@@ -19,7 +19,7 @@ pub struct Op {
 
 pub type Attr = HashMap<Symbol, Constant>;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq)] // fixme: Hash
 pub struct OpHand(pub *const Op);
 
 impl AsRef<Op> for OpHand {

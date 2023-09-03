@@ -15,7 +15,7 @@ pub trait Matcher<T, D> {
   fn matching(&self, i: &T) -> Option<Vec<(Symbol, MatchValue<D>)>>;
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Hash)]
 pub enum MatchValue<D> {
   Name(Name),
   Const(Constant),

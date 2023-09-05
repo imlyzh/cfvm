@@ -1,13 +1,13 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, cell::RefCell, rc::Rc};
 
 use crate::{
   eclass::{EClass, Id},
-  enode::ENode,
+  enode::{RawENode, ENode},
   form::Form,
 };
 
 #[derive(Debug, Clone)]
-pub struct ELike<D>(HashMap<Form, Vec<Id<D>>>);
+pub struct ELike<D>(HashMap<Form, Vec<ENode<D>>>);
 
 impl<D> Default for ELike<D> {
   fn default() -> ELike<D> {
@@ -22,13 +22,57 @@ impl<D> ELike<D> {
 }
 
 impl<D> ELike<D> {
-  pub fn find_collect(&mut self, form: &Form) -> Option<&mut Vec<Id<D>>> {
+  pub fn find_collect(&mut self, form: &Form) -> Option<&Vec<ENode<D>>> {
+    self.0.get(form)
+  }
+  pub fn find_collect_mut(&mut self, form: &Form) -> Option<&mut Vec<ENode<D>>> {
     self.0.get_mut(form)
   }
 }
 
 impl<D: Default> ELike<D> {
   pub fn add_node(&mut self, form: &Form, node: ENode<D>) -> Id<D> {
+    let mut mut_vector;
+    if let Some(nodes) = self.0.get_mut(form) {
+      for n in nodes {
+        if *n == node {
+          return n.get_id();
+        }
+      }
+      mut_vector = nodes;
+    } else {
+      mut_vector = &mut self.0.insert(form.clone(), vec![]).unwrap();
+    }
+    let append_node = node;
+    mut_vector.push(append_node);
+    append_node.get_id()
+  }
+
+  pub fn add_raw_node(&mut self, form: &Form, node: RawENode<D>) -> Id<D> {
+    let mut mut_vector;
+    if let Some(nodes) = self.0.get_mut(form) {
+      for n in nodes {
+        if n.body.clone() == node {
+          return n.get_id();
+        }
+      }
+      mut_vector = nodes;
+    } else {
+      mut_vector = &mut self.0.insert(form.clone(), vec![]).unwrap();
+    }
+    let mut append_node;
+      let id = Id(Rc::new_cyclic(|eclass| {
+        append_node = ENode {
+          eclass: eclass.clone(),
+          body: node,
+      };
+      RefCell::new(EClass::from(append_node))
+      }));
+      mut_vector.push(append_node);
+      id
+  }
+  /*
+  pub fn add_node(&mut self, form: &Form, node: ENode<D>) {
     if let Some(mut ids) = self.0.get_mut(form).cloned() {
       // 拿到了相似的 eclass 集合
       // Similar eclasses set found
@@ -44,7 +88,6 @@ impl<D: Default> ELike<D> {
       let id = Id::new(EClass::from(node));
       // 将新建的 eclass 加入相似集
       ids.push(id);
-      todo!()
     } else {
       // 没有相似的类的集合
       // No similar eclasses set found
@@ -54,14 +97,6 @@ impl<D: Default> ELike<D> {
       self.0.insert(form.clone(), vec![id.clone()]);
       id
     }
-  }
-
-  /*
-  pub fn add_and_infer_node(
-    &mut self,
-    node: ENode<D>
-  ) -> Id<D> {
-    unimplemented!()
   }
   //  */
 }

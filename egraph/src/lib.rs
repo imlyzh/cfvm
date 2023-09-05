@@ -5,4 +5,5 @@ pub mod enode;
 
 pub mod form;
 pub mod pattern;
+pub mod matching;
 pub mod rewriter;

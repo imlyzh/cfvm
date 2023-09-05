@@ -1,18 +1,19 @@
+use std::{cell::RefCell, rc::Rc};
+
 use fcir::{op::Op, value::Value};
 
 use crate::{
   eclass::{EClass, Id},
   elike::ELike,
-  enode::{ENode, EOp, EOpHand},
-  form::Form,
+  enode::{RawENode, EOp, EOpHand, ENode},
+  form::{Form, GetForm},
 };
 
 #[derive(Debug, Default)]
 pub struct EGraph<D> {
-  root: Vec<Id<D>>,
-  likes: ELike<D>,
-
-  eclasses: Vec<EClass<D>>,
+  pub root: Vec<Id<D>>,
+  pub likes: ELike<D>,
+  pub eclasses: Vec<Id<D>>,
 }
 
 impl<D> EGraph<D> {
@@ -26,8 +27,8 @@ impl<D> EGraph<D> {
 }
 
 impl<D: Default> EGraph<D> {
-  pub fn add_op(&mut self, o: &Op) -> (Form, Id<D>, EOpHand<D>) {
-    let r = o.uses.iter().map(|i| self.add_node(i)).collect::<Vec<_>>();
+  pub fn add_op(&mut self, o: &Op) -> (Id<D>, EOpHand<D>) {
+    let r = o.uses.iter().map(|i| self.add_value(i)).collect::<Vec<_>>();
 
     let form = r.iter().map(|(f, _)| f).cloned().collect::<Vec<Form>>();
 
@@ -36,6 +37,8 @@ impl<D: Default> EGraph<D> {
     let form = Form::Form(o.opcode.clone(), form);
 
     let eop = EOp {
+      // form_cache: RefCell::new(Some(form)),
+      form_cache: form,
       opcode: o.opcode.clone(),
       uses,
       attr: o.attr.clone(),
@@ -43,28 +46,43 @@ impl<D: Default> EGraph<D> {
       sign: o.sign.clone(),
     };
     let eop = EOpHand::new(eop);
-    let node = ENode::Use(eop.clone());
+    let node = RawENode::Use(eop.clone());
 
-    let id = self.likes.add_node(&form, node);
+    let id = self.add_raw_node(node);
 
-    (form, id, eop)
+    (id, eop)
   }
 
-  pub fn add_node(&mut self, value: &Value) -> (Form, Id<D>) {
-    let (f, node) = self.make_enode(value);
-    let r = self.likes.add_node(&f, node);
+  pub fn add_value(&mut self, value: &Value) -> (Form, Id<D>) {
+    let node = self.make_enode(value);
+    let f = node.get_form();
+    let r = self.add_raw_node(node);
     (f, r)
   }
 
-  pub fn make_enode(&mut self, value: &Value) -> (Form, ENode<D>) {
+  pub fn add_node(&mut self, node: ENode<D>) -> Id<D> {
+    let id = self.likes.add_node(&node.get_form(), node);
+    if id != node.get_id() {
+      self.eclasses.push(id);
+    }
+    id
+  }
+
+  pub fn add_raw_node(&mut self, node: RawENode<D>) -> Id<D> {
+    let id = self.likes.add_raw_node(&node.get_form(), node);
+    self.eclasses.push(id);
+    id
+  }
+
+  pub fn make_enode(&mut self, value: &Value) -> RawENode<D> {
     match value {
       Value::Use(op) => {
-        let (form, _id, eop) = self.add_op(op.as_ref());
-        (form, ENode::Use(eop))
+        let (_id, eop) = self.add_op(op.as_ref());
+        RawENode::Use(eop)
       },
-      Value::Const(n) => (Form::Atom, n.into()),
-      Value::Argument(n) => (Form::Atom, n.into()),
-      Value::Label(n) => (Form::Atom, n.into()),
+      Value::Const(n) => n.into(),
+      Value::Argument(n) => n.into(),
+      Value::Label(n) => n.into(),
     }
   }
 }

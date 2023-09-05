@@ -1,4 +1,4 @@
-use std::{cell::RefCell, collections::HashMap, hash::Hash, rc::Rc};
+use std::{cell::RefCell, hash::Hash, rc::Rc};
 
 use fcir::{
   symbol::{Name, Symbol},
@@ -7,7 +7,7 @@ use fcir::{
 
 use crate::{
   eclass::{EClass, Id},
-  enode::{ENode, EOp, EOpHand},
+  enode::{RawENode, EOp, EOpHand, ENode},
   form::{Form, GetForm},
 };
 
@@ -15,26 +15,35 @@ pub trait Matcher<T, D> {
   fn matching(&self, i: &T) -> Option<Vec<(Symbol, MatchValue<D>)>>;
 }
 
+pub type MatchValue<D> = ENode<D>;
+
+/*
 #[derive(Debug, Clone, PartialEq, Hash)]
 pub enum MatchValue<D> {
-  Name(Name),
+  // Name(Name),
   Const(Constant),
   Use(Id<D>),
   Argument(Argument),
   Label(Symbol),
 }
 
-pub trait IntoMatchValue<D> {
-  fn into_match_value(&self) -> MatchValue<D>;
-}
+
+//  */
+
+
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct OpPat(pub Catch<Name>, pub Vec<Catch<ValuePat>>);
+pub struct OpPat(
+  // pub Catch<Name>,
+  pub Name,
+  pub Vec<Catch<ValuePat>>
+);
 
 impl GetForm for OpPat {
   fn get_form(&self) -> Form {
     Form::Form(
-      self.0 .0.clone(),
+      // self.0 .0.clone(),
+      self.0.clone(),
       self.1.iter().map(GetForm::get_form).collect(),
     )
   }
@@ -42,8 +51,10 @@ impl GetForm for OpPat {
 
 impl<D> Matcher<EOp<D>, D> for OpPat {
   fn matching(&self, op: &EOp<D>) -> Option<Vec<(Symbol, MatchValue<D>)>> {
-    let mut catch: Vec<(_, MatchValue<D>)> = self.0.matching(&op.opcode)?;
-    let catch1: Vec<(Symbol, MatchValue<D>)> = self
+    // let mut catch: Vec<(_, MatchValue<D>)> = self.0.matching(&op.opcode)?;
+    let _: Vec<(Symbol, MatchValue<D>)> = self.0.matching(&op.opcode)?;
+    // let catch1: Vec<(Symbol, MatchValue<D>)> = self
+    let catch: Vec<(Symbol, MatchValue<D>)> = self
       .1
       .iter()
       .zip(op.uses.iter())
@@ -52,7 +63,7 @@ impl<D> Matcher<EOp<D>, D> for OpPat {
       .into_iter()
       .flatten()
       .collect();
-    catch.extend(catch1);
+    // catch.extend(catch1);
     Some(catch)
   }
 }
@@ -111,6 +122,8 @@ impl<D> Matcher<EClass<D>, D> for Catch<ValuePat> {
   }
 }
 
+/*
+// disable name catch
 impl<D> Matcher<Name, D> for Catch<Name> {
   fn matching(&self, i: &Name) -> Option<Vec<(Symbol, MatchValue<D>)>> {
     if &self.0 != i {
@@ -123,6 +136,7 @@ impl<D> Matcher<Name, D> for Catch<Name> {
     }
   }
 }
+//  */
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ValuePat {
@@ -153,24 +167,30 @@ impl<D> Matcher<EClass<D>, D> for ValuePat {
 }
 
 impl<D> Matcher<ENode<D>, D> for ValuePat {
-  fn matching(&self, i: &ENode<D>) -> Option<Vec<(Symbol, MatchValue<D>)>> {
+    fn matching(&self, i: &ENode<D>) -> Option<Vec<(Symbol, MatchValue<D>)>> {
+        self.matching(&i.body)
+    }
+}
+
+impl<D> Matcher<RawENode<D>, D> for ValuePat {
+  fn matching(&self, i: &RawENode<D>) -> Option<Vec<(Symbol, MatchValue<D>)>> {
     match (self, i) {
-      (ValuePat::Use(op), ENode::Use(op1)) => op.matching(op1),
-      (ValuePat::Const(v), ENode::Const(v1)) => {
+      (ValuePat::Use(op), RawENode::Use(op1)) => op.matching(op1),
+      (ValuePat::Const(v), RawENode::Const(v1)) => {
         if v == v1 {
           Some(vec![])
         } else {
           None
         }
       },
-      (ValuePat::Argument(v), ENode::Argument(v1)) => {
+      (ValuePat::Argument(v), RawENode::Argument(v1)) => {
         if v == v1 {
           Some(vec![])
         } else {
           None
         }
       },
-      (ValuePat::Label(v), ENode::Label(v1)) => {
+      (ValuePat::Label(v), RawENode::Label(v1)) => {
         if v == v1 {
           Some(vec![])
         } else {
@@ -192,8 +212,10 @@ impl<D> Matcher<Name, D> for Name {
   }
 }
 
+/*
 impl<D> IntoMatchValue<D> for Name {
   fn into_match_value(&self) -> MatchValue<D> {
     MatchValue::Name(self.clone())
   }
 }
+ */

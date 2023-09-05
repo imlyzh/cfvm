@@ -1,6 +1,6 @@
 use std::{cell::RefCell, hash::Hash, rc::Rc};
 
-use crate::enode::ENode;
+use crate::enode::{RawENode, ENode};
 
 #[derive(Debug)]
 pub struct Id<D>(pub Rc<RefCell<EClass<D>>>); // warning: multi-thread unsound

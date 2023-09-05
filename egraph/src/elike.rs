@@ -32,43 +32,44 @@ impl<D> ELike<D> {
 
 impl<D: Default> ELike<D> {
   pub fn add_node(&mut self, form: &Form, node: ENode<D>) -> Id<D> {
-    let mut mut_vector;
+    let mut_vector;
     if let Some(nodes) = self.0.get_mut(form) {
-      for n in nodes {
+      for n in nodes.iter() {
         if *n == node {
           return n.get_id();
         }
       }
       mut_vector = nodes;
     } else {
-      mut_vector = &mut self.0.insert(form.clone(), vec![]).unwrap();
+      self.0.insert(form.clone(), vec![]).unwrap();
+      mut_vector = self.0.get_mut(form).unwrap();
     }
     let append_node = node;
+    let id = append_node.get_id();
     mut_vector.push(append_node);
-    append_node.get_id()
+    id
   }
 
   pub fn add_raw_node(&mut self, form: &Form, node: RawENode<D>) -> Id<D> {
-    let mut mut_vector;
+    let mut_vector;
     if let Some(nodes) = self.0.get_mut(form) {
-      for n in nodes {
+      for n in nodes.iter() {
         if n.body.clone() == node {
           return n.get_id();
         }
       }
       mut_vector = nodes;
     } else {
-      mut_vector = &mut self.0.insert(form.clone(), vec![]).unwrap();
+      self.0.insert(form.clone(), vec![]).unwrap();
+      mut_vector = self.0.get_mut(form).unwrap();
     }
-    let mut append_node;
       let id = Id(Rc::new_cyclic(|eclass| {
-        append_node = ENode {
-          eclass: eclass.clone(),
-          body: node,
-      };
-      RefCell::new(EClass::from(append_node))
+      RefCell::new(EClass::from(ENode {
+        eclass: eclass.clone(),
+        body: node,
+    }))
       }));
-      mut_vector.push(append_node);
+      mut_vector.push(id.as_ref().borrow().nodes[0].clone());
       id
   }
   /*

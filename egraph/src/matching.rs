@@ -6,7 +6,7 @@ use crate::{egraph::EGraph, pattern::{ValuePat, Matcher}, form::GetForm, enode::
 
 
 impl<D> EGraph<D> {
-  pub fn matching(&self, value: ValuePat) -> Option<Vec<Vec<(Symbol, ENode<D>)>>> {
+  pub fn matching(&mut self, value: ValuePat) -> Option<Vec<Vec<(Symbol, ENode<D>)>>> {
     let form = value.get_form();
     let r = self.likes.find_collect(&form)?;
     // fixme

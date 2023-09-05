@@ -29,7 +29,7 @@ impl<D> GetForm for EOp<D> {
       // } else {
       //   unreachable!()
       // }
-      self.form_cache
+      self.form_cache.clone()
     }
 }
 

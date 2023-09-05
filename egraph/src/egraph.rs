@@ -61,16 +61,17 @@ impl<D: Default> EGraph<D> {
   }
 
   pub fn add_node(&mut self, node: ENode<D>) -> Id<D> {
+    let input_id = node.get_id();
     let id = self.likes.add_node(&node.get_form(), node);
-    if id != node.get_id() {
-      self.eclasses.push(id);
+    if id != input_id {
+      self.eclasses.push(id.clone());
     }
     id
   }
 
   pub fn add_raw_node(&mut self, node: RawENode<D>) -> Id<D> {
     let id = self.likes.add_raw_node(&node.get_form(), node);
-    self.eclasses.push(id);
+    self.eclasses.push(id.clone());
     id
   }
 

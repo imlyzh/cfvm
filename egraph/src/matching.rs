@@ -1,16 +1,21 @@
 use fcir::symbol::Symbol;
 
-use crate::{egraph::EGraph, pattern::{ValuePat, Matcher}, form::GetForm, enode::ENode};
-
-
-
+use crate::{
+  egraph::EGraph,
+  enode::ENode,
+  form::GetForm,
+  pattern::{Matcher, ValuePat},
+};
 
 impl<D> EGraph<D> {
   pub fn matching(&mut self, value: ValuePat) -> Option<Vec<Vec<(Symbol, ENode<D>)>>> {
     let form = value.get_form();
     let r = self.likes.find_collect(&form)?;
     // fixme
-    let r = r.iter().filter_map(|x| value.matching(x)).collect::<Vec<_>>();
+    let r = r
+      .iter()
+      .filter_map(|x| value.matching(x))
+      .collect::<Vec<_>>();
     if r.is_empty() {
       return None;
     }

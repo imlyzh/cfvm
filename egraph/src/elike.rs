@@ -1,8 +1,8 @@
-use std::{collections::HashMap, cell::RefCell, rc::Rc};
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 use crate::{
   eclass::{EClass, Id},
-  enode::{RawENode, ENode},
+  enode::{ENode, RawENode},
   form::Form,
 };
 
@@ -63,14 +63,14 @@ impl<D: Default> ELike<D> {
       self.0.insert(form.clone(), vec![]).unwrap();
       mut_vector = self.0.get_mut(form).unwrap();
     }
-      let id = Id(Rc::new_cyclic(|eclass| {
+    let id = Id(Rc::new_cyclic(|eclass| {
       RefCell::new(EClass::from(ENode {
         eclass: eclass.clone(),
         body: node,
-    }))
-      }));
-      mut_vector.push(id.as_ref().borrow().nodes[0].clone());
-      id
+      }))
+    }));
+    mut_vector.push(id.as_ref().borrow().nodes[0].clone());
+    id
   }
   /*
   pub fn add_node(&mut self, form: &Form, node: ENode<D>) {

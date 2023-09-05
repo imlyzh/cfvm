@@ -7,7 +7,7 @@ use fcir::{
 
 use crate::{
   eclass::{EClass, Id},
-  enode::{RawENode, EOp, EOpHand, ENode},
+  enode::{ENode, EOp, EOpHand, RawENode},
   form::{Form, GetForm},
 };
 
@@ -30,13 +30,11 @@ pub enum MatchValue<D> {
 
 //  */
 
-
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct OpPat(
   // pub Catch<Name>,
   pub Name,
-  pub Vec<Catch<ValuePat>>
+  pub Vec<Catch<ValuePat>>,
 );
 
 impl GetForm for OpPat {
@@ -167,9 +165,9 @@ impl<D> Matcher<EClass<D>, D> for ValuePat {
 }
 
 impl<D> Matcher<ENode<D>, D> for ValuePat {
-    fn matching(&self, i: &ENode<D>) -> Option<Vec<(Symbol, MatchValue<D>)>> {
-        self.matching(&i.body)
-    }
+  fn matching(&self, i: &ENode<D>) -> Option<Vec<(Symbol, MatchValue<D>)>> {
+    self.matching(&i.body)
+  }
 }
 
 impl<D> Matcher<RawENode<D>, D> for ValuePat {

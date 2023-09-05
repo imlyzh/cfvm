@@ -1,12 +1,19 @@
 use std::collections::HashMap;
 
-use fcir::{symbol::{Name, Symbol}, value::Value};
+use fcir::{
+  symbol::{Name, Symbol},
+  value::Value,
+};
 
-use crate::{pattern::MatchValue, eclass::Id, egraph::EGraph, form::GetForm, enode::ENode};
+use crate::{eclass::Id, egraph::EGraph, enode::ENode, form::GetForm, pattern::MatchValue};
 
 pub trait Rewriter<D> {
   type Output;
-  fn rewrite(&self, res: &HashMap<Symbol, MatchValue<D>>, egraph: &mut EGraph<D>) -> Option<Self::Output>;
+  fn rewrite(
+    &self,
+    res: &HashMap<Symbol, MatchValue<D>>,
+    egraph: &mut EGraph<D>,
+  ) -> Option<Self::Output>;
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -14,11 +21,15 @@ pub struct OpTemplate(pub Name, pub Vec<Insert<Value>>);
 
 impl<D: Default> Rewriter<D> for OpTemplate {
   type Output = Id<D>;
-    fn rewrite(&self, res: &HashMap<Symbol, MatchValue<D>>, egraph: &mut EGraph<D>) -> Option<Id<D>> {
-      let r = self.1.iter().map(|i| i.rewrite(res, egraph)).collect::<Option<Vec<_>>>()?;
+  fn rewrite(&self, res: &HashMap<Symbol, MatchValue<D>>, egraph: &mut EGraph<D>) -> Option<Id<D>> {
+    let r = self
+      .1
+      .iter()
+      .map(|i| i.rewrite(res, egraph))
+      .collect::<Option<Vec<_>>>()?;
 
-      // let form = r.iter().map(|id| id.get_form()).cloned().collect::<Vec<Form>>();
-      // let form = Form::Form(o.opcode.clone(), form);
+    // let form = r.iter().map(|id| id.get_form()).cloned().collect::<Vec<Form>>();
+    // let form = Form::Form(o.opcode.clone(), form);
 
     // let eop = EOp {
     //   // form_cache: RefCell::new(Some(form)),
@@ -36,9 +47,8 @@ impl<D: Default> Rewriter<D> for OpTemplate {
 
     // (id, eop)
     todo!()
-    }
+  }
 }
-
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Insert<T> {
@@ -53,7 +63,7 @@ impl<D: Default> Rewriter<D> for Insert<Value> {
     match self {
       Insert::Use(op) => op.rewrite(res, egraph),
       Insert::Var(sym) => Some(egraph.add_node(res.get(sym)?.clone())),
-      Insert::Lit(node) => todo!(),//Some(egraph.add_node(node.clone())),
+      Insert::Lit(node) => todo!(), //Some(egraph.add_node(node.clone())),
     }
   }
 }

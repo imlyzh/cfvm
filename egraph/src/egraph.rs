@@ -5,7 +5,7 @@ use fcir::{op::Op, value::Value};
 use crate::{
   eclass::{EClass, Id},
   elike::ELike,
-  enode::{RawENode, EOp, EOpHand, ENode},
+  enode::{ENode, EOp, EOpHand, RawENode},
   form::{Form, GetForm},
 };
 

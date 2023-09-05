@@ -1,4 +1,7 @@
-use std::{cell::RefCell, rc::{Rc, Weak}};
+use std::{
+  cell::RefCell,
+  rc::{Rc, Weak},
+};
 
 use fcir::{
   block::Region,
@@ -8,7 +11,10 @@ use fcir::{
   value::{Argument, Constant},
 };
 
-use crate::{eclass::{Id, EClass}, form::{Form, GetForm}};
+use crate::{
+  eclass::{EClass, Id},
+  form::{Form, GetForm},
+};
 
 /// EOp from/into Op
 #[derive(Debug, Clone)]
@@ -23,14 +29,14 @@ pub struct EOp<D> {
 }
 
 impl<D> GetForm for EOp<D> {
-    fn get_form(&self) -> Form {
-      // if let Some(x) = self.form_cache.borrow().as_ref() {
-      //   x.clone()
-      // } else {
-      //   unreachable!()
-      // }
-      self.form_cache.clone()
-    }
+  fn get_form(&self) -> Form {
+    // if let Some(x) = self.form_cache.borrow().as_ref() {
+    //   x.clone()
+    // } else {
+    //   unreachable!()
+    // }
+    self.form_cache.clone()
+  }
 }
 
 impl<D> PartialEq for EOp<D> {
@@ -45,7 +51,6 @@ impl<D> PartialEq for EOp<D> {
 
 #[derive(Debug)]
 pub struct EOpHand<D>(Rc<RefCell<EOp<D>>>);
-
 
 impl<D> GetForm for EOpHand<D> {
   fn get_form(&self) -> Form {
@@ -90,25 +95,25 @@ impl<D> ENode<D> {
 }
 
 impl<D> PartialEq for ENode<D> {
-    fn eq(&self, other: &Self) -> bool {
-        self.body == other.body
-    }
+  fn eq(&self, other: &Self) -> bool {
+    self.body == other.body
+  }
 }
 
 impl<D> Clone for ENode<D> {
-    fn clone(&self) -> Self {
-        Self { eclass: self.eclass.clone(), body: self.body.clone() }
+  fn clone(&self) -> Self {
+    Self {
+      eclass: self.eclass.clone(),
+      body: self.body.clone(),
     }
+  }
 }
 
 impl<D> GetForm for ENode<D> {
   fn get_form(&self) -> Form {
-      self.body.get_form()
+    self.body.get_form()
   }
 }
-
-
-
 
 /// RawENode from/into Value
 #[derive(Debug)]
@@ -120,23 +125,21 @@ pub enum RawENode<D> {
 }
 
 impl<D> Clone for RawENode<D> {
-    fn clone(&self) -> Self {
-        match self {
-            Self::Const(arg0) => Self::Const(arg0.clone()),
-            Self::Use(arg0) => Self::Use(arg0.clone()),
-            Self::Argument(arg0) => Self::Argument(arg0.clone()),
-            Self::Label(arg0) => Self::Label(arg0.clone()),
-        }
+  fn clone(&self) -> Self {
+    match self {
+      Self::Const(arg0) => Self::Const(arg0.clone()),
+      Self::Use(arg0) => Self::Use(arg0.clone()),
+      Self::Argument(arg0) => Self::Argument(arg0.clone()),
+      Self::Label(arg0) => Self::Label(arg0.clone()),
     }
+  }
 }
 
 impl<D> GetForm for RawENode<D> {
   fn get_form(&self) -> Form {
     match self {
       RawENode::Use(op) => op.get_form(),
-        RawENode::Const(_) |
-        RawENode::Argument(_) |
-        RawENode::Label(_) => Form::Atom,
+      RawENode::Const(_) | RawENode::Argument(_) | RawENode::Label(_) => Form::Atom,
     }
   }
 }

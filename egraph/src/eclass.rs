@@ -1,7 +1,7 @@
 use std::{cell::RefCell, hash::Hash, rc::Rc};
 
 use crate::{
-  enode::{ENode, RawENode},
+  enode::ENode,
   form::{Form, GetForm},
 };
 

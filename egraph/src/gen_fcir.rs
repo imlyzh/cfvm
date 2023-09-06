@@ -21,18 +21,15 @@ impl<D> GenFcir for EOpHand<D> {
   }
 }
 
-pub fn product<T: Clone>(a: &Vec<Vec<T>>, b: &Vec<T>) -> Vec<Vec<T>> {
+pub fn product<T: Clone>(a: &[Vec<T>], b: &[T]) -> Vec<Vec<T>> {
   a.iter()
-    .map(|item_a| {
-      b.iter()
-        .map(move |item_b| {
-          let mut r = item_a.clone();
-          r.push(item_b.clone());
-          r
-        })
-        .collect::<Vec<Vec<T>>>()
+    .flat_map(|item_a| {
+      b.iter().map(move |item_b| {
+        let mut r = item_a.clone();
+        r.push(item_b.clone());
+        r
+      })
     })
-    .flatten()
     .collect::<Vec<Vec<_>>>()
 }
 
@@ -72,8 +69,7 @@ impl<D> GenFcir for EClass<D> {
     self
       .nodes
       .iter()
-      .map(|node| node.gen_fcir())
-      .flatten()
+      .flat_map(|node| node.gen_fcir())
       .collect::<Vec<_>>()
   }
 }

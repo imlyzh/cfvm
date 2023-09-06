@@ -5,13 +5,7 @@ use fcir::{
   value::Value,
 };
 
-use crate::{
-  eclass::Id,
-  egraph::EGraph,
-  enode::ENode,
-  form::{Form, GetForm},
-  pattern::MatchValue,
-};
+use crate::{eclass::Id, egraph::EGraph, pattern::MatchValue};
 
 pub trait Rewriter<D> {
   type Output;

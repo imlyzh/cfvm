@@ -1,9 +1,7 @@
-use std::{cell::RefCell, rc::Rc};
-
 use fcir::{op::Op, value::Value};
 
 use crate::{
-  eclass::{EClass, Id},
+  eclass::Id,
   elike::ELike,
   enode::{ENode, EOp, EOpHand, RawENode},
   form::{Form, GetForm},

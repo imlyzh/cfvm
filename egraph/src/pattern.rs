@@ -6,7 +6,7 @@ use fcir::{
 };
 
 use crate::{
-  eclass::{EClass, Id},
+  eclass::EClass,
   enode::{ENode, EOp, EOpHand, RawENode},
   form::{Form, GetForm},
 };
@@ -160,7 +160,7 @@ impl<D> Matcher<EClass<D>, D> for ValuePat {
         return Some(r);
       }
     }
-    return None;
+    None
   }
 }
 

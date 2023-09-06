@@ -73,12 +73,13 @@ impl<D> GenFcir for EClass<D> {
       .nodes
       .iter()
       .map(|node| node.gen_fcir())
+      .flatten()
       .collect::<Vec<_>>()
   }
 }
 
 impl<D> GenFcir for ENode<D> {
-  type Output = Value;
+  type Output = Vec<Value>;
 
   fn gen_fcir(&self) -> Self::Output {
     self.body.gen_fcir()
@@ -86,14 +87,14 @@ impl<D> GenFcir for ENode<D> {
 }
 
 impl<D> GenFcir for RawENode<D> {
-  type Output = Value;
+  type Output = Vec<Value>;
 
   fn gen_fcir(&self) -> Self::Output {
     match self {
-      RawENode::Use(op) => Value::Use(OpHand::new(op.gen_fcir())),
-      RawENode::Const(c) => Value::Const(c.clone()),
-      RawENode::Argument(a) => Value::Argument(a.clone()),
-      RawENode::Label(l) => Value::Label(l.clone()),
+      RawENode::Use(op) => op.gen_fcir().into_iter().map(Value::Use).collect(),
+      RawENode::Const(c) => vec![Value::Const(c.clone())],
+      RawENode::Argument(a) => vec![Value::Argument(a.clone())],
+      RawENode::Label(l) => vec![Value::Label(l.clone())],
     }
   }
 }

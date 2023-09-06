@@ -1,6 +1,9 @@
 use std::{cell::RefCell, hash::Hash, rc::Rc};
 
-use crate::enode::{ENode, RawENode};
+use crate::{
+  enode::{ENode, RawENode},
+  form::{Form, GetForm},
+};
 
 #[derive(Debug)]
 pub struct Id<D>(pub Rc<RefCell<EClass<D>>>); // warning: multi-thread unsound
@@ -8,6 +11,10 @@ pub struct Id<D>(pub Rc<RefCell<EClass<D>>>); // warning: multi-thread unsound
 impl<D> Id<D> {
   pub fn new(value: EClass<D>) -> Self {
     Id(Rc::new(RefCell::new(value)))
+  }
+
+  pub fn get_forms(&self) -> Vec<Form> {
+    self.as_ref().borrow().get_forms()
   }
 }
 
@@ -87,5 +94,9 @@ impl<D> EClass<D> {
     // if !self.nodes.contains(&node) {
     self.nodes.push(node)
     // }
+  }
+
+  pub fn get_forms(&self) -> Vec<Form> {
+    self.nodes.iter().map(GetForm::get_form).collect()
   }
 }

@@ -5,7 +5,13 @@ use fcir::{
   value::Value,
 };
 
-use crate::{eclass::Id, egraph::EGraph, enode::ENode, form::GetForm, pattern::MatchValue};
+use crate::{
+  eclass::Id,
+  egraph::EGraph,
+  enode::ENode,
+  form::{Form, GetForm},
+  pattern::MatchValue,
+};
 
 pub trait Rewriter<D> {
   type Output;
@@ -28,8 +34,10 @@ impl<D: Default> Rewriter<D> for OpTemplate {
       .map(|i| i.rewrite(res, egraph))
       .collect::<Option<Vec<_>>>()?;
 
-    // let form = r.iter().map(|id| id.get_form()).cloned().collect::<Vec<Form>>();
-    // let form = Form::Form(o.opcode.clone(), form);
+    // let forms = r.iter().map(|id| id.get_forms()).collect::<Vec<_>>();
+    // for i in forms {
+    // }
+    // let form = Form::Form(self.0.clone(), form);
 
     // let eop = EOp {
     //   // form_cache: RefCell::new(Some(form)),

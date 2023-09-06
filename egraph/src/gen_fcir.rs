@@ -1,4 +1,7 @@
-use fcir::op::Op;
+use fcir::{
+  op::{Op, OpHand},
+  value::Value,
+};
 
 use crate::{
   eclass::{EClass, Id},
@@ -7,62 +10,90 @@ use crate::{
 
 pub trait GenFcir {
   type Output;
-  fn gen_ir(&self) -> Vec<Self::Output>;
+  fn gen_fcir(&self) -> Self::Output;
 }
 
 impl<D> GenFcir for EOpHand<D> {
-  type Output = Op;
+  type Output = Vec<OpHand>;
 
-  fn gen_ir(&self) -> Vec<Self::Output> {
-    self.as_ref().borrow().gen_ir()
+  fn gen_fcir(&self) -> Self::Output {
+    self.as_ref().borrow().gen_fcir()
   }
 }
 
-impl<D> GenFcir for EOp<D> {
-  type Output = Op;
+pub fn product<T: Clone>(a: &Vec<Vec<T>>, b: &Vec<T>) -> Vec<Vec<T>> {
+  a.iter()
+    .map(|item_a| {
+      b.iter()
+        .map(move |item_b| {
+          let mut r = item_a.clone();
+          r.push(item_b.clone());
+          r
+        })
+        .collect::<Vec<Vec<T>>>()
+    })
+    .flatten()
+    .collect::<Vec<Vec<_>>>()
+}
 
-  fn gen_ir(&self) -> Vec<Self::Output> {
-    todo!()
+impl<D> GenFcir for EOp<D> {
+  type Output = Vec<OpHand>;
+
+  fn gen_fcir(&self) -> Self::Output {
+    let uses = self.uses.iter().map(GenFcir::gen_fcir).collect::<Vec<_>>();
+    let uses = uses.iter().fold(vec![], |a, b| product(&a, b));
+    uses
+      .into_iter()
+      .map(|uses| {
+        OpHand::new(Op {
+          opcode: self.opcode.clone(),
+          uses,
+          attr: self.attr.clone(),
+          region: self.region.clone(),
+          sign: self.sign.clone(),
+        })
+      })
+      .collect()
   }
 }
 
 impl<D> GenFcir for Id<D> {
-  type Output = Op;
+  type Output = Vec<Value>;
 
-  fn gen_ir(&self) -> Vec<Self::Output> {
-    self.as_ref().borrow().gen_ir()
+  fn gen_fcir(&self) -> Self::Output {
+    self.as_ref().borrow().gen_fcir()
   }
 }
 
 impl<D> GenFcir for EClass<D> {
-  type Output = Op;
+  type Output = Vec<Value>;
 
-  fn gen_ir(&self) -> Vec<Self::Output> {
+  fn gen_fcir(&self) -> Self::Output {
     self
       .nodes
       .iter()
-      .flat_map(|node| node.gen_ir())
+      .map(|node| node.gen_fcir())
       .collect::<Vec<_>>()
   }
 }
 
 impl<D> GenFcir for ENode<D> {
-  type Output = Op;
+  type Output = Value;
 
-  fn gen_ir(&self) -> Vec<Self::Output> {
-    self.body.gen_ir()
+  fn gen_fcir(&self) -> Self::Output {
+    self.body.gen_fcir()
   }
 }
 
 impl<D> GenFcir for RawENode<D> {
-  type Output = Op;
+  type Output = Value;
 
-  fn gen_ir(&self) -> Vec<Self::Output> {
+  fn gen_fcir(&self) -> Self::Output {
     match self {
-      RawENode::Use(op) => op.gen_ir(),
-      RawENode::Const(_) => vec![todo!()],
-      RawENode::Argument(_) => vec![todo!()],
-      RawENode::Label(_) => vec![todo!()],
+      RawENode::Use(op) => Value::Use(OpHand::new(op.gen_fcir())),
+      RawENode::Const(c) => Value::Const(c.clone()),
+      RawENode::Argument(a) => Value::Argument(a.clone()),
+      RawENode::Label(l) => Value::Label(l.clone()),
     }
   }
 }

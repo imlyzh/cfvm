@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, rc::Rc, hash::Hash};
 
 use crate::{
   block::Region,
@@ -19,12 +19,25 @@ pub struct Op {
 
 pub type Attr = HashMap<Symbol, Constant>;
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)] // fixme: Hash
-pub struct OpHand(pub *const Op);
+#[derive(Debug, Clone, PartialEq, Eq)] // fixme: Hash
+pub struct OpHand(pub Rc<Op>);
+
+impl OpHand {
+  pub fn new(op: Op) -> Self {
+    Self(Rc::new(op))
+  }
+}
+
+impl Hash for OpHand {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        Rc::into_raw(self.0.clone()).hash(state);
+    }
+}
 
 impl AsRef<Op> for OpHand {
   fn as_ref(&self) -> &Op {
-    unsafe { self.0.as_ref().unwrap() }
+    // unsafe { self.0.as_ref().unwrap() }
+    self.0.as_ref()
   }
 }
 

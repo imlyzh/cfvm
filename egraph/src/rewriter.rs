@@ -1,54 +1,65 @@
 use std::collections::HashMap;
 
+use cfvm_common::unbalanced_product;
 use fcir::{
+  block::Region,
+  op::Attr,
   symbol::{Name, Symbol},
+  types::FuncType,
   value::Value,
 };
 
-use crate::{eclass::Id, egraph::EGraph, pattern::MatchValue};
+use crate::{
+  eclass::Id,
+  egraph::EGraph,
+  enode::{EOp, EOpHand, RawENode},
+  form::Form,
+  pattern::MatchValue,
+};
 
 pub trait Rewriter<D> {
   type Output;
-  fn rewrite(
-    &self,
-    res: &HashMap<Symbol, MatchValue<D>>,
-    egraph: &mut EGraph<D>,
-  ) -> Option<Self::Output>;
+  fn rewrite(&self, res: &HashMap<Symbol, MatchValue<D>>, egraph: &mut EGraph<D>) -> Self::Output;
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct OpTemplate(pub Name, pub Vec<Insert<Value>>);
+pub struct OpTemplate(pub Name, pub Vec<Insert<Value>>, pub FuncType);
 
 impl<D: Default> Rewriter<D> for OpTemplate {
-  type Output = Id<D>;
-  fn rewrite(&self, res: &HashMap<Symbol, MatchValue<D>>, egraph: &mut EGraph<D>) -> Option<Id<D>> {
-    let r = self
+  type Output = Vec<Id<D>>;
+  fn rewrite(&self, res: &HashMap<Symbol, MatchValue<D>>, egraph: &mut EGraph<D>) -> Self::Output {
+    let uses = self
       .1
       .iter()
       .map(|i| i.rewrite(res, egraph))
-      .collect::<Option<Vec<_>>>()?;
+      .collect::<Vec<_>>();
+    let uses = uses
+      .into_iter()
+      .fold(vec![], |a, b| unbalanced_product(&a, &b));
 
-    // let forms = r.iter().map(|id| id.get_forms()).collect::<Vec<_>>();
-    // for i in forms {
-    // }
-    // let form = Form::Form(self.0.clone(), form);
-
-    // let eop = EOp {
-    //   // form_cache: RefCell::new(Some(form)),
-    //   form_cache: form,
-    //   opcode: o.opcode.clone(),
-    //   uses,
-    //   attr: o.attr.clone(),
-    //   region: o.region.clone(),
-    //   sign: o.sign.clone(),
-    // };
-    // let eop = EOpHand::new(eop);
-    // let node = RawENode::Use(eop.clone());
-
-    // let id = self.add_raw_node(node);
-
-    // (id, eop)
-    todo!()
+    let mut r = vec![];
+    for uses in uses.into_iter() {
+      let forms = uses
+        .iter()
+        .map(|id| id.get_forms())
+        .fold(vec![], |a, b| unbalanced_product(&a, &b));
+      let append = forms.into_iter().map(|forms| {
+        let eop = EOp {
+          // form_cache: RefCell::new(Some(form)),
+          form_cache: Form::Form(self.0.clone(), forms),
+          opcode: self.0.clone(),
+          uses: uses.clone(),
+          attr: Attr::new(),
+          region: Region::new(),
+          sign: self.2.clone(),
+        };
+        let eop = EOpHand::new(eop);
+        let node = RawENode::Use(eop.clone());
+        egraph.add_raw_node(node)
+      });
+      r.extend(append)
+    }
+    r
   }
 }
 
@@ -60,12 +71,16 @@ pub enum Insert<T> {
 }
 
 impl<D: Default> Rewriter<D> for Insert<Value> {
-  type Output = Id<D>;
-  fn rewrite(&self, res: &HashMap<Symbol, MatchValue<D>>, egraph: &mut EGraph<D>) -> Option<Id<D>> {
+  type Output = Vec<Id<D>>;
+  fn rewrite(&self, res: &HashMap<Symbol, MatchValue<D>>, egraph: &mut EGraph<D>) -> Self::Output {
     match self {
       Insert::Use(op) => op.rewrite(res, egraph),
-      Insert::Var(sym) => Some(egraph.add_node(res.get(sym)?.clone())),
-      Insert::Lit(node) => todo!(), //Some(egraph.add_node(node.clone())),
+      Insert::Var(sym) => res
+        .get(sym)
+        .into_iter()
+        .map(|node| egraph.add_node(node.clone()))
+        .collect(),
+      Insert::Lit(value) => vec![egraph.add_value(value).1],
     }
   }
 }

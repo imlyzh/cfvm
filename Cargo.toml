@@ -18,7 +18,7 @@ path = "./src/main.rs"
 [workspace]
 resolver = '2'
 members = [
-  # "common",
+  "common",
   "rewrite_system",
   "egraph",
   "fcir",
@@ -31,7 +31,7 @@ edition = "2021"
 
 [workspace.dependencies]
 cfvm = { path="cfvm" }
-# cfvm-common = { path="common" }
+cfvm_common = { path="common" }
 egraph = { path="egraph" }
 rewrite_system = { path="rewrite_system" }
 fcir = { path="fcir" }

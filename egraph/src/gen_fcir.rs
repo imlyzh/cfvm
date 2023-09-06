@@ -1,3 +1,4 @@
+use cfvm_common::unbalanced_product;
 use fcir::{
   op::{Op, OpHand},
   value::Value,
@@ -21,24 +22,12 @@ impl<D> GenFcir for EOpHand<D> {
   }
 }
 
-pub fn product<T: Clone>(a: &[Vec<T>], b: &[T]) -> Vec<Vec<T>> {
-  a.iter()
-    .flat_map(|item_a| {
-      b.iter().map(move |item_b| {
-        let mut r = item_a.clone();
-        r.push(item_b.clone());
-        r
-      })
-    })
-    .collect::<Vec<Vec<_>>>()
-}
-
 impl<D> GenFcir for EOp<D> {
   type Output = Vec<OpHand>;
 
   fn gen_fcir(&self) -> Self::Output {
     let uses = self.uses.iter().map(GenFcir::gen_fcir).collect::<Vec<_>>();
-    let uses = uses.iter().fold(vec![], |a, b| product(&a, b));
+    let uses = uses.iter().fold(vec![], |a, b| unbalanced_product(&a, b));
     uses
       .into_iter()
       .map(|uses| {

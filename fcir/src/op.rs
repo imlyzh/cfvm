@@ -1,4 +1,4 @@
-use std::{collections::HashMap, rc::Rc, hash::Hash};
+use std::{collections::HashMap, hash::Hash, rc::Rc};
 
 use crate::{
   block::Region,
@@ -29,9 +29,9 @@ impl OpHand {
 }
 
 impl Hash for OpHand {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        Rc::into_raw(self.0.clone()).hash(state);
-    }
+  fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+    Rc::into_raw(self.0.clone()).hash(state);
+  }
 }
 
 impl AsRef<Op> for OpHand {

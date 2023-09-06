@@ -1,6 +1,6 @@
 use crate::{symbol::Name, value::Constant};
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum Type {
   TypeFunc(TypeFunc),
   FuncType(FuncType),
@@ -8,20 +8,20 @@ pub enum Type {
   // Union(UnionType),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct TypeFunc {
   pub name: Name,
   pub args: Vec<TypeOrConst>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum TypeOrConst {
   Type(Type),
   Const(Constant),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct FuncType(pub Vec<Type>, pub Vec<Type>);
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub struct FuncType(pub Vec<Type>, pub Box<Type>);
 
 /*
 #[derive(Debug, Clone, PartialEq, Eq)]

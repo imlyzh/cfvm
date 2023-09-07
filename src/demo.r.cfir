@@ -1,8 +1,0 @@
-
-mod demo114 {
-    fn @fn_demo114() -> i32 {
-        let %x: i8, stack = 1
-        let %y = x
-        add(%x, %y)
-    }
-}

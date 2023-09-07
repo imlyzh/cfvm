@@ -5,5 +5,4 @@ pub mod enode;
 
 pub mod gen_fcir;
 pub mod matching;
-pub mod pattern;
 pub mod rewriter;

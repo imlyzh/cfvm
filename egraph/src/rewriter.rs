@@ -14,7 +14,7 @@ use crate::{
   eclass::Id,
   egraph::EGraph,
   enode::{EOp, EOpHand, RawENode},
-  pattern::MatchValue,
+  matching::MatchValue,
 };
 
 pub trait Rewriter<D> {

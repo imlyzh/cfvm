@@ -7,9 +7,9 @@ use fcir::{
   block::Region,
   op::Attr,
   rewriter::form::{Form, GetForm},
-  symbol::{Name, Symbol},
+  symbol::Name,
   types::FuncType,
-  value::{Argument, Constant},
+  value::{Argument, Constant, Label},
 };
 
 use crate::eclass::{EClass, Id};
@@ -119,7 +119,7 @@ pub enum RawENode<D> {
   Const(Constant),
   Use(EOpHand<D>),
   Argument(Argument),
-  Label(Symbol),
+  Label(Label),
 }
 
 impl<D> Clone for RawENode<D> {
@@ -166,8 +166,8 @@ impl<D> From<&Argument> for RawENode<D> {
   }
 }
 
-impl<D> From<&Symbol> for RawENode<D> {
-  fn from(value: &Symbol) -> Self {
+impl<D> From<&Label> for RawENode<D> {
+  fn from(value: &Label) -> Self {
     RawENode::Label(value.clone())
   }
 }

@@ -5,8 +5,11 @@ pub enum Value {
   Const(Constant),
   Use(OpHand),
   Argument(Argument),
-  Label(Symbol),
+  Label(Label),
 }
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub struct Label(pub Symbol);
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct Argument(pub Symbol, pub Option<Order>);

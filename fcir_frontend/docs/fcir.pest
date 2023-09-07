@@ -1,21 +1,21 @@
 
-block = { !block_entity ~ op_def+ }
+block = { !block_head ~ op_def+ }
 
 op_def = { (symbol ~ "=")? ~ op }
 
-op = { name ~ uses? ~ attr? ~ region? ~ ":" ~ func_type }
+op = { name ~ uses ~ attr ~ region ~ ":" ~ func_type }
 
-uses = { "(" ~ (value ~ ("," ~ value)* ~ ","?)? ~ ")" }
+uses = { ("(" ~ (value ~ ("," ~ value)* ~ ","?)? ~ ")")? }
 
 attr = {
-  "[" ~ (key_value_pair ~ ("," ~ key_value_pair)* ~ ","?)? ~ "]"
+  ("[" ~ (key_constant_pair ~ ("," ~ key_constant_pair)* ~ ","?)? ~ "]")?
 }
-key_value_pair = { symbol ~ ":" ~ value }
+key_constant_pair = { symbol ~ ":" ~ constant }
 
-region = { "{" ~ labeld_block* ~ "}" }
-labeld_block = { (block_entity? ~ block) }
+region = { ("{" ~ labeld_block* ~ "}")? }
+labeld_block = { block_head ~ block }
 
-block_entity = { ("^" ~ label ~ block_argument? ~ ":") }
+block_head = { ("^" ~ label ~ block_argument? ~ ":")? }
 
 block_argument = {
   "(" ~ (symbol_type_pair ~ ("," ~ symbol_type_pair)* ~ ","?)? ~ ")"
@@ -54,7 +54,7 @@ value =
 
 argument = { argument_order ~ symbol }
 
-argument_order = { "def" | "use" }
+argument_order = { ("def" | "use")? }
 
 label = _{ symbol }
 

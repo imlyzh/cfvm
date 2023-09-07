@@ -52,7 +52,7 @@ impl<D> Id<D> {
 #[derive(Debug)]
 pub struct EClass<D> {
   pub nodes: Vec<ENode<D>>,
-  data: D,
+  pub data: D,
 }
 
 impl<D: Default> Default for EClass<D> {

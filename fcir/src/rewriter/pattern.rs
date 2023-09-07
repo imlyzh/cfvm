@@ -2,7 +2,7 @@ use std::{cell::RefCell, hash::Hash, rc::Rc};
 
 use crate::{
   symbol::{Name, Symbol},
-  value::{Argument, Constant},
+  value::{Argument, Constant, Label},
 };
 
 use super::form::{Form, GetForm};
@@ -75,7 +75,7 @@ pub enum ValuePat {
   Const(Constant),
   Use(OpPatHand),
   Argument(Argument),
-  Label(Symbol),
+  Label(Label),
 }
 
 impl GetForm for ValuePat {

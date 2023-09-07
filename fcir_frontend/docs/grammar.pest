@@ -1,0 +1,124 @@
+
+block = { !block_entity ~ op_def+ }
+
+op_def = { (symbol ~ "=")? ~ op }
+
+op = { name ~ uses? ~ attr? ~ region? ~ ":" ~ func_type }
+
+uses = { "(" ~ (value ~ ("," ~ value)* ~ ","?)? ~ ")" }
+
+attr = {
+  "[" ~ (key_value_pair ~ ("," ~ key_value_pair)* ~ ","?)? ~ "]"
+}
+key_value_pair = { symbol ~ ":" ~ value }
+
+region = { "{" ~ labeld_block* ~ "}" }
+labeld_block = { (block_entity? ~ block) }
+
+block_entity = { ("^" ~ label ~ block_argument? ~ ":") }
+
+block_argument = {
+  "(" ~ (symbol_type_pair ~ ("," ~ symbol_type_pair)* ~ ","?)? ~ ")"
+}
+
+symbol_type_pair = { symbol ~ "." ~ _type }
+
+_type =
+  { type_func
+  | func_type
+  }
+
+type_or_const = { _type | constant }
+
+type_func = { name ~ type_argument? }
+
+type_argument = { "<" ~ (type_or_const ~ ("," ~ type_or_const)* ~ ","?)? ~ ">" }
+
+func_type = { "(" ~ type_list ~ ")" ~ "->" ~ _type }
+
+type_list = { (_type ~ ("," ~ _type)* ~ ","?)? }
+
+name = { (symbol ~ ".")? ~ symbol }
+
+symbol_or_op =
+  { symbol
+  | op
+  }
+
+value =
+  { symbol_or_op
+  | constant
+  | label
+  | argument
+}
+
+argument = { argument_order ~ symbol }
+
+argument_order = { "def" | "use" }
+
+label = _{ symbol }
+
+constant =
+  { string_lit
+  // | float_lit
+  | int_lit
+  | uint_lit
+  | bool_lit
+}
+
+int_lit = ${ signed_number ~ !("u" | "f") ~ "i"? }
+uint_lit = ${ number ~ "u" }
+
+float_lit = ${ float_number ~ "f"? }
+
+float_number = $
+    { (("+" | "-")? ~ number_hex ~ "." ~ ASCII_HEX_DIGIT+)
+    | (("+" | "-")? ~ number_oct ~ "." ~ ASCII_OCT_DIGIT+)
+    | (("+" | "-")? ~ number_bin ~ "." ~ ASCII_BIN_DIGIT+)
+    | (("+" | "-")? ~ number_dec ~ "." ~ ASCII_DIGIT+)
+}
+
+signed_number = ${ ("+" | "-")? ~ number }
+
+number = $
+    { number_hex
+    | number_oct
+    | number_bin
+    | number_dec
+    }
+
+number_dec = _ { ASCII_DIGIT+ }
+number_oct = _ { "0o" ~ ASCII_OCT_DIGIT+ }
+number_hex = _ { "0x" ~ ASCII_HEX_DIGIT+ }
+number_bin = _ { "0b" ~ ASCII_BIN_DIGIT+ }
+
+string_lit = @ { "\"" ~ (escape | (!("\\" | "\"") ~ ANY)+)* ~ "\""}
+escape = _{ "\\\\"
+     | "\\\""
+     | "\\'"
+     | "\\n"
+     | "\\r"
+     | "\\t"
+     }
+
+bool_lit = @{ "true" | "false" }
+
+
+symbol = @{ (!(WHITE_SPACE | "." | "=" | "->" | "(" | ")" | "<" | ">" | "[" | "]" |  "{" | "}" | "," | ":") ~ ANY)+ }
+
+
+COMMENT = _
+    { line_comment
+    // | block_comment
+    }
+
+line_comment = _ {
+  "//" ~ (!NEWLINE ~ ANY)* ~ NEWLINE?
+}
+
+WHITESPACE = _
+  { " "
+  | "\t"
+  | WHITE_SPACE
+  | NEWLINE
+  }

@@ -1,0 +1,12 @@
+[package]
+name = "fcir_frontend"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+fcir.workspace = true
+pest = "2.7.3"
+pest_derive = "2.7.3"

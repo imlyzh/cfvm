@@ -7,13 +7,13 @@ use fcir::{
   symbol::{Name, Symbol},
   types::FuncType,
   value::Value,
+  rewriter::form::Form,
 };
 
 use crate::{
   eclass::Id,
   egraph::EGraph,
   enode::{EOp, EOpHand, RawENode},
-  form::Form,
   pattern::MatchValue,
 };
 

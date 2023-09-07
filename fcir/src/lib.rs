@@ -3,4 +3,4 @@ pub mod op;
 pub mod symbol;
 pub mod types;
 pub mod value;
-// pub mod rewrite;
+pub mod rewriter;

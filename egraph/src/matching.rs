@@ -1,10 +1,11 @@
-use fcir::symbol::Symbol;
+use fcir::{
+  symbol::Symbol,
+  rewriter::{form::GetForm, pattern::{ValuePat, Matcher}},
+};
 
 use crate::{
   egraph::EGraph,
   enode::ENode,
-  form::GetForm,
-  pattern::{Matcher, ValuePat},
 };
 
 impl<D> EGraph<D> {

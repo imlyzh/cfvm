@@ -3,8 +3,9 @@ use std::{cell::RefCell, collections::HashMap, rc::Rc};
 use crate::{
   eclass::{EClass, Id},
   enode::{ENode, RawENode},
-  form::Form,
 };
+
+use fcir::rewriter::form::Form;
 
 #[derive(Debug, Clone)]
 pub struct ELike<D>(HashMap<Form, Vec<ENode<D>>>);

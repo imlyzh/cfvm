@@ -1,8 +1,10 @@
 use std::{cell::RefCell, hash::Hash, rc::Rc};
 
+
+use fcir::rewriter::form::{Form, GetForm};
+
 use crate::{
   enode::ENode,
-  form::{Form, GetForm},
 };
 
 #[derive(Debug)]

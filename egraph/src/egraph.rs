@@ -1,10 +1,9 @@
-use fcir::{op::Op, value::Value};
+use fcir::{op::Op, value::Value, rewriter::form::{Form, GetForm}};
 
 use crate::{
   eclass::Id,
   elike::ELike,
   enode::{ENode, EOp, EOpHand, RawENode},
-  form::{Form, GetForm},
 };
 
 #[derive(Debug, Default)]

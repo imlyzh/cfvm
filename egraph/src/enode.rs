@@ -9,11 +9,11 @@ use fcir::{
   symbol::{Name, Symbol},
   types::FuncType,
   value::{Argument, Constant},
+  rewriter::form::{Form, GetForm},
 };
 
 use crate::{
   eclass::{EClass, Id},
-  form::{Form, GetForm},
 };
 
 /// EOp from/into Op

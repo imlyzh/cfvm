@@ -17,7 +17,7 @@ impl<D> Default for ELike<D> {
 }
 
 impl<D> ELike<D> {
-  fn new() -> ELike<D> {
+  pub fn new() -> ELike<D> {
     Default::default()
   }
 }

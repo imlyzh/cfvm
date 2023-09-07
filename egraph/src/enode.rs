@@ -6,15 +6,13 @@ use std::{
 use fcir::{
   block::Region,
   op::Attr,
+  rewriter::form::{Form, GetForm},
   symbol::{Name, Symbol},
   types::FuncType,
   value::{Argument, Constant},
-  rewriter::form::{Form, GetForm},
 };
 
-use crate::{
-  eclass::{EClass, Id},
-};
+use crate::eclass::{EClass, Id};
 
 /// EOp from/into Op
 #[derive(Debug, Clone)]

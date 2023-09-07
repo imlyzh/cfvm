@@ -22,7 +22,6 @@ members = [
   "fcir",
   "fcir_frontend",
   "egraph",
-  # "rewrite_system",
   ]
 
 [workspace.package]
@@ -36,7 +35,7 @@ cfvm_common = { path="common" }
 fcir = { path="fcir" }
 fcir_frontend = { path="fcir_frontend" }
 egraph = { path="egraph" }
-# rewrite_system = { path="rewrite_system" }
+
 
 
 [dependencies]

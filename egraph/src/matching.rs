@@ -1,12 +1,12 @@
 use fcir::{
+  rewriter::{
+    form::GetForm,
+    pattern::{Matcher, ValuePat},
+  },
   symbol::Symbol,
-  rewriter::{form::GetForm, pattern::{ValuePat, Matcher}},
 };
 
-use crate::{
-  egraph::EGraph,
-  enode::ENode,
-};
+use crate::{egraph::EGraph, enode::ENode};
 
 impl<D> EGraph<D> {
   pub fn matching(&mut self, value: ValuePat) -> Option<Vec<Vec<(Symbol, ENode<D>)>>> {

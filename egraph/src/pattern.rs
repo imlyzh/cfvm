@@ -1,8 +1,4 @@
-
-use fcir::{
-  symbol::Symbol,
-  rewriter::pattern::*,
-};
+use fcir::{rewriter::pattern::*, symbol::Symbol};
 
 use crate::{
   eclass::EClass,
@@ -10,7 +6,6 @@ use crate::{
 };
 
 pub type MatchValue<D> = ENode<D>;
-
 
 impl<D> Matcher<EOp<D>, MatchValue<D>> for OpPat {
   fn matching(&self, op: &EOp<D>) -> Option<Vec<(Symbol, MatchValue<D>)>> {
@@ -30,7 +25,6 @@ impl<D> Matcher<EOp<D>, MatchValue<D>> for OpPat {
     Some(catch)
   }
 }
-
 
 impl<D> Matcher<EOpHand<D>, MatchValue<D>> for OpPatHand {
   fn matching(&self, i: &EOpHand<D>) -> Option<Vec<(Symbol, MatchValue<D>)>> {

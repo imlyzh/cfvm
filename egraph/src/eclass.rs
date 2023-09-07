@@ -1,11 +1,8 @@
 use std::{cell::RefCell, hash::Hash, rc::Rc};
 
-
 use fcir::rewriter::form::{Form, GetForm};
 
-use crate::{
-  enode::ENode,
-};
+use crate::enode::ENode;
 
 #[derive(Debug)]
 pub struct Id<D>(pub Rc<RefCell<EClass<D>>>); // warning: multi-thread unsound

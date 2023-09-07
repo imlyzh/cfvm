@@ -1,4 +1,8 @@
-use fcir::{op::Op, value::Value, rewriter::form::{Form, GetForm}};
+use fcir::{
+  op::Op,
+  rewriter::form::{Form, GetForm},
+  value::Value,
+};
 
 use crate::{
   eclass::Id,

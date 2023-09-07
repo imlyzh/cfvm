@@ -4,10 +4,10 @@ use cfvm_common::unbalanced_product;
 use fcir::{
   block::Region,
   op::Attr,
+  rewriter::form::Form,
   symbol::{Name, Symbol},
   types::FuncType,
   value::Value,
-  rewriter::form::Form,
 };
 
 use crate::{

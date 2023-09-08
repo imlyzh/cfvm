@@ -17,7 +17,7 @@ labeld_block = { block_head_opt ~ block }
 
 block_head_opt = { block_head? }
 
-block_head = { ("^" ~ label ~ block_argument? ~ ":") }
+block_head = { (label ~ block_argument? ~ ":") }
 
 block_argument = {
   "(" ~ (symbol_type_pair ~ ("," ~ symbol_type_pair)* ~ ","?)? ~ ")"
@@ -43,8 +43,8 @@ type_list = { (_type ~ ("," ~ _type)* ~ ","?)? }
 name = { (symbol ~ ".")? ~ symbol }
 
 symbol_or_op =
-  { symbol
-  | op
+  { op
+  | symbol
   }
 
 value =
@@ -58,7 +58,7 @@ argument = { argument_order ~ symbol }
 
 argument_order = { ("def" | "use")? }
 
-label = _{ symbol }
+label = { "^" ~ symbol }
 
 constant =
   { string_lit

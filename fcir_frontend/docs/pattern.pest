@@ -27,7 +27,7 @@ argument = { argument_order ~ symbol }
 
 argument_order = { ("def" | "use")? }
 
-label = _{ symbol }
+label = _{ "^" ~ symbol }
 
 constant =
   { string_lit

@@ -19,8 +19,8 @@ value =
 }
 
 symbol_or_op_pat =
-  { symbol
-  | op_pat
+  { op_pat
+  | symbol
   }
 
 argument = { argument_order ~ symbol }
@@ -75,7 +75,7 @@ escape = _{ "\\\\"
 bool_lit = @{ "true" | "false" }
 
 
-symbol = @{ (!(WHITE_SPACE | "." | "=" | "->" | "(" | ")" | "<" | ">" | "[" | "]" |  "{" | "}" | "," | ":" | "?") ~ ANY)+ }
+symbol = @{ (!(WHITE_SPACE | "." | "=" | "->" | "(" | ")" | "<" | ">" | "[" | "]" |  "{" | "}" | "," | ":" | "?" | constant) ~ ANY)+ }
 
 
 COMMENT = _

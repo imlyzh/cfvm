@@ -13,9 +13,11 @@ attr = {
 key_constant_pair = { symbol ~ ":" ~ constant }
 
 region = { ("{" ~ labeld_block* ~ "}")? }
-labeld_block = { block_head ~ block }
+labeld_block = { block_head_opt ~ block }
 
-block_head = { ("^" ~ label ~ block_argument? ~ ":")? }
+block_head_opt = { block_head? }
+
+block_head = { ("^" ~ label ~ block_argument? ~ ":") }
 
 block_argument = {
   "(" ~ (symbol_type_pair ~ ("," ~ symbol_type_pair)* ~ ","?)? ~ ")"
@@ -24,13 +26,13 @@ block_argument = {
 symbol_type_pair = { symbol ~ "." ~ _type }
 
 _type =
-  { type_func
+  { generic_type
   | func_type
   }
 
 type_or_const = { _type | constant }
 
-type_func = { name ~ type_argument? }
+generic_type = { name ~ type_argument? }
 
 type_argument = { "<" ~ (type_or_const ~ ("," ~ type_or_const)* ~ ","?)? ~ ">" }
 

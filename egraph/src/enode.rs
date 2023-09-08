@@ -20,6 +20,7 @@ pub struct EOp<D> {
   // pub form_cache: RefCell<Option<Form>>,
   pub form_cache: Form,
   pub opcode: Name,
+  pub def: Option<Symbol>,
   pub uses: Vec<Id<D>>,
   pub attr: Attr,
   pub region: Region,

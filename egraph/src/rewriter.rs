@@ -23,13 +23,18 @@ pub trait Rewriter<D> {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct OpTemplate(pub Name, pub Vec<Insert<Value>>, pub FuncType);
+pub struct OpTemplate(
+  pub Name,
+  pub Option<Symbol>,
+  pub Vec<Insert<Value>>,
+  pub FuncType,
+);
 
 impl<D: Default> Rewriter<D> for OpTemplate {
   type Output = Vec<Id<D>>;
   fn rewrite(&self, res: &HashMap<Symbol, MatchValue<D>>, egraph: &mut EGraph<D>) -> Self::Output {
     let uses = self
-      .1
+      .2
       .iter()
       .map(|i| i.rewrite(res, egraph))
       .collect::<Vec<_>>();
@@ -48,10 +53,11 @@ impl<D: Default> Rewriter<D> for OpTemplate {
           // form_cache: RefCell::new(Some(form)),
           form_cache: Form::Form(self.0.clone(), forms),
           opcode: self.0.clone(),
+          def: self.1.clone(),
           uses: uses.clone(),
           attr: Attr::new(),
           region: Region::new(),
-          sign: self.2.clone(),
+          sign: self.3.clone(),
         };
         let eop = EOpHand::new(eop);
         let node = RawENode::Use(eop.clone());

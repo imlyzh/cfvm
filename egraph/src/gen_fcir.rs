@@ -33,6 +33,7 @@ impl<D> GenFcir for EOp<D> {
       .map(|uses| {
         OpHand::new(Op {
           opcode: self.opcode.clone(),
+          def: self.def.clone(),
           uses,
           attr: self.attr.clone(),
           region: self.region.clone(),

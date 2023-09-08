@@ -41,6 +41,7 @@ impl<D: Default> EGraph<D> {
       // form_cache: RefCell::new(Some(form)),
       form_cache: form,
       opcode: o.opcode.clone(),
+      def: o.def.clone(),
       uses,
       attr: o.attr.clone(),
       region: o.region.clone(),
@@ -79,7 +80,7 @@ impl<D: Default> EGraph<D> {
   pub fn make_enode(&mut self, value: &Value) -> RawENode<D> {
     match value {
       Value::Use(op) => {
-        let (_id, eop) = self.add_op(op.as_ref());
+        let (_id, eop) = self.add_op(&op.as_ref().borrow());
         RawENode::Use(eop)
       },
       Value::Const(n) => RawENode::Const(n.clone()),

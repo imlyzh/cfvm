@@ -245,8 +245,12 @@ impl FcirParseFrom for Value {
     let pair = pair.into_inner().next().unwrap();
     match pair.as_rule() {
       Rule::symbol_or_op => {
-        // keypoint!
-        todo!()
+        if pair.as_rule() == Rule::symbol {
+          Value::Input(FcirParseFrom::parse_from(pair, path))
+        } else {
+          // if pair.as_rule() == Rule::op
+          Value::Use(FcirParseFrom::parse_from(pair, path))
+        }
       },
       Rule::constant => Value::Const(FcirParseFrom::parse_from(pair, path)),
       Rule::label => Value::Label(FcirParseFrom::parse_from(pair, path)),

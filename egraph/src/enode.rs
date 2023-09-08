@@ -7,7 +7,7 @@ use fcir::{
   block::Region,
   op::Attr,
   rewriter::form::{Form, GetForm},
-  symbol::Name,
+  symbol::{Name, Symbol},
   types::FuncType,
   value::{Argument, Constant, Label},
 };
@@ -120,6 +120,7 @@ pub enum RawENode<D> {
   Use(EOpHand<D>),
   Argument(Argument),
   Label(Label),
+  Input(Symbol),
 }
 
 impl<D> Clone for RawENode<D> {
@@ -129,6 +130,7 @@ impl<D> Clone for RawENode<D> {
       Self::Use(arg0) => Self::Use(arg0.clone()),
       Self::Argument(arg0) => Self::Argument(arg0.clone()),
       Self::Label(arg0) => Self::Label(arg0.clone()),
+      Self::Input(arg0) => Self::Input(arg0.clone()),
     }
   }
 }
@@ -137,7 +139,9 @@ impl<D> GetForm for RawENode<D> {
   fn get_form(&self) -> Form {
     match self {
       RawENode::Use(op) => op.get_form(),
-      RawENode::Const(_) | RawENode::Argument(_) | RawENode::Label(_) => Form::Atom,
+      RawENode::Const(_) | RawENode::Argument(_) | RawENode::Label(_) | RawENode::Input(_) => {
+        Form::Atom
+      },
     }
   }
 }

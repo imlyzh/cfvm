@@ -80,6 +80,7 @@ impl<D> GenFcir for RawENode<D> {
       RawENode::Const(c) => vec![Value::Const(c.clone())],
       RawENode::Argument(a) => vec![Value::Argument(a.clone())],
       RawENode::Label(l) => vec![Value::Label(l.clone())],
+      RawENode::Input(i) => vec![Value::Input(i.clone())],
     }
   }
 }

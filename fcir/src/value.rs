@@ -6,6 +6,7 @@ pub enum Value {
   Use(OpHand),
   Argument(Argument),
   Label(Label),
+  Input(Symbol),
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]

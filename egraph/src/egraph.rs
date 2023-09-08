@@ -82,9 +82,10 @@ impl<D: Default> EGraph<D> {
         let (_id, eop) = self.add_op(op.as_ref());
         RawENode::Use(eop)
       },
-      Value::Const(n) => n.into(),
-      Value::Argument(n) => n.into(),
-      Value::Label(n) => n.into(),
+      Value::Const(n) => RawENode::Const(n.clone()),
+      Value::Argument(n) => RawENode::Argument(n.clone()),
+      Value::Label(n) => RawENode::Label(n.clone()),
+      Value::Input(n) => RawENode::Input(n.clone()),
     }
   }
 }

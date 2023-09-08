@@ -7,7 +7,9 @@ uses = { ("(" ~ (catch ~ ("," ~ catch)* ~ ","?)? ~ ")")? }
 
 name = { (symbol ~ ".")? ~ symbol }
 
-catch = { "?" ~ symbol ~ (":" ~ value) }
+catch = { catch_0 | catch_1 }
+catch_0 = { "?" ~ symbol ~ (":" ~ value)? }
+catch_1 = { value }
 
 value =
   { symbol_or_op_pat

@@ -375,7 +375,7 @@ mod test {
     let src = "fn.def (a) [ inline: true ] {
       r = arthi.add (a, 1): (int, int) -> int
       fn.ret (r): (int) -> never
-  }: () -> (int, int) -> int";
+  }: () -> (int) -> int";
     let pair = Fcir::parse(Rule::block, src).unwrap();
     let r: Vec<Block> = pair
       .into_iter()

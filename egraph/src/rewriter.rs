@@ -51,7 +51,7 @@ impl<D: Default> Rewriter<D> for OpTemplate {
       let append = forms.into_iter().map(|forms| {
         let eop = EOp {
           // form_cache: RefCell::new(Some(form)),
-          form_cache: Form::Form(self.0.clone(), forms),
+          form_cache: Form::Form(self.0.clone(), forms.into_iter().map(Some).collect()),
           opcode: self.0.clone(),
           def: self.1.clone(),
           uses: uses.clone(),

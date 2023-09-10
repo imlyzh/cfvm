@@ -19,12 +19,12 @@ pub struct OpPat(
 );
 
 impl GetForm for OpPat {
-  fn get_form(&self) -> Form {
-    Form::Form(
+  fn get_form(&self) -> Option<Form> {
+    Some(Form::Form(
       // self.0 .0.clone(),
       self.0.clone(),
       self.1.iter().map(GetForm::get_form).collect(),
-    )
+    ))
   }
 }
 
@@ -38,7 +38,7 @@ impl OpPatHand {
 }
 
 impl GetForm for OpPatHand {
-  fn get_form(&self) -> Form {
+  fn get_form(&self) -> Option<Form> {
     self.as_ref().borrow().get_form()
   }
 }
@@ -62,11 +62,21 @@ impl PartialEq for OpPatHand {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Catch<T>(pub T, pub Option<Symbol>);
+pub struct Catch<T>(pub Option<T>, pub Option<Symbol>);
 
 impl<T: GetForm> GetForm for Catch<T> {
-  fn get_form(&self) -> Form {
+  fn get_form(&self) -> Option<Form> {
     self.0.get_form()
+  }
+}
+
+impl<T: GetForm> GetForm for Option<T> {
+  fn get_form(&self) -> Option<Form> {
+    if let Some(x) = self {
+      x.get_form()
+    } else {
+      None
+    }
   }
 }
 
@@ -76,13 +86,16 @@ pub enum ValuePat {
   Use(OpPatHand),
   Argument(Argument),
   Label(Label),
+  Input(Symbol),
 }
 
 impl GetForm for ValuePat {
-  fn get_form(&self) -> Form {
+  fn get_form(&self) -> Option<Form> {
     match self {
       ValuePat::Use(op) => op.get_form(),
-      ValuePat::Const(_) | ValuePat::Argument(_) | ValuePat::Label(_) => Form::Atom,
+      ValuePat::Const(_) | ValuePat::Argument(_) | ValuePat::Label(_) | ValuePat::Input(_) => {
+        Some(Form::Atom)
+      },
     }
   }
 }

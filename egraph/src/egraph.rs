@@ -31,7 +31,7 @@ impl<D: Default> EGraph<D> {
   pub fn add_op(&mut self, o: &Op) -> (Id<D>, EOpHand<D>) {
     let r = o.uses.iter().map(|i| self.add_value(i)).collect::<Vec<_>>();
 
-    let form = r.iter().map(|(f, _)| f).cloned().collect::<Vec<Form>>();
+    let form = r.iter().map(|(f, _)| Some(f.clone())).collect::<Vec<_>>();
 
     let uses = r.iter().map(|(_, i)| i).cloned().collect();
 
@@ -57,14 +57,14 @@ impl<D: Default> EGraph<D> {
 
   pub fn add_value(&mut self, value: &Value) -> (Form, Id<D>) {
     let node = self.make_enode(value);
-    let f = node.get_form();
+    let f = node.get_form().unwrap();
     let r = self.add_raw_node(node);
     (f, r)
   }
 
   pub fn add_node(&mut self, node: ENode<D>) -> Id<D> {
     let input_id = node.get_id();
-    let id = self.likes.add_node(&node.get_form(), node);
+    let id = self.likes.add_node(&node.get_form().unwrap(), node);
     if id != input_id {
       self.eclasses.push(id.clone());
     }
@@ -72,7 +72,7 @@ impl<D: Default> EGraph<D> {
   }
 
   pub fn add_raw_node(&mut self, node: RawENode<D>) -> Id<D> {
-    let id = self.likes.add_raw_node(&node.get_form(), node);
+    let id = self.likes.add_raw_node(&node.get_form().unwrap(), node);
     self.eclasses.push(id.clone());
     id
   }

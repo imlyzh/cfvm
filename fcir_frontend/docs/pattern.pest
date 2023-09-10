@@ -9,7 +9,7 @@ name = { (symbol ~ ".")? ~ symbol }
 
 catch = { catch_0 | catch_1 }
 catch_0 = { "?" ~ symbol ~ (":" ~ value)? }
-catch_1 = { value }
+catch_1 = { "_" | value }
 
 value =
   { symbol_or_op_pat
@@ -75,7 +75,7 @@ escape = _{ "\\\\"
 bool_lit = @{ "true" | "false" }
 
 
-symbol = @{ (!(WHITE_SPACE | "." | "=" | "->" | "(" | ")" | "<" | ">" | "[" | "]" |  "{" | "}" | "," | ":" | "?" | constant) ~ ANY)+ }
+symbol = @{ (!(WHITE_SPACE | "." | "=" | "->" | "(" | ")" | "<" | ">" | "[" | "]" |  "{" | "}" | "," | ":" | "?" | "_" | constant) ~ ANY)+ }
 
 
 COMMENT = _

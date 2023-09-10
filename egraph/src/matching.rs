@@ -16,6 +16,10 @@ use crate::{
 impl<D> EGraph<D> {
   pub fn matching(&mut self, value: ValuePat) -> Option<Vec<Vec<(Symbol, ENode<D>)>>> {
     let form = value.get_form();
+    if let None = form {
+      return Some(vec![])
+    }
+    let form = form.unwrap();
     let r = self.likes.find_collect(&form)?;
     // fixme
     let r = r
@@ -57,7 +61,7 @@ impl<D> Matcher<EOpHand<D>, MatchValue<D>> for OpPatHand {
 }
 
 impl<D> Matcher<EClass<D>, MatchValue<D>> for Catch<ValuePat> {
-  fn matching(&self, i: &EClass<D>) -> Option<Vec<(Symbol, MatchValue<D>)>> {
+  fn matching(&self, i: &EClass<D>) -> Option<(ValuePat, Vec<(Symbol, MatchValue<D>)>)> {
     self.0.matching(i)
   }
 }

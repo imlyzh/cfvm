@@ -96,6 +96,10 @@ impl<D> EClass<D> {
   }
 
   pub fn get_forms(&self) -> Vec<Form> {
-    self.nodes.iter().map(GetForm::get_form).collect()
+    self
+      .nodes
+      .iter()
+      .map(|node| node.get_form().unwrap())
+      .collect()
   }
 }

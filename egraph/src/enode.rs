@@ -28,13 +28,13 @@ pub struct EOp<D> {
 }
 
 impl<D> GetForm for EOp<D> {
-  fn get_form(&self) -> Form {
+  fn get_form(&self) -> Option<Form> {
     // if let Some(x) = self.form_cache.borrow().as_ref() {
     //   x.clone()
     // } else {
     //   unreachable!()
     // }
-    self.form_cache.clone()
+    Some(self.form_cache.clone())
   }
 }
 
@@ -52,7 +52,7 @@ impl<D> PartialEq for EOp<D> {
 pub struct EOpHand<D>(Rc<RefCell<EOp<D>>>);
 
 impl<D> GetForm for EOpHand<D> {
-  fn get_form(&self) -> Form {
+  fn get_form(&self) -> Option<Form> {
     self.as_ref().borrow().get_form()
   }
 }
@@ -109,7 +109,7 @@ impl<D> Clone for ENode<D> {
 }
 
 impl<D> GetForm for ENode<D> {
-  fn get_form(&self) -> Form {
+  fn get_form(&self) -> Option<Form> {
     self.body.get_form()
   }
 }
@@ -137,11 +137,11 @@ impl<D> Clone for RawENode<D> {
 }
 
 impl<D> GetForm for RawENode<D> {
-  fn get_form(&self) -> Form {
+  fn get_form(&self) -> Option<Form> {
     match self {
       RawENode::Use(op) => op.get_form(),
       RawENode::Const(_) | RawENode::Argument(_) | RawENode::Label(_) | RawENode::Input(_) => {
-        Form::Atom
+        Some(Form::Atom)
       },
     }
   }

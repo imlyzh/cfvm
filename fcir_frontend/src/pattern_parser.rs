@@ -12,7 +12,7 @@ pub struct Pattern {}
 
 pub type ParseError = pest::error::Error<Rule>;
 
-pub trait FcirParseFrom
+pub trait PatternParseFrom
 where
   Self: std::marker::Sized,
 {
@@ -21,17 +21,17 @@ where
 
 macro_rules! next {
   ($pairs:expr, $path:expr) => {
-    FcirParseFrom::parse_from($pairs.next().unwrap(), $path)
+    PatternParseFrom::parse_from($pairs.next().unwrap(), $path)
   };
 }
 
-impl FcirParseFrom for OpPatHand {
+impl PatternParseFrom for OpPatHand {
   fn parse_from(pair: Pair<Rule>, path: &str) -> Self {
-    OpPatHand::new(FcirParseFrom::parse_from(pair, path))
+    OpPatHand::new(PatternParseFrom::parse_from(pair, path))
   }
 }
 
-impl FcirParseFrom for OpPat {
+impl PatternParseFrom for OpPat {
   fn parse_from(pair: Pair<Rule>, path: &str) -> Self {
     debug_assert_eq!(pair.as_rule(), Rule::op_pat);
     let mut pairs = pair.into_inner();
@@ -42,17 +42,17 @@ impl FcirParseFrom for OpPat {
   }
 }
 
-impl FcirParseFrom for Vec<Catch<ValuePat>> {
+impl PatternParseFrom for Vec<Catch<ValuePat>> {
   fn parse_from(pair: Pair<Rule>, path: &str) -> Self {
     debug_assert_eq!(pair.as_rule(), Rule::uses);
     pair
       .into_inner()
-      .map(|pair| FcirParseFrom::parse_from(pair, path))
+      .map(|pair| PatternParseFrom::parse_from(pair, path))
       .collect()
   }
 }
 
-impl FcirParseFrom for Catch<ValuePat> {
+impl PatternParseFrom for Catch<ValuePat> {
   fn parse_from(pair: Pair<Rule>, path: &str) -> Self {
     debug_assert_eq!(pair.as_rule(), Rule::catch);
     let pair0 = pair.into_inner().next().unwrap();
@@ -64,18 +64,18 @@ impl FcirParseFrom for Catch<ValuePat> {
     };
     let value: Option<ValuePat> = pairs
       .next()
-      .map(|pair| FcirParseFrom::parse_from(pair, path));
+      .map(|pair| PatternParseFrom::parse_from(pair, path));
     Self(value, name)
   }
 }
 
-impl FcirParseFrom for Name {
+impl PatternParseFrom for Name {
   fn parse_from(pair: Pair<Rule>, path: &str) -> Self {
     debug_assert_eq!(pair.as_rule(), Rule::name);
     let mut pairs = pair.into_inner();
     let sym0 = next!(pairs, path);
     if let Some(pair) = pairs.next() {
-      let sym1 = FcirParseFrom::parse_from(pair, path);
+      let sym1 = PatternParseFrom::parse_from(pair, path);
       Self(Some(sym0), sym1)
     } else {
       Self(None, sym0)
@@ -83,7 +83,7 @@ impl FcirParseFrom for Name {
   }
 }
 
-impl FcirParseFrom for ValuePat {
+impl PatternParseFrom for ValuePat {
   fn parse_from(pair: Pair<Rule>, path: &str) -> Self {
     debug_assert_eq!(pair.as_rule(), Rule::value);
     let pair = pair.into_inner().next().unwrap();
@@ -91,21 +91,21 @@ impl FcirParseFrom for ValuePat {
       Rule::symbol_or_op_pat => {
         let pair = pair.into_inner().next().unwrap();
         if pair.as_rule() == Rule::op_pat {
-          ValuePat::Use(FcirParseFrom::parse_from(pair, path))
+          ValuePat::Use(PatternParseFrom::parse_from(pair, path))
         } else {
           // if pair.as_rule() == Rule::op
-          ValuePat::Input(FcirParseFrom::parse_from(pair, path))
+          ValuePat::Input(PatternParseFrom::parse_from(pair, path))
         }
       },
-      Rule::constant => ValuePat::Const(FcirParseFrom::parse_from(pair, path)),
-      Rule::label => ValuePat::Label(FcirParseFrom::parse_from(pair, path)),
-      Rule::argument => ValuePat::Argument(FcirParseFrom::parse_from(pair, path)),
+      Rule::constant => ValuePat::Const(PatternParseFrom::parse_from(pair, path)),
+      Rule::label => ValuePat::Label(PatternParseFrom::parse_from(pair, path)),
+      Rule::argument => ValuePat::Argument(PatternParseFrom::parse_from(pair, path)),
       _ => unreachable!(),
     }
   }
 }
 
-impl FcirParseFrom for Label {
+impl PatternParseFrom for Label {
   fn parse_from(pair: Pair<Rule>, path: &str) -> Self {
     debug_assert_eq!(pair.as_rule(), Rule::label);
     let mut pairs = pair.into_inner();
@@ -113,7 +113,7 @@ impl FcirParseFrom for Label {
   }
 }
 
-impl FcirParseFrom for Argument {
+impl PatternParseFrom for Argument {
   fn parse_from(pair: Pair<Rule>, path: &str) -> Self {
     debug_assert_eq!(pair.as_rule(), Rule::argument);
     let mut pairs = pair.into_inner();
@@ -123,14 +123,14 @@ impl FcirParseFrom for Argument {
   }
 }
 
-impl FcirParseFrom for Option<Order> {
+impl PatternParseFrom for Option<Order> {
   fn parse_from(_pair: Pair<Rule>, _path: &str) -> Self {
     // fixme: maybe
     None
   }
 }
 
-impl FcirParseFrom for Constant {
+impl PatternParseFrom for Constant {
   fn parse_from(pair: Pair<Rule>, _: &str) -> Self {
     debug_assert_eq!(pair.as_rule(), Rule::constant);
     let pair = pair.into_inner().next().unwrap();
@@ -144,9 +144,29 @@ impl FcirParseFrom for Constant {
   }
 }
 
-impl FcirParseFrom for Symbol {
+impl PatternParseFrom for Symbol {
   fn parse_from(pair: Pair<Rule>, _: &str) -> Self {
     debug_assert_eq!(pair.as_rule(), Rule::symbol);
     Symbol::new(pair.as_str())
+  }
+}
+
+mod test {
+  #[test]
+  fn test_parser() {
+    use pest::Parser;
+
+    use crate::pattern_parser::{Pattern, PatternParseFrom, Rule};
+    use fcir::rewriter::pattern::OpPat;
+
+    let src = "add(sub(_, ?b), ?b)";
+    let pair = Pattern::parse(Rule::op_pat, src).unwrap();
+    let r: Vec<OpPat> = pair
+      .into_iter()
+      .map(|pair| -> OpPat { PatternParseFrom::parse_from(pair, "<test>") })
+      .collect();
+    for i in r {
+      println!("{:?}", i);
+    }
   }
 }

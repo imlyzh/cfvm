@@ -7,8 +7,9 @@ use crate::{
 
 use super::form::{Form, GetForm};
 
-pub trait Matcher<T, R> {
-  fn matching(&self, i: &T) -> Option<Vec<(Symbol, R)>>;
+pub trait Matcher<T> {
+  type Output;
+  fn matching(&self, i: &T) -> Self::Output;
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -100,10 +101,11 @@ impl GetForm for ValuePat {
   }
 }
 
-impl<R> Matcher<Name, R> for Name {
-  fn matching(&self, i: &Name) -> Option<Vec<(Symbol, R)>> {
+impl Matcher<Name> for Name {
+  type Output = Option<()>;
+  fn matching(&self, i: &Name) -> Self::Output {
     if self == i {
-      Some(vec![])
+      Some(())
     } else {
       None
     }

@@ -14,7 +14,12 @@ use crate::{
 };
 
 impl<D> EGraph<D> {
-  pub fn matching(&mut self, value: ValuePat) -> Vec<Vec<(Symbol, ENode<D>)>> {
+  pub fn matching_op(&mut self, op: OpPat) -> Vec<Vec<(Symbol, ENode<D>)>> {
+    let value = ValuePat::Use(OpPatHand::new(op));
+    self.matching_value(value)
+  }
+
+  pub fn matching_value(&mut self, value: ValuePat) -> Vec<Vec<(Symbol, ENode<D>)>> {
     let form = value.get_form();
     let form = form.unwrap();
     let r = self.likes.find_collect(&form);

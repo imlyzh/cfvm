@@ -151,6 +151,22 @@ impl PatternParseFrom for Symbol {
   }
 }
 
+#[macro_export]
+macro_rules! pat {
+  ($src:expr) => {{
+    use fcir::rewriter::pattern::OpPat;
+    use fcir_frontend::pattern_parser::Pattern;
+    use fcir_frontend::pattern_parser::{PatternParseFrom, Rule};
+    use pest::Parser;
+    let pair = Pattern::parse(Rule::op_pat, $src).unwrap();
+    pair
+      .into_iter()
+      .map(|pair| -> OpPat { PatternParseFrom::parse_from(pair, "<test>") })
+      .next()
+      .unwrap()
+  }};
+}
+
 mod test {
   #[test]
   fn test_parser() {

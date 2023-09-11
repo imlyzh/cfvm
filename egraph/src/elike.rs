@@ -61,7 +61,7 @@ impl<D: Default> ELike<D> {
       }
       mut_vector = nodes;
     } else {
-      self.0.insert(form.clone(), vec![]).unwrap();
+      self.0.insert(form.clone(), vec![]);
       mut_vector = self.0.get_mut(form).unwrap();
     }
     let id = Id(Rc::new_cyclic(|eclass| {

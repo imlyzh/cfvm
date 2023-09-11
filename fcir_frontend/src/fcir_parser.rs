@@ -363,6 +363,22 @@ impl FcirParseFrom for Symbol {
   }
 }
 
+#[macro_export]
+macro_rules! fcir {
+  ($src:expr) => {{
+    use fcir::op::Op;
+    use fcir_frontend::fcir_parser::Fcir;
+    use fcir_frontend::fcir_parser::{FcirParseFrom, Rule};
+    use pest::Parser;
+    let pair = Fcir::parse(Rule::op, $src).unwrap();
+    pair
+      .into_iter()
+      .map(|pair| -> Op { FcirParseFrom::parse_from(pair, "<builtin>") })
+      .next()
+      .unwrap()
+  }};
+}
+
 mod test {
   #[test]
   fn test_parser() {

@@ -8,7 +8,7 @@ use crate::{
 use fcir::rewriter::form::Form;
 
 #[derive(Debug, Clone)]
-pub struct ELike<D>(HashMap<Form, Vec<ENode<D>>>);
+pub struct ELike<D>(pub HashMap<Form, Vec<ENode<D>>>);
 
 impl<D> Default for ELike<D> {
   fn default() -> ELike<D> {

@@ -379,6 +379,22 @@ macro_rules! fcir {
   }};
 }
 
+#[macro_export]
+macro_rules! value {
+  ($src:expr) => {{
+    use fcir::value::Value;
+    use fcir_frontend::fcir_parser::Fcir;
+    use fcir_frontend::fcir_parser::{FcirParseFrom, Rule};
+    use pest::Parser;
+    let pair = Fcir::parse(Rule::value, $src).unwrap();
+    pair
+      .into_iter()
+      .map(|pair| -> Value { FcirParseFrom::parse_from(pair, "<builtin>") })
+      .next()
+      .unwrap()
+  }};
+}
+
 mod test {
   #[test]
   fn test_parser() {

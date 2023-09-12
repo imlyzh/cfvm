@@ -167,6 +167,22 @@ macro_rules! pat {
   }};
 }
 
+#[macro_export]
+macro_rules! value_pat {
+  ($src:expr) => {{
+    use fcir::rewriter::pattern::ValuePat;
+    use fcir_frontend::pattern_parser::Pattern;
+    use fcir_frontend::pattern_parser::{PatternParseFrom, Rule};
+    use pest::Parser;
+    let pair = Pattern::parse(Rule::value, $src).unwrap();
+    pair
+      .into_iter()
+      .map(|pair| -> ValuePat { PatternParseFrom::parse_from(pair, "<test>") })
+      .next()
+      .unwrap()
+  }};
+}
+
 mod test {
   #[test]
   fn test_parser() {

@@ -50,7 +50,7 @@ impl<D: Default> EGraph<D> {
     let eop = EOpHand::new(eop);
     let node = RawENode::Use(eop.clone());
 
-    let id = self.add_raw_node(node);
+    let (id, _node) = self.add_raw_node(node);
 
     (id, eop)
   }
@@ -58,8 +58,8 @@ impl<D: Default> EGraph<D> {
   pub fn add_value(&mut self, value: &Value) -> (Form, Id<D>) {
     let node = self.make_enode(value);
     let f = node.get_form().unwrap();
-    let r = self.add_raw_node(node);
-    (f, r)
+    let (id, _node) = self.add_raw_node(node);
+    (f, id)
   }
 
   pub fn add_node(&mut self, node: ENode<D>) -> Id<D> {
@@ -71,10 +71,10 @@ impl<D: Default> EGraph<D> {
     id
   }
 
-  pub fn add_raw_node(&mut self, node: RawENode<D>) -> Id<D> {
-    let id = self.likes.add_raw_node(&node.get_form().unwrap(), node);
+  pub fn add_raw_node(&mut self, node: RawENode<D>) -> (Id<D>, ENode<D>) {
+    let (id, enode) = self.likes.add_raw_node(&node.get_form().unwrap(), node);
     self.eclasses.push(id.clone());
-    id
+    (id, enode)
   }
 
   pub fn make_enode(&mut self, value: &Value) -> RawENode<D> {

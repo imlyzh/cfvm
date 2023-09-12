@@ -51,12 +51,12 @@ impl<D: Default> ELike<D> {
     id
   }
 
-  pub fn add_raw_node(&mut self, form: &Form, node: RawENode<D>) -> Id<D> {
+  pub fn add_raw_node(&mut self, form: &Form, node: RawENode<D>) -> (Id<D>, ENode<D>) {
     let mut_vector;
     if let Some(nodes) = self.0.get_mut(form) {
       for n in nodes.iter() {
         if n.body.clone() == node {
-          return n.get_id();
+          return (n.get_id(), n.clone());
         }
       }
       mut_vector = nodes;
@@ -70,8 +70,9 @@ impl<D: Default> ELike<D> {
         body: node,
       }))
     }));
-    mut_vector.push(id.as_ref().borrow().nodes[0].clone());
-    id
+    let node = id.as_ref().borrow().nodes[0].clone();
+    mut_vector.push(node.clone());
+    (id, node)
   }
   /*
   pub fn add_node(&mut self, form: &Form, node: ENode<D>) {

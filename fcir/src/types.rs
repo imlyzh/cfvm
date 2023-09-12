@@ -1,4 +1,7 @@
-use crate::{symbol::Name, value::Constant};
+use crate::{
+  symbol::{Name, Symbol},
+  value::Constant,
+};
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum Type {
@@ -6,6 +9,22 @@ pub enum Type {
   FuncType(FuncType),
   // Tuple(TupleType),
   // Union(UnionType),
+}
+
+impl Type {
+  pub fn any_type() -> Type {
+    Type::GenericType(GenericType {
+      name: Name(None, Symbol::new("any")),
+      args: vec![],
+    })
+  }
+
+  pub fn never_type() -> Type {
+    Type::GenericType(GenericType {
+      name: Name(None, Symbol::new("never")),
+      args: vec![],
+    })
+  }
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]

@@ -17,6 +17,7 @@ pub struct OpPat(
   // pub Catch<Name>,
   pub Name,
   pub Vec<Catch<ValuePat>>,
+  // pub FuncType,
 );
 
 impl GetForm for OpPat {

@@ -13,8 +13,8 @@ impl std::hash::Hash for Form {
   fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
     match self {
       Form::Atom => 0_u8.hash(state),
-      Form::Form(_name, arg) => {
-        // name.hash(state);
+      Form::Form(name, arg) => {
+        name.hash(state);
         arg.len().hash(state);
       },
     }

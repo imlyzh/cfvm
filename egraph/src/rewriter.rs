@@ -1,92 +1,39 @@
 use std::collections::HashMap;
 
-use cfvm_common::unbalanced_product;
 use fcir::{
-  block::Region,
-  op::Attr,
-  rewriter::form::Form,
-  symbol::{Name, Symbol},
-  types::FuncType,
-  value::Value,
+  op::Op,
+  rewriter::pattern::{Catch, OpPat},
+  symbol::Symbol,
 };
 
-use crate::{
-  eclass::Id,
-  egraph::EGraph,
-  enode::{EOp, EOpHand, RawENode},
-  matching::MatchValue,
-};
+use crate::enode::ENode;
+
+type MatchRecord<D> = HashMap<Symbol, ENode<D>>;
 
 pub trait Rewriter<D> {
   type Output;
-  fn rewrite(&self, res: &HashMap<Symbol, MatchValue<D>>, egraph: &mut EGraph<D>) -> Self::Output;
+  fn rewrite(&self, record: &MatchRecord<D>) -> Self::Output;
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct OpTemplate(
-  pub Name,
-  pub Option<Symbol>,
-  pub Vec<Insert<Value>>,
-  pub FuncType,
-);
+impl<D> Rewriter<D> for OpPat {
+  type Output = Op;
 
-impl<D: Default> Rewriter<D> for OpTemplate {
-  type Output = Vec<Id<D>>;
-  fn rewrite(&self, res: &HashMap<Symbol, MatchValue<D>>, egraph: &mut EGraph<D>) -> Self::Output {
-    let uses = self
-      .2
-      .iter()
-      .map(|i| i.rewrite(res, egraph))
-      .collect::<Vec<_>>();
-    let uses = uses
-      .into_iter()
-      .fold(vec![], |a, b| unbalanced_product(&a, &b));
-
-    let mut r = vec![];
-    for uses in uses.into_iter() {
-      let forms = uses
-        .iter()
-        .map(|id| id.get_forms())
-        .fold(vec![], |a, b| unbalanced_product(&a, &b));
-      let append = forms.into_iter().map(|forms| {
-        let eop = EOp {
-          // form_cache: RefCell::new(Some(form)),
-          form_cache: Form::Form(self.0.clone(), forms.into_iter().map(Some).collect()),
-          opcode: self.0.clone(),
-          def: self.1.clone(),
-          uses: uses.clone(),
-          attr: Attr::new(),
-          region: Region::new(),
-          sign: self.3.clone(),
-        };
-        let eop = EOpHand::new(eop);
-        let node = RawENode::Use(eop.clone());
-        egraph.add_raw_node(node)
-      });
-      r.extend(append)
-    }
-    r
+  fn rewrite(&self, record: &MatchRecord<D>) -> Self::Output {
+    todo!()
   }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub enum Insert<T> {
-  Var(Symbol),
-  Use(OpTemplate),
-  Lit(T),
-}
+impl<D, T: Rewriter<D>> Rewriter<D> for Catch<T> {
+  type Output = Option<T::Output>;
 
-impl<D: Default> Rewriter<D> for Insert<Value> {
-  type Output = Vec<Id<D>>;
-  fn rewrite(&self, res: &HashMap<Symbol, MatchValue<D>>, egraph: &mut EGraph<D>) -> Self::Output {
-    match self {
-      Insert::Use(op) => op.rewrite(res, egraph),
-      Insert::Var(sym) => res
-        .get(sym)
-        .into_iter()
-        .map(|node| egraph.add_node(node.clone()))
-        .collect(),
-      Insert::Lit(value) => vec![egraph.add_value(value).1],
+  fn rewrite(&self, record: &MatchRecord<D>) -> Self::Output {
+    match (&self.0, &self.1) {
+      (None, None) => None,
+      (None, Some(sym)) => todo!(),
+      (Some(pat), None) => Some(pat.rewrite(record)),
+      (Some(pat), Some(sym)) => {
+        todo!()
+      },
     }
   }
 }

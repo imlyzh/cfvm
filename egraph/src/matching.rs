@@ -16,12 +16,12 @@ use crate::{
 type MatchRecord<D> = Vec<(Symbol, ENode<D>)>;
 
 impl<D> EGraph<D> {
-  pub fn matching_op(&mut self, op: OpPat) -> Vec<MatchRecord<D>> {
+  pub fn matching_op(&mut self, op: OpPat) -> Vec<(ENode<D>, MatchRecord<D>)> {
     let value = ValuePat::Use(OpPatHand::new(op));
     self.matching_value(value)
   }
 
-  pub fn matching_value(&mut self, value: ValuePat) -> Vec<MatchRecord<D>> {
+  pub fn matching_value(&mut self, value: ValuePat) -> Vec<(ENode<D>, MatchRecord<D>)> {
     let form = value.get_form();
     let form = form.unwrap();
     let r = self.likes.find_collect(&form);
@@ -31,8 +31,13 @@ impl<D> EGraph<D> {
     let r = r.unwrap();
 
     r.iter()
-      .filter_map(|x| -> Option<Vec<MatchRecord<D>>> { value.matching(x) })
-      .flatten()
+      .filter_map(|node| -> Option<(ENode<D>, Vec<MatchRecord<D>>)> { value.matching(node) })
+      .flat_map(|(node, records)| -> Vec<(ENode<D>, MatchRecord<D>)> {
+        records
+          .into_iter()
+          .map(|record| (node.clone(), record))
+          .collect()
+      })
       .collect::<Vec<_>>()
   }
 }
@@ -88,7 +93,7 @@ impl<D> Matcher<EClass<D>> for ValuePat {
   fn matching(&self, i: &EClass<D>) -> Self::Output {
     let mut r = vec![];
     for node in &i.nodes {
-      if let Some(catch) = self.matching(node) {
+      if let Some((node, catch)) = self.matching(node) {
         for catch in catch {
           r.push((node.clone(), catch))
         }
@@ -99,11 +104,10 @@ impl<D> Matcher<EClass<D>> for ValuePat {
 }
 
 impl<D> Matcher<ENode<D>> for ValuePat {
-  type Output = Option<Vec<MatchRecord<D>>>;
+  type Output = Option<(ENode<D>, Vec<MatchRecord<D>>)>;
   fn matching(&self, i: &ENode<D>) -> Self::Output {
-    // self.matching(&i.body)
     let r = self.matching(&i.body)?;
-    Some(r)
+    Some((i.clone(), r))
   }
 }
 

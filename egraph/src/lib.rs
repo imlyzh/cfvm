@@ -5,4 +5,5 @@ pub mod enode;
 
 pub mod gen_fcir;
 pub mod matching;
-// pub mod rewriter;
+pub mod rewriter;
+// pub mod tem_based_rewriter;

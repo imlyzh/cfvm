@@ -3,7 +3,7 @@ use std::{
   rc::{Rc, Weak},
 };
 
-use fcir::{
+use cfir::{
   block::Region,
   op::Attr,
   rewriter::form::{Form, GetForm},

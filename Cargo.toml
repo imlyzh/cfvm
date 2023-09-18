@@ -19,9 +19,10 @@ path = "./src/main.rs"
 resolver = '2'
 members = [
   "common",
-  "fcir",
-  "fcir_frontend",
+  "cfir",
+  "cfir_frontend",
   "egraph",
+  "cfpl"
   ]
 
 [workspace.package]
@@ -30,10 +31,9 @@ authors = ["Lyzh <enterindex@gmail.com>"]
 edition = "2021"
 
 [workspace.dependencies]
-cfvm = { path="cfvm" }
 cfvm_common = { path="common" }
-fcir = { path="fcir" }
-fcir_frontend = { path="fcir_frontend" }
+cfir = { path="cfir" }
+cfir_frontend = { path="cfir_frontend" }
 egraph = { path="egraph" }
 pest = "2.7.3"
 pest_derive = "2.7.3"
@@ -41,6 +41,6 @@ pest_derive = "2.7.3"
 
 [dependencies]
 pest.workspace = true
-fcir.workspace = true
-fcir_frontend.workspace = true
+cfir.workspace = true
+cfir_frontend.workspace = true
 egraph.workspace = true

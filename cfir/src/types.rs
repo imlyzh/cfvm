@@ -12,6 +12,13 @@ pub enum Type {
 }
 
 impl Type {
+  pub fn uninfered() -> Type {
+    Type::GenericType(GenericType {
+      name: Name(None, Symbol::new("uninfered")),
+      args: vec![],
+    })
+  }
+
   pub fn any_type() -> Type {
     Type::GenericType(GenericType {
       name: Name(None, Symbol::new("any")),

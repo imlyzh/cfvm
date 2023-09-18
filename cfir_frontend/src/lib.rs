@@ -1,2 +1,2 @@
-pub mod fcir_parser;
+pub mod cfir_parser;
 pub mod pattern_parser;

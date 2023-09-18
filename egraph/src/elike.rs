@@ -5,7 +5,7 @@ use crate::{
   enode::{ENode, RawENode},
 };
 
-use fcir::rewriter::form::Form;
+use cfir::rewriter::form::Form;
 
 #[derive(Debug, Clone)]
 pub struct ELike<D>(pub HashMap<Form, Vec<ENode<D>>>);

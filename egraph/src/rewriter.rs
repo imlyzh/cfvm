@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use fcir::{
+use cfir::{
   block::Region,
   op::Attr,
   rewriter::{

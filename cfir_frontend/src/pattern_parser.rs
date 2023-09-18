@@ -1,4 +1,4 @@
-use fcir::{
+use cfir::{
   rewriter::pattern::{Catch, OpPat, OpPatHand, ValuePat},
   symbol::{Name, Symbol},
   value::{Argument, Constant, Label, Order},
@@ -154,9 +154,9 @@ impl PatternParseFrom for Symbol {
 #[macro_export]
 macro_rules! pat {
   ($src:expr) => {{
-    use fcir::rewriter::pattern::OpPat;
-    use fcir_frontend::pattern_parser::Pattern;
-    use fcir_frontend::pattern_parser::{PatternParseFrom, Rule};
+    use cfir::rewriter::pattern::OpPat;
+    use cfir_frontend::pattern_parser::Pattern;
+    use cfir_frontend::pattern_parser::{PatternParseFrom, Rule};
     use pest::Parser;
     let pair = Pattern::parse(Rule::op_pat, $src).unwrap();
     pair
@@ -170,9 +170,9 @@ macro_rules! pat {
 #[macro_export]
 macro_rules! value_pat {
   ($src:expr) => {{
-    use fcir::rewriter::pattern::ValuePat;
-    use fcir_frontend::pattern_parser::Pattern;
-    use fcir_frontend::pattern_parser::{PatternParseFrom, Rule};
+    use cfir::rewriter::pattern::ValuePat;
+    use cfir_frontend::pattern_parser::Pattern;
+    use cfir_frontend::pattern_parser::{PatternParseFrom, Rule};
     use pest::Parser;
     let pair = Pattern::parse(Rule::value, $src).unwrap();
     pair
@@ -189,7 +189,7 @@ mod test {
     use pest::Parser;
 
     use crate::pattern_parser::{Pattern, PatternParseFrom, Rule};
-    use fcir::rewriter::pattern::OpPat;
+    use cfir::rewriter::pattern::OpPat;
 
     let src = "add(sub(_, ?b), ?b)";
     let pair = Pattern::parse(Rule::op_pat, src).unwrap();

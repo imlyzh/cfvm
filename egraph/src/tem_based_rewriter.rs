@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use cfvm_common::unbalanced_product;
-use fcir::{
+use cfir::{
   block::Region,
   op::Attr,
   rewriter::form::Form,

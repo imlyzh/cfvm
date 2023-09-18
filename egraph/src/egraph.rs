@@ -1,4 +1,4 @@
-use fcir::{
+use cfir::{
   op::Op,
   rewriter::form::{Form, GetForm},
   value::Value,

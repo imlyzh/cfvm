@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use pest::iterators::Pair;
 use pest_derive::Parser;
 
-use fcir::{
+use cfir::{
   block::{Block, Region},
   op::{Op, OpHand},
   symbol::{Name, Symbol},
@@ -12,12 +12,12 @@ use fcir::{
 };
 
 #[derive(Parser)]
-#[grammar = "../docs/fcir.pest"]
-pub struct Fcir {}
+#[grammar = "../docs/cfir.pest"]
+pub struct CFIR {}
 
 pub type ParseError = pest::error::Error<Rule>;
 
-pub trait FcirParseFrom
+pub trait CFIRParseFrom
 where
   Self: std::marker::Sized,
 {
@@ -26,11 +26,11 @@ where
 
 macro_rules! next {
   ($pairs:expr, $path:expr) => {
-    FcirParseFrom::parse_from($pairs.next().unwrap(), $path)
+    CFIRParseFrom::parse_from($pairs.next().unwrap(), $path)
   };
 }
 
-impl FcirParseFrom for (Option<Symbol>, OpHand) {
+impl CFIRParseFrom for (Option<Symbol>, OpHand) {
   fn parse_from(pair: Pair<Rule>, path: &str) -> Self {
     let op = op_def_parse_from(pair, path);
     let name = op.as_ref().borrow().def.clone();
@@ -43,23 +43,23 @@ pub fn op_def_parse_from(pair: Pair<Rule>, path: &str) -> OpHand {
   let mut pairs = pair.into_inner();
   let pair = pairs.next().unwrap();
   if let Some(pair1) = pairs.next() {
-    let name = FcirParseFrom::parse_from(pair, path);
+    let name = CFIRParseFrom::parse_from(pair, path);
     let name = Some(name);
-    let op: OpHand = FcirParseFrom::parse_from(pair1, path);
+    let op: OpHand = CFIRParseFrom::parse_from(pair1, path);
     op.as_ref().borrow_mut().def = name.clone();
     op
   } else {
-    FcirParseFrom::parse_from(pair, path)
+    CFIRParseFrom::parse_from(pair, path)
   }
 }
 
-impl FcirParseFrom for OpHand {
+impl CFIRParseFrom for OpHand {
   fn parse_from(pair: Pair<Rule>, path: &str) -> Self {
-    OpHand::new(FcirParseFrom::parse_from(pair, path))
+    OpHand::new(CFIRParseFrom::parse_from(pair, path))
   }
 }
 
-impl FcirParseFrom for Op {
+impl CFIRParseFrom for Op {
   fn parse_from(pair: Pair<Rule>, path: &str) -> Self {
     debug_assert_eq!(pair.as_rule(), Rule::op);
     let mut pairs = pair.into_inner();
@@ -79,7 +79,7 @@ impl FcirParseFrom for Op {
   }
 }
 
-impl FcirParseFrom for Vec<Value> {
+impl CFIRParseFrom for Vec<Value> {
   fn parse_from(pair: Pair<Rule>, path: &str) -> Self {
     debug_assert_eq!(pair.as_rule(), Rule::uses);
     pair
@@ -89,17 +89,17 @@ impl FcirParseFrom for Vec<Value> {
   }
 }
 
-impl FcirParseFrom for HashMap<Symbol, Constant> {
+impl CFIRParseFrom for HashMap<Symbol, Constant> {
   fn parse_from(pair: Pair<Rule>, path: &str) -> Self {
     debug_assert_eq!(pair.as_rule(), Rule::attr);
     pair
       .into_inner()
-      .map(|pair| FcirParseFrom::parse_from(pair, path))
+      .map(|pair| CFIRParseFrom::parse_from(pair, path))
       .collect()
   }
 }
 
-impl FcirParseFrom for (Symbol, Constant) {
+impl CFIRParseFrom for (Symbol, Constant) {
   fn parse_from(pair: Pair<Rule>, path: &str) -> Self {
     debug_assert_eq!(pair.as_rule(), Rule::key_constant_pair);
     let mut pairs = pair.into_inner();
@@ -109,17 +109,17 @@ impl FcirParseFrom for (Symbol, Constant) {
   }
 }
 
-impl FcirParseFrom for Region {
+impl CFIRParseFrom for Region {
   fn parse_from(pair: Pair<Rule>, path: &str) -> Self {
     debug_assert_eq!(pair.as_rule(), Rule::region);
     pair
       .into_inner()
-      .map(|pair| FcirParseFrom::parse_from(pair, path))
+      .map(|pair| CFIRParseFrom::parse_from(pair, path))
       .collect()
   }
 }
 
-impl FcirParseFrom for (Option<Symbol>, Block) {
+impl CFIRParseFrom for (Option<Symbol>, Block) {
   fn parse_from(pair: Pair<Rule>, path: &str) -> Self {
     debug_assert_eq!(pair.as_rule(), Rule::labeld_block);
     let mut pairs = pair.into_inner();
@@ -132,7 +132,7 @@ impl FcirParseFrom for (Option<Symbol>, Block) {
   }
 }
 
-impl FcirParseFrom for Block {
+impl CFIRParseFrom for Block {
   fn parse_from(pair: Pair<Rule>, path: &str) -> Self {
     debug_assert_eq!(pair.as_rule(), Rule::block);
     let opdefs = pair
@@ -143,11 +143,11 @@ impl FcirParseFrom for Block {
   }
 }
 
-impl FcirParseFrom for Vec<OpHand> {
+impl CFIRParseFrom for Vec<OpHand> {
   fn parse_from(pair: Pair<Rule>, path: &str) -> Self {
     pair
       .into_inner()
-      .map(|pair| FcirParseFrom::parse_from(pair, path))
+      .map(|pair| CFIRParseFrom::parse_from(pair, path))
       .collect()
   }
 }
@@ -158,24 +158,24 @@ fn block_head_opt_parse_from(
 ) -> (Option<Symbol>, HashMap<Symbol, Type>) {
   debug_assert_eq!(pair.as_rule(), Rule::block_head_opt);
   if let Some(pair) = pair.into_inner().next() {
-    FcirParseFrom::parse_from(pair, path)
+    CFIRParseFrom::parse_from(pair, path)
   } else {
     (None, HashMap::new())
   }
 }
 
-impl FcirParseFrom for (Option<Symbol>, HashMap<Symbol, Type>) {
+impl CFIRParseFrom for (Option<Symbol>, HashMap<Symbol, Type>) {
   fn parse_from(pair: Pair<Rule>, path: &str) -> Self {
     debug_assert_eq!(pair.as_rule(), Rule::block_head);
     if let Some(pair) = pair.into_inner().next() {
       let mut pairs = pair.into_inner();
       let pair0 = pairs.next().unwrap();
       if let Some(pair1) = pairs.next() {
-        let label = FcirParseFrom::parse_from(pair0, path);
-        let args: HashMap<Symbol, Type> = FcirParseFrom::parse_from(pair1, path);
+        let label = CFIRParseFrom::parse_from(pair0, path);
+        let args: HashMap<Symbol, Type> = CFIRParseFrom::parse_from(pair1, path);
         (Some(label), args)
       } else {
-        let args: HashMap<Symbol, Type> = FcirParseFrom::parse_from(pair0, path);
+        let args: HashMap<Symbol, Type> = CFIRParseFrom::parse_from(pair0, path);
         (None, args)
       }
     } else {
@@ -184,17 +184,17 @@ impl FcirParseFrom for (Option<Symbol>, HashMap<Symbol, Type>) {
   }
 }
 
-impl FcirParseFrom for HashMap<Symbol, Type> {
+impl CFIRParseFrom for HashMap<Symbol, Type> {
   fn parse_from(pair: Pair<Rule>, path: &str) -> Self {
     debug_assert_eq!(pair.as_rule(), Rule::block_argument);
     pair
       .into_inner()
-      .map(|pair| FcirParseFrom::parse_from(pair, path))
+      .map(|pair| CFIRParseFrom::parse_from(pair, path))
       .collect()
   }
 }
 
-impl FcirParseFrom for (Symbol, Type) {
+impl CFIRParseFrom for (Symbol, Type) {
   fn parse_from(pair: Pair<Rule>, path: &str) -> Self {
     debug_assert_eq!(pair.as_rule(), Rule::symbol_type_pair);
     let mut pairs = pair.into_inner();
@@ -204,26 +204,26 @@ impl FcirParseFrom for (Symbol, Type) {
   }
 }
 
-impl FcirParseFrom for Box<Type> {
+impl CFIRParseFrom for Box<Type> {
   fn parse_from(pair: Pair<Rule>, path: &str) -> Self {
-    Box::new(FcirParseFrom::parse_from(pair, path))
+    Box::new(CFIRParseFrom::parse_from(pair, path))
   }
 }
 
-impl FcirParseFrom for Type {
+impl CFIRParseFrom for Type {
   fn parse_from(pair: Pair<Rule>, path: &str) -> Self {
     debug_assert_eq!(pair.as_rule(), Rule::_type);
     let pair = pair.into_inner().next().unwrap();
     if pair.as_rule() == Rule::generic_type {
-      Type::GenericType(FcirParseFrom::parse_from(pair, path))
+      Type::GenericType(CFIRParseFrom::parse_from(pair, path))
     } else {
       // pair.as_rule() == Rule::func_type
-      Type::FuncType(FcirParseFrom::parse_from(pair, path))
+      Type::FuncType(CFIRParseFrom::parse_from(pair, path))
     }
   }
 }
 
-impl FcirParseFrom for GenericType {
+impl CFIRParseFrom for GenericType {
   fn parse_from(pair: Pair<Rule>, path: &str) -> Self {
     debug_assert_eq!(pair.as_rule(), Rule::generic_type);
     let mut pairs = pair.into_inner();
@@ -231,7 +231,7 @@ impl FcirParseFrom for GenericType {
     if let Some(pair) = pairs.next() {
       GenericType {
         name,
-        args: FcirParseFrom::parse_from(pair, path),
+        args: CFIRParseFrom::parse_from(pair, path),
       }
     } else {
       GenericType { name, args: vec![] }
@@ -239,29 +239,29 @@ impl FcirParseFrom for GenericType {
   }
 }
 
-impl FcirParseFrom for Vec<TypeOrConst> {
+impl CFIRParseFrom for Vec<TypeOrConst> {
   fn parse_from(pair: Pair<Rule>, path: &str) -> Self {
     debug_assert_eq!(pair.as_rule(), Rule::type_argument);
     pair
       .into_inner()
-      .map(|pair| FcirParseFrom::parse_from(pair, path))
+      .map(|pair| CFIRParseFrom::parse_from(pair, path))
       .collect()
   }
 }
 
-impl FcirParseFrom for TypeOrConst {
+impl CFIRParseFrom for TypeOrConst {
   fn parse_from(pair: Pair<Rule>, path: &str) -> Self {
     debug_assert_eq!(pair.as_rule(), Rule::type_or_const);
     if pair.as_rule() == Rule::_type {
-      TypeOrConst::Type(FcirParseFrom::parse_from(pair, path))
+      TypeOrConst::Type(CFIRParseFrom::parse_from(pair, path))
     } else {
       // pair.as_rule() == Rule::constant
-      TypeOrConst::Const(FcirParseFrom::parse_from(pair, path))
+      TypeOrConst::Const(CFIRParseFrom::parse_from(pair, path))
     }
   }
 }
 
-impl FcirParseFrom for FuncType {
+impl CFIRParseFrom for FuncType {
   fn parse_from(pair: Pair<Rule>, path: &str) -> Self {
     debug_assert_eq!(pair.as_rule(), Rule::func_type);
     let mut pairs = pair.into_inner();
@@ -271,23 +271,23 @@ impl FcirParseFrom for FuncType {
   }
 }
 
-impl FcirParseFrom for Vec<Type> {
+impl CFIRParseFrom for Vec<Type> {
   fn parse_from(pair: Pair<Rule>, path: &str) -> Self {
     debug_assert_eq!(pair.as_rule(), Rule::type_list);
     pair
       .into_inner()
-      .map(|pair| FcirParseFrom::parse_from(pair, path))
+      .map(|pair| CFIRParseFrom::parse_from(pair, path))
       .collect()
   }
 }
 
-impl FcirParseFrom for Name {
+impl CFIRParseFrom for Name {
   fn parse_from(pair: Pair<Rule>, path: &str) -> Self {
     debug_assert_eq!(pair.as_rule(), Rule::name);
     let mut pairs = pair.into_inner();
     let sym0 = next!(pairs, path);
     if let Some(pair) = pairs.next() {
-      let sym1 = FcirParseFrom::parse_from(pair, path);
+      let sym1 = CFIRParseFrom::parse_from(pair, path);
       Self(Some(sym0), sym1)
     } else {
       Self(None, sym0)
@@ -295,7 +295,7 @@ impl FcirParseFrom for Name {
   }
 }
 
-impl FcirParseFrom for Value {
+impl CFIRParseFrom for Value {
   fn parse_from(pair: Pair<Rule>, path: &str) -> Self {
     debug_assert_eq!(pair.as_rule(), Rule::value);
     let pair = pair.into_inner().next().unwrap();
@@ -303,21 +303,21 @@ impl FcirParseFrom for Value {
       Rule::symbol_or_op => {
         let pair = pair.into_inner().next().unwrap();
         if pair.as_rule() == Rule::symbol {
-          Value::Input(FcirParseFrom::parse_from(pair, path))
+          Value::Input(CFIRParseFrom::parse_from(pair, path))
         } else {
           // if pair.as_rule() == Rule::op
-          Value::Use(FcirParseFrom::parse_from(pair, path))
+          Value::Use(CFIRParseFrom::parse_from(pair, path))
         }
       },
-      Rule::constant => Value::Const(FcirParseFrom::parse_from(pair, path)),
-      Rule::label => Value::Label(FcirParseFrom::parse_from(pair, path)),
-      Rule::argument => Value::Argument(FcirParseFrom::parse_from(pair, path)),
+      Rule::constant => Value::Const(CFIRParseFrom::parse_from(pair, path)),
+      Rule::label => Value::Label(CFIRParseFrom::parse_from(pair, path)),
+      Rule::argument => Value::Argument(CFIRParseFrom::parse_from(pair, path)),
       _ => unreachable!(),
     }
   }
 }
 
-impl FcirParseFrom for Label {
+impl CFIRParseFrom for Label {
   fn parse_from(pair: Pair<Rule>, path: &str) -> Self {
     debug_assert_eq!(pair.as_rule(), Rule::label);
     let mut pairs = pair.into_inner();
@@ -325,7 +325,7 @@ impl FcirParseFrom for Label {
   }
 }
 
-impl FcirParseFrom for Argument {
+impl CFIRParseFrom for Argument {
   fn parse_from(pair: Pair<Rule>, path: &str) -> Self {
     debug_assert_eq!(pair.as_rule(), Rule::argument);
     let mut pairs = pair.into_inner();
@@ -335,14 +335,14 @@ impl FcirParseFrom for Argument {
   }
 }
 
-impl FcirParseFrom for Option<Order> {
+impl CFIRParseFrom for Option<Order> {
   fn parse_from(_pair: Pair<Rule>, _path: &str) -> Self {
     // fixme: maybe
     None
   }
 }
 
-impl FcirParseFrom for Constant {
+impl CFIRParseFrom for Constant {
   fn parse_from(pair: Pair<Rule>, _: &str) -> Self {
     debug_assert_eq!(pair.as_rule(), Rule::constant);
     let pair = pair.into_inner().next().unwrap();
@@ -356,7 +356,7 @@ impl FcirParseFrom for Constant {
   }
 }
 
-impl FcirParseFrom for Symbol {
+impl CFIRParseFrom for Symbol {
   fn parse_from(pair: Pair<Rule>, _: &str) -> Self {
     debug_assert_eq!(pair.as_rule(), Rule::symbol);
     Symbol::new(pair.as_str())
@@ -364,16 +364,16 @@ impl FcirParseFrom for Symbol {
 }
 
 #[macro_export]
-macro_rules! fcir {
+macro_rules! cfir {
   ($src:expr) => {{
-    use fcir::op::Op;
-    use fcir_frontend::fcir_parser::Fcir;
-    use fcir_frontend::fcir_parser::{FcirParseFrom, Rule};
+    use cfir::op::Op;
+    use cfir_frontend::cfir_parser::CFIR;
+    use cfir_frontend::cfir_parser::{CFIRParseFrom, Rule};
     use pest::Parser;
-    let pair = Fcir::parse(Rule::op, $src).unwrap();
+    let pair = CFIR::parse(Rule::op, $src).unwrap();
     pair
       .into_iter()
-      .map(|pair| -> Op { FcirParseFrom::parse_from(pair, "<builtin>") })
+      .map(|pair| -> Op { CFIRParseFrom::parse_from(pair, "<builtin>") })
       .next()
       .unwrap()
   }};
@@ -382,14 +382,14 @@ macro_rules! fcir {
 #[macro_export]
 macro_rules! value {
   ($src:expr) => {{
-    use fcir::value::Value;
-    use fcir_frontend::fcir_parser::Fcir;
-    use fcir_frontend::fcir_parser::{FcirParseFrom, Rule};
+    use cfir::value::Value;
+    use cfir_frontend::cfir_parser::CFIR;
+    use cfir_frontend::cfir_parser::{CFIRParseFrom, Rule};
     use pest::Parser;
-    let pair = Fcir::parse(Rule::value, $src).unwrap();
+    let pair = cfir::parse(Rule::value, $src).unwrap();
     pair
       .into_iter()
-      .map(|pair| -> Value { FcirParseFrom::parse_from(pair, "<builtin>") })
+      .map(|pair| -> Value { CFIRParseFrom::parse_from(pair, "<builtin>") })
       .next()
       .unwrap()
   }};
@@ -400,18 +400,18 @@ mod test {
   fn test_parser() {
     use pest::Parser;
 
-    use super::Fcir;
-    use crate::fcir_parser::{FcirParseFrom, Rule};
-    use fcir::block::Block;
+    use super::CFIR;
+    use crate::cfir_parser::{CFIRParseFrom, Rule};
+    use cfir::block::Block;
 
     let src = "fn.def (a) [ inline: true ] {
       r = arthi.add (a, 1): (int, int) -> int
       fn.ret (r): (int) -> never
   }: () -> (int) -> int";
-    let pair = Fcir::parse(Rule::block, src).unwrap();
+    let pair = CFIR::parse(Rule::block, src).unwrap();
     let r: Vec<Block> = pair
       .into_iter()
-      .map(|pair| -> Block { FcirParseFrom::parse_from(pair, "<test>") })
+      .map(|pair| -> Block { CFIRParseFrom::parse_from(pair, "<test>") })
       .collect();
     for i in r {
       println!("{:?}", i);

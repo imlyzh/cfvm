@@ -1,4 +1,4 @@
-use fcir::{
+use cfir::{
   rewriter::pattern::*,
   rewriter::{
     form::GetForm,

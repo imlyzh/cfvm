@@ -30,6 +30,7 @@ macro_rules! next {
   };
 }
 
+/*
 impl CFIRParseFrom for (Option<Symbol>, OpHand) {
   fn parse_from(pair: Pair<Rule>, path: &str) -> Self {
     let op = op_def_parse_from(pair, path);
@@ -37,20 +38,35 @@ impl CFIRParseFrom for (Option<Symbol>, OpHand) {
     (name, op)
   }
 }
+ */
+
+impl CFIRParseFrom for Vec<Symbol> {
+  fn parse_from(pair: Pair<Rule>, path: &str) -> Self {
+    debug_assert_eq!(pair.as_rule(), Rule::name_bind);
+    pair
+      .into_inner()
+      .map(|pair| CFIRParseFrom::parse_from(pair, path))
+      .collect()
+  }
+}
 
 pub fn op_def_parse_from(pair: Pair<Rule>, path: &str) -> OpHand {
   debug_assert_eq!(pair.as_rule(), Rule::op_def);
   let mut pairs = pair.into_inner();
-  let pair = pairs.next().unwrap();
-  if let Some(pair1) = pairs.next() {
-    let name = CFIRParseFrom::parse_from(pair, path);
-    let name = Some(name);
-    let op: OpHand = CFIRParseFrom::parse_from(pair1, path);
-    op.as_ref().borrow_mut().def = name.clone();
-    op
-  } else {
-    CFIRParseFrom::parse_from(pair, path)
-  }
+  // let pair = pairs.next().unwrap();
+  // if let Some(pair1) = pairs.next() {
+  // let name = CFIRParseFrom::parse_from(pair, path);
+  // let name = Some(name);
+  // let op: OpHand = CFIRParseFrom::parse_from(pair1, path);
+  // op.as_ref().borrow_mut().def = name.clone();
+  // op
+  // } else {
+  // CFIRParseFrom::parse_from(pair, path)
+  // }
+  let defs: Vec<Symbol> = next!(pairs, path);
+  let mut op: Op = next!(pairs, path);
+  op.defs = defs;
+  OpHand::new(op)
 }
 
 impl CFIRParseFrom for OpHand {
@@ -70,7 +86,8 @@ impl CFIRParseFrom for Op {
     let sign: FuncType = next!(pairs, path);
     Self {
       opcode,
-      def: None,
+      // def: None,
+      defs: vec![],
       uses,
       attr,
       region,
@@ -306,7 +323,8 @@ impl CFIRParseFrom for Value {
           Value::Input(CFIRParseFrom::parse_from(pair, path))
         } else {
           // if pair.as_rule() == Rule::op
-          Value::Use(CFIRParseFrom::parse_from(pair, path))
+          // Value::Use(CFIRParseFrom::parse_from(pair, path))
+          Value::Use(CFIRParseFrom::parse_from(pair, path), 0)
         }
       },
       Rule::constant => Value::Const(CFIRParseFrom::parse_from(pair, path)),

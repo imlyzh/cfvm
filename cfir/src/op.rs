@@ -10,7 +10,8 @@ use crate::{
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Op {
   pub opcode: Name,
-  pub def: Option<Symbol>,
+  // pub def: Option<Symbol>,
+  pub defs: Vec<Symbol>,
   pub uses: Vec<Value>,
   pub attr: Attr,
   pub region: Region,

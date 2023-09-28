@@ -25,6 +25,35 @@ macro_rules! next {
   };
 }
 
+impl PatternParseFrom for Vec<Symbol> {
+  fn parse_from(pair: Pair<Rule>, path: &str) -> Self {
+    debug_assert_eq!(pair.as_rule(), Rule::name_bind);
+    pair
+      .into_inner()
+      .map(|pair| PatternParseFrom::parse_from(pair, path))
+      .collect()
+  }
+}
+
+pub fn op_def_pat_parse_from(pair: Pair<Rule>, path: &str) -> OpPatHand {
+  debug_assert_eq!(pair.as_rule(), Rule::op_def_pat);
+  let mut pairs = pair.into_inner();
+  // let pair = pairs.next().unwrap();
+  // if let Some(pair1) = pairs.next() {
+  // let name = CFIRParseFrom::parse_from(pair, path);
+  // let name = Some(name);
+  // let op: OpHand = CFIRParseFrom::parse_from(pair1, path);
+  // op.as_ref().borrow_mut().def = name.clone();
+  // op
+  // } else {
+  // CFIRParseFrom::parse_from(pair, path)
+  // }
+  let defs: Vec<Symbol> = next!(pairs, path);
+  let mut op: OpPat = next!(pairs, path);
+  op.2 = defs;
+  OpPatHand::new(op)
+}
+
 impl PatternParseFrom for OpPatHand {
   fn parse_from(pair: Pair<Rule>, path: &str) -> Self {
     OpPatHand::new(PatternParseFrom::parse_from(pair, path))
@@ -38,7 +67,7 @@ impl PatternParseFrom for OpPat {
     let opcode: Name = next!(pairs, path);
     let uses = next!(pairs, path);
     // let attr: HashMap<Symbol, Constant> = next!(pairs, path);
-    OpPat(opcode, uses)
+    OpPat(opcode, uses, vec![])
   }
 }
 
@@ -91,7 +120,7 @@ impl PatternParseFrom for ValuePat {
       Rule::symbol_or_op_pat => {
         let pair = pair.into_inner().next().unwrap();
         if pair.as_rule() == Rule::op_pat {
-          ValuePat::Use(PatternParseFrom::parse_from(pair, path))
+          ValuePat::Use(PatternParseFrom::parse_from(pair, path), 0)
         } else {
           // if pair.as_rule() == Rule::op
           ValuePat::Input(PatternParseFrom::parse_from(pair, path))

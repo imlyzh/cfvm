@@ -3,7 +3,8 @@ use crate::{op::OpHand, symbol::Symbol};
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum Value {
   Const(Constant),
-  Use(OpHand),
+  // Use(OpHand),
+  Use(OpHand, usize),
   Argument(Argument),
   Label(Label),
   Input(Symbol),

@@ -17,7 +17,7 @@ type MatchRecord<D> = Vec<(Symbol, ENode<D>)>;
 
 impl<D> EGraph<D> {
   pub fn matching_op(&mut self, op: OpPat) -> Vec<(ENode<D>, MatchRecord<D>)> {
-    let value = ValuePat::Use(OpPatHand::new(op));
+    let value = ValuePat::Use(OpPatHand::new(op), 0); // FIXME: rewrite system
     self.matching_value(value)
   }
 
@@ -115,7 +115,13 @@ impl<D> Matcher<RawENode<D>> for ValuePat {
   type Output = Option<Vec<MatchRecord<D>>>;
   fn matching(&self, i: &RawENode<D>) -> Self::Output {
     match (self, i) {
-      (ValuePat::Use(op), RawENode::Use(op1)) => Some(op.matching(op1)),
+      (ValuePat::Use(op, loff), RawENode::Use(op1, roff)) => {
+        if loff == roff {
+          Some(op.matching(op1))
+        } else {
+          None
+        }
+      },
       (ValuePat::Const(v), RawENode::Const(v1)) => {
         if v == v1 {
           Some(vec![])

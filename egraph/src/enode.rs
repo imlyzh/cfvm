@@ -20,7 +20,8 @@ pub struct EOp<D> {
   // pub form_cache: RefCell<Option<Form>>,
   pub form_cache: Form,
   pub opcode: Name,
-  pub def: Option<Symbol>,
+  // pub def: Option<Symbol>,
+  pub defs: Vec<Symbol>,
   pub uses: Vec<Id<D>>,
   pub attr: Attr,
   pub region: Region,
@@ -118,7 +119,8 @@ impl<D> GetForm for ENode<D> {
 #[derive(Debug)]
 pub enum RawENode<D> {
   Const(Constant),
-  Use(EOpHand<D>),
+  // Use(EOpHand<D>),
+  Use(EOpHand<D>, usize),
   Argument(Argument),
   Label(Label),
   Input(Symbol),
@@ -128,7 +130,7 @@ impl<D> Clone for RawENode<D> {
   fn clone(&self) -> Self {
     match self {
       Self::Const(arg0) => Self::Const(arg0.clone()),
-      Self::Use(arg0) => Self::Use(arg0.clone()),
+      Self::Use(arg0, arg1) => Self::Use(arg0.clone(), *arg1),
       Self::Argument(arg0) => Self::Argument(arg0.clone()),
       Self::Label(arg0) => Self::Label(arg0.clone()),
       Self::Input(arg0) => Self::Input(arg0.clone()),
@@ -139,7 +141,8 @@ impl<D> Clone for RawENode<D> {
 impl<D> GetForm for RawENode<D> {
   fn get_form(&self) -> Option<Form> {
     match self {
-      RawENode::Use(op) => op.get_form(),
+      RawENode::Use(op, 0) => op.get_form(),
+      RawENode::Use(_op, _) => None, // FIXME: rewrite system
       RawENode::Const(_) | RawENode::Argument(_) | RawENode::Label(_) | RawENode::Input(_) => {
         Some(Form::Atom)
       },
@@ -151,7 +154,7 @@ impl<D> PartialEq for RawENode<D> {
   fn eq(&self, other: &Self) -> bool {
     match (self, other) {
       (Self::Const(l0), Self::Const(r0)) => l0 == r0,
-      (Self::Use(l0), Self::Use(r0)) => l0 == r0,
+      (Self::Use(l0, l1), Self::Use(r0, r1)) => l0 == r0 && l1 == r1,
       (Self::Argument(l0), Self::Argument(r0)) => l0 == r0,
       (Self::Label(l0), Self::Label(r0)) => l0 == r0,
       _ => false,

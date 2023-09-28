@@ -1,7 +1,9 @@
 
 block = { !block_head ~ op_def+ }
 
-op_def = { (symbol ~ "=")? ~ op }
+op_def = { name_bind ~ op }
+
+name_bind = { (symbol ~ ("," ~ symbol)* ~ "=")? }
 
 op = { name ~ uses ~ attr ~ region ~ ":" ~ func_type }
 

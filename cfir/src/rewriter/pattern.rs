@@ -17,6 +17,7 @@ pub struct OpPat(
   // pub Catch<Name>,
   pub Name,
   pub Vec<Catch<ValuePat>>,
+  pub Vec<Symbol>,
   // pub FuncType,
 );
 
@@ -85,7 +86,8 @@ impl<T: GetForm> GetForm for Option<T> {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ValuePat {
   Const(Constant),
-  Use(OpPatHand),
+  // Use(OpPatHand),
+  Use(OpPatHand, usize),
   Argument(Argument),
   Label(Label),
   Input(Symbol),
@@ -94,7 +96,8 @@ pub enum ValuePat {
 impl GetForm for ValuePat {
   fn get_form(&self) -> Option<Form> {
     match self {
-      ValuePat::Use(op) => op.get_form(),
+      ValuePat::Use(op, 0) => op.get_form(),
+      ValuePat::Use(_op, _) => None,
       ValuePat::Const(_) | ValuePat::Argument(_) | ValuePat::Label(_) | ValuePat::Input(_) => {
         Some(Form::Atom)
       },

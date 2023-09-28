@@ -1,5 +1,7 @@
 
-op_def_pat = { (symbol ~ "=")? ~ op_pat }
+op_def_pat = { name_bind ~ op_pat }
+
+name_bind = { (symbol ~ ("," ~ symbol)* ~ "=")? }
 
 op_pat = { name ~ uses }
 

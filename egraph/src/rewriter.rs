@@ -40,12 +40,14 @@ impl<D: Default> Rewriter<D> for OpPat {
     Some(EOp {
       form_cache: Form::Form(self.0.clone(), forms),
       opcode: self.0.clone(),
-      def: None, // FIXME: gen new id
+      // def: None, // FIXME: gen new id
+      defs: vec![], // FIXME: gen new id
       uses,
       attr: Attr::new(),
       region: Region::new(),
       // sign: self.2.clone(),
-      sign: FuncType(vec![], Box::new(Type::any_type())), // FIXME: type inference
+      // sign: FuncType(vec![], ::new(Type::any_type())), // FIXME: type inference
+      sign: FuncType(vec![], vec![Type::any_type()]), // FIXME: type inference
     })
   }
 }
@@ -82,7 +84,7 @@ impl<D: Default> Rewriter<D> for ValuePat {
 
   fn rewrite(&self, record: &MatchRecord<D>, egraph: &mut EGraph<D>) -> Self::Output {
     let node = match self {
-      ValuePat::Use(u) => RawENode::Use(u.rewrite(record, egraph)?),
+      ValuePat::Use(u, offset) => RawENode::Use(u.rewrite(record, egraph)?, *offset),
       ValuePat::Const(v) => RawENode::Const(v.clone()),
       ValuePat::Argument(v) => RawENode::Argument(v.clone()),
       ValuePat::Label(v) => RawENode::Label(v.clone()),

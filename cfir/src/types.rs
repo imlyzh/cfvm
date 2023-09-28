@@ -47,7 +47,8 @@ pub enum TypeOrConst {
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub struct FuncType(pub Vec<Type>, pub Box<Type>);
+// pub struct FuncType(pub Vec<Type>, pub Box<Type>);
+pub struct FuncType(pub Vec<Type>, pub Vec<Type>);
 
 /*
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -41,14 +41,15 @@ impl<D: Default> EGraph<D> {
       // form_cache: RefCell::new(Some(form)),
       form_cache: form,
       opcode: o.opcode.clone(),
-      def: o.def.clone(),
+      // def: o.def.clone(),
+      defs: o.defs.clone(),
       uses,
       attr: o.attr.clone(),
       region: o.region.clone(),
       sign: o.sign.clone(),
     };
     let eop = EOpHand::new(eop);
-    let node = RawENode::Use(eop.clone());
+    let node = RawENode::Use(eop.clone(), 0); // FIXME: rewrite system
 
     let (id, _node) = self.add_raw_node(node);
 
@@ -79,9 +80,9 @@ impl<D: Default> EGraph<D> {
 
   pub fn make_enode(&mut self, value: &Value) -> RawENode<D> {
     match value {
-      Value::Use(op) => {
+      Value::Use(op, offset) => {
         let (_id, eop) = self.add_op(&op.as_ref().borrow());
-        RawENode::Use(eop)
+        RawENode::Use(eop, *offset)
       },
       Value::Const(n) => RawENode::Const(n.clone()),
       Value::Argument(n) => RawENode::Argument(n.clone()),

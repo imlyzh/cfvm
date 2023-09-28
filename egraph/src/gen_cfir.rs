@@ -1,8 +1,8 @@
-use cfvm_common::unbalanced_product;
 use cfir::{
   op::{Op, OpHand},
   value::Value,
 };
+use cfvm_common::unbalanced_product;
 
 use crate::{
   eclass::{EClass, Id},
@@ -33,7 +33,8 @@ impl<D> Gencfir for EOp<D> {
       .map(|uses| {
         OpHand::new(Op {
           opcode: self.opcode.clone(),
-          def: self.def.clone(),
+          // def: self.def.clone(),
+          defs: self.defs.clone(),
           uses,
           attr: self.attr.clone(),
           region: self.region.clone(),
@@ -77,7 +78,11 @@ impl<D> Gencfir for RawENode<D> {
 
   fn gen_cfir(&self) -> Self::Output {
     match self {
-      RawENode::Use(op) => op.gen_cfir().into_iter().map(Value::Use).collect(),
+      RawENode::Use(op, offset) => op
+        .gen_cfir()
+        .into_iter()
+        .map(|op| Value::Use(op, *offset))
+        .collect(),
       RawENode::Const(c) => vec![Value::Const(c.clone())],
       RawENode::Argument(a) => vec![Value::Argument(a.clone())],
       RawENode::Label(l) => vec![Value::Label(l.clone())],

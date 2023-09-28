@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use cfir::{
   rewriter::pattern::*,
   rewriter::{
@@ -14,6 +16,19 @@ use crate::{
 };
 
 type MatchRecord<D> = Vec<(Symbol, ENode<D>)>;
+type MatchRecord1<D> = HashMap<Symbol, ENode<D>>;
+
+pub fn unify<D>(mut lhs: MatchRecord1<D>, rhs: MatchRecord1<D>) -> Option<MatchRecord1<D>> {
+  for (name, node) in rhs {
+    if let Some(rec) = lhs.get(&name) {
+      if rec != &node {
+        return None;
+      }
+    }
+    lhs.insert(name, node);
+  }
+  Some(lhs)
+}
 
 impl<D> EGraph<D> {
   pub fn matching_op(&mut self, op: OpPat) -> Vec<(ENode<D>, MatchRecord<D>)> {

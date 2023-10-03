@@ -3,7 +3,7 @@ use std::{cell::RefCell, collections::HashMap, hash::Hash, rc::Rc};
 use crate::{
   block::Region,
   symbol::{Name, Symbol},
-  types::{FuncType, Type},
+  types::Type,
   value::{Constant, Value},
 };
 

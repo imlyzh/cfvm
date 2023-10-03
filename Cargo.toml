@@ -22,7 +22,9 @@ members = [
   "cfir",
   "cfir_frontend",
   "egraph",
-  "cfpl"
+  "cfpl",
+  "backend",
+  "description_lang",
   ]
 
 [workspace.package]

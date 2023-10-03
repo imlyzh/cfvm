@@ -8,7 +8,7 @@ use cfir::{
     pattern::{Catch, OpPat, OpPatHand, ValuePat},
   },
   symbol::Symbol,
-  types::{FuncType, Type},
+  types::Type,
 };
 
 use crate::{

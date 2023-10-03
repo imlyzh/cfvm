@@ -8,7 +8,7 @@ use cfir::{
   op::Attr,
   rewriter::form::{Form, GetForm},
   symbol::{Name, Symbol},
-  types::{FuncType, Type},
+  types::Type,
   value::{Argument, Constant, Label},
 };
 

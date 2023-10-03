@@ -8,7 +8,7 @@ use cfir::{
   op::Attr,
   rewriter::form::{Form, GetForm},
   symbol::{Name, Symbol},
-  types::FuncType,
+  types::{FuncType, Type},
   value::{Argument, Constant, Label},
 };
 
@@ -25,7 +25,8 @@ pub struct EOp<D> {
   pub uses: Vec<Id<D>>,
   pub attr: Attr,
   pub region: Region,
-  pub sign: FuncType,
+  // pub sign: FuncType,
+  pub sign: Vec<Type>,
 }
 
 impl<D> GetForm for EOp<D> {

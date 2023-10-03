@@ -5,7 +5,8 @@ op_def = { name_bind ~ op }
 
 name_bind = { (symbol ~ ("," ~ symbol)* ~ "=")? }
 
-op = { name ~ uses ~ attr ~ region ~ ":" ~ func_type }
+// op = { name ~ uses ~ attr ~ region ~ ":" ~ _type }
+op = { name ~ uses ~ attr ~ region ~ ":" ~ type_list }
 
 uses = { ("(" ~ (value ~ ("," ~ value)* ~ ","?)? ~ ")")? }
 
@@ -38,9 +39,10 @@ generic_type = { name ~ type_argument? }
 
 type_argument = { "<" ~ (type_or_const ~ ("," ~ type_or_const)* ~ ","?)? ~ ">" }
 
-func_type = { "(" ~ type_list ~ ")" ~ "->" ~ _type }
+// func_type = { "(" ~ type_list ~ ")" ~ "->" ~ _type }
+func_type = { "(" ~ type_list ~ ")" ~ "->" ~ type_list }
 
-type_list = { (_type ~ ("," ~ _type)* ~ ","?)? }
+type_list = { (_type ~ ("," ~ _type)*)? }
 
 name = { (symbol ~ ".")? ~ symbol }
 

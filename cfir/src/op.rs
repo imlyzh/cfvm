@@ -3,7 +3,7 @@ use std::{cell::RefCell, collections::HashMap, hash::Hash, rc::Rc};
 use crate::{
   block::Region,
   symbol::{Name, Symbol},
-  types::FuncType,
+  types::{FuncType, Type},
   value::{Constant, Value},
 };
 
@@ -15,7 +15,8 @@ pub struct Op {
   pub uses: Vec<Value>,
   pub attr: Attr,
   pub region: Region,
-  pub sign: FuncType,
+  // pub sign: FuncType,
+  pub sign: Vec<Type>,
 }
 
 pub type Attr = HashMap<Symbol, Constant>;

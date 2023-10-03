@@ -46,8 +46,8 @@ impl<D: Default> Rewriter<D> for OpPat {
       attr: Attr::new(),
       region: Region::new(),
       // sign: self.2.clone(),
-      // sign: FuncType(vec![], ::new(Type::any_type())), // FIXME: type inference
-      sign: FuncType(vec![], vec![Type::any_type()]), // FIXME: type inference
+      // sign: FuncType(vec![], vec![Type::any_type()]), // FIXME: type inference
+      sign: vec![Type::any_type()],
     })
   }
 }

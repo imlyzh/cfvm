@@ -83,7 +83,8 @@ impl CFIRParseFrom for Op {
     let uses: Vec<Value> = next!(pairs, path);
     let attr: HashMap<Symbol, Constant> = next!(pairs, path);
     let region: Region = next!(pairs, path);
-    let sign: FuncType = next!(pairs, path);
+    // let sign: FuncType = next!(pairs, path);
+    let sign: Vec<Type> = next!(pairs, path);
     Self {
       opcode,
       // def: None,
@@ -282,8 +283,8 @@ impl CFIRParseFrom for FuncType {
   fn parse_from(pair: Pair<Rule>, path: &str) -> Self {
     debug_assert_eq!(pair.as_rule(), Rule::func_type);
     let mut pairs = pair.into_inner();
-    let input = next!(pairs, path);
-    let output = next!(pairs, path);
+    let input: Vec<Type> = next!(pairs, path);
+    let output: Vec<Type> = next!(pairs, path);
     FuncType(input, output)
   }
 }
@@ -302,9 +303,9 @@ impl CFIRParseFrom for Name {
   fn parse_from(pair: Pair<Rule>, path: &str) -> Self {
     debug_assert_eq!(pair.as_rule(), Rule::name);
     let mut pairs = pair.into_inner();
-    let sym0 = next!(pairs, path);
+    let sym0: Symbol = next!(pairs, path);
     if let Some(pair) = pairs.next() {
-      let sym1 = CFIRParseFrom::parse_from(pair, path);
+      let sym1: Symbol = CFIRParseFrom::parse_from(pair, path);
       Self(Some(sym0), sym1)
     } else {
       Self(None, sym0)
@@ -347,8 +348,8 @@ impl CFIRParseFrom for Argument {
   fn parse_from(pair: Pair<Rule>, path: &str) -> Self {
     debug_assert_eq!(pair.as_rule(), Rule::argument);
     let mut pairs = pair.into_inner();
-    let order = next!(pairs, path);
-    let sym = next!(pairs, path);
+    let order: Option<Order> = next!(pairs, path);
+    let sym: Symbol = next!(pairs, path);
     Argument(sym, order)
   }
 }

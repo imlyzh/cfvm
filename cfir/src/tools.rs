@@ -3,17 +3,22 @@ use std::collections::HashMap;
 use crate::{
   op::{OpHand, Space},
   symbol::Symbol,
-  value::Value,
+  value::{Value, self},
 };
 
 pub fn relinking(ops: &Space) -> Space {
+  let record = make_name_mapping(ops);
+  name_replace(&record, ops)
+}
+
+pub fn make_name_mapping(ops: &Space) -> HashMap<Symbol, Value> {
   let mut record = HashMap::new();
   for op in ops {
     for (offset, name) in op.as_ref().borrow().defs.iter().enumerate() {
       record.insert(name.clone(), Value::Use(op.clone(), offset));
     }
   }
-  name_replace(&record, ops)
+  record
 }
 
 pub fn name_replace(record: &HashMap<Symbol, Value>, ops: &Space) -> Space {

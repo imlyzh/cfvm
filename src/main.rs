@@ -1,3 +1,5 @@
+use cfir::tools::relinking;
+
 fn main() {}
 
 #[test]
@@ -12,5 +14,17 @@ fn matching_test() {
   egg.add_op(&op);
 
   let r = egg.matching_op(op_pat);
+  println!("op_pat: {:?}", r);
+}
+
+
+#[test]
+fn relinking_test() {
+  use cfir_frontend::{cfir, pat};
+
+  let op = cfir!("add(add(a, 1): (int, int) -> int, 1): (int, int) -> int");
+
+  // relinking(ops)
+  // make_name_mapping
   println!("op_pat: {:?}", r);
 }

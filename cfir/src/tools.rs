@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::{
   op::{OpHand, Space},
   symbol::Symbol,
-  value::{Value, self},
+  value::Value,
 };
 
 pub fn relinking(ops: &Space) -> Space {

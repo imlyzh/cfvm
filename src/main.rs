@@ -1,13 +1,13 @@
-use cfir::tools::relinking;
+
 
 fn main() {}
 
 #[test]
 fn matching_test() {
-  use cfir_frontend::{cfir, pat};
+  use cfir_frontend::{cfir_expr, pat};
   use egraph::egraph::EGraph;
 
-  let op = cfir!("add(add(a, 1): (int, int) -> int, 1): (int, int) -> int");
+  let op = cfir_expr!("add(add(a, 1): (int, int) -> int, 1): (int, int) -> int");
   let op_pat = pat!("add(add(?a, ?b), ?b)");
 
   let mut egg: EGraph<()> = EGraph::new();
@@ -20,11 +20,15 @@ fn matching_test() {
 
 #[test]
 fn relinking_test() {
-  use cfir_frontend::{cfir, pat};
+  use cfir::tools::relinking;
+  use cfir_frontend::cfir_block;
+  use cfir::value::Value;
 
-  let op = cfir!("add(add(a, 1): (int, int) -> int, 1): (int, int) -> int");
+  let ops = cfir_block!("
+  r = arthi.add (a, 1): (int, int) -> int
+  fn.ret (r): (int) -> never
+  ").2;
 
-  // relinking(ops)
-  // make_name_mapping
-  println!("op_pat: {:?}", r);
+  let relinked_ops = relinking(&ops);
+  assert_eq!(relinked_ops[1].as_ref().borrow().uses[0], Value::Use(relinked_ops[0].clone(), 0));
 }

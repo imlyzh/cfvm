@@ -383,11 +383,25 @@ impl CFIRParseFrom for Symbol {
 }
 
 #[macro_export]
-macro_rules! cfir {
+macro_rules! cfir_block {
+  ($src:expr) => {{
+    use cfir::block::Block;
+    use cfir_frontend::cfir_parser::{CFIR, CFIRParseFrom, Rule};
+    use pest::Parser;
+    let pair = CFIR::parse(Rule::block, $src).unwrap();
+    pair
+      .into_iter()
+      .map(|pair| -> Block { CFIRParseFrom::parse_from(pair, "<builtin>") })
+      .next()
+      .unwrap()
+  }};
+}
+
+#[macro_export]
+macro_rules! cfir_expr {
   ($src:expr) => {{
     use cfir::op::Op;
-    use cfir_frontend::cfir_parser::CFIR;
-    use cfir_frontend::cfir_parser::{CFIRParseFrom, Rule};
+    use cfir_frontend::cfir_parser::{CFIR, CFIRParseFrom, Rule};
     use pest::Parser;
     let pair = CFIR::parse(Rule::op, $src).unwrap();
     pair
@@ -402,8 +416,8 @@ macro_rules! cfir {
 macro_rules! value {
   ($src:expr) => {{
     use cfir::value::Value;
-    use cfir_frontend::cfir_parser::CFIR;
-    use cfir_frontend::cfir_parser::{CFIRParseFrom, Rule};
+    use cfir_frontend::cfir_parser::{CFIR, CFIRParseFrom, Rule};
+
     use pest::Parser;
     let pair = cfir::parse(Rule::value, $src).unwrap();
     pair
@@ -418,9 +432,7 @@ mod test {
   #[test]
   fn test_parser() {
     use pest::Parser;
-
-    use super::CFIR;
-    use crate::cfir_parser::{CFIRParseFrom, Rule};
+    use crate::cfir_parser::{CFIR, CFIRParseFrom, Rule};
     use cfir::block::Block;
 
     let src = "fn.def (a) [ inline: true ] {

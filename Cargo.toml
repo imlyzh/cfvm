@@ -33,7 +33,7 @@ authors = ["Lyzh <enterindex@gmail.com>"]
 edition = "2021"
 
 [workspace.dependencies]
-cfvm_common = { path="common" }
+common = { path="common" }
 cfir = { path="cfir" }
 cfir_frontend = { path="cfir_frontend" }
 egraph = { path="egraph" }

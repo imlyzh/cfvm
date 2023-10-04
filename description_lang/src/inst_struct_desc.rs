@@ -1,9 +1,23 @@
+use std::collections::HashMap;
+
+
+/// example:
+/// ```
+/// sip(Register(r)) = (r)
+/// sip(Literal(l)) = (0x114, l)
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MappingRecord<'a> (pub HashMap<&'a str, MappingList<'a>>);
+
+pub type MappingList<'a> = Vec<InstStructMapping<'a>>;
 
 /// name(pattern...) = (construct)
-#[derive(Debug)]
-pub struct InstStructMapping<'a> (pub &'a str, pub Vec<InstPattern<'a>>, pub Vec<InstConstruct<'a>>);
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct InstStructMapping<'a> (pub &'a str, pub Params<'a>, pub Vec<InstConstruct<'a>>);
 
-#[derive(Debug)]
+pub type Params<'a> = Vec<InstPattern<'a>>;
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum InstPattern<'a> {
   Predicate(&'a str, Vec<&'a str>),
   // Literal(Vec<u8>),
@@ -11,9 +25,9 @@ pub enum InstPattern<'a> {
   Var(&'a str),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum InstConstruct<'a> {
-  MappingCall(&'a str),
+  MappingCall(&'a str, Params<'a>),
   Literal(Vec<u8>),
   Var(&'a str),
 }

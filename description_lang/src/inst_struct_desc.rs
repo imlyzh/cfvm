@@ -1,19 +1,18 @@
 use std::collections::HashMap;
 
-
 /// example:
 /// ```
 /// sip(Register(r)) = (r)
 /// sip(Literal(l)) = (0x114, l)
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct MappingRecord<'a> (pub HashMap<&'a str, MappingList<'a>>);
+pub struct MappingRecord<'a>(pub HashMap<&'a str, MappingList<'a>>);
 
 pub type MappingList<'a> = Vec<InstStructMapping<'a>>;
 
 /// name(pattern...) = (construct)
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct InstStructMapping<'a> (pub &'a str, pub Params<'a>, pub Vec<InstConstruct<'a>>);
+pub struct InstStructMapping<'a>(pub &'a str, pub Params<'a>, pub Vec<InstConstruct<'a>>);
 
 pub type Params<'a> = Vec<InstPattern<'a>>;
 

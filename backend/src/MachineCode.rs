@@ -3,7 +3,7 @@ use cfvm_common::constant::Symbol;
 pub type MachineCodeList = Vec<MachineCode>;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct MachineCode (pub Symbol, Vec<Param>);
+pub struct MachineCode(pub Symbol, Vec<Param>);
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Param {

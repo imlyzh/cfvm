@@ -1,5 +1,3 @@
-
-
 fn main() {}
 
 #[test]
@@ -17,18 +15,23 @@ fn matching_test() {
   println!("op_pat: {:?}", r);
 }
 
-
 #[test]
 fn relinking_test() {
   use cfir::tools::relinking;
-  use cfir_frontend::cfir_block;
   use cfir::value::Value;
+  use cfir_frontend::cfir_block;
 
-  let ops = cfir_block!("
+  let ops = cfir_block!(
+    "
   r = arthi.add (a, 1): (int, int) -> int
   fn.ret (r): (int) -> never
-  ").2;
+  "
+  )
+  .2;
 
   let relinked_ops = relinking(&ops);
-  assert_eq!(relinked_ops[1].as_ref().borrow().uses[0], Value::Use(relinked_ops[0].clone(), 0));
+  assert_eq!(
+    relinked_ops[1].as_ref().borrow().uses[0],
+    Value::Use(relinked_ops[0].clone(), 0)
+  );
 }
